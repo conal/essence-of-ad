@@ -45,52 +45,36 @@ Another instance of generalized AD is automatic incremental evaluation of functi
 
 \section{What's a derivative?}
 
-\nc\R{\mathbb{R}}
-%format R="\R"
-\nc\C{\mathbb{C}}
-%format C="\C"
+%format eps = epsilon
 
-\nc\eps\epsilon
-\rnc\eps\varepsilon
+%format Rm = R"^m"
+%format Rn = R"^n"
 
 Since automatic differentiation (AD) has to do with computing derivatives, let's begin by considering what derivatives are.
-If your introductory calculus class was like mine, you learned that the derivative $f'(x)$ (or |f' x|) of a function $f : \R \to \R$ at a point $x$ (in the domain of $f$) is a \emph{number}, defined as follows;
-$$ f'(x) = \lim_{\eps \to 0}\frac{f(x+\eps) - f(x)}{\eps} $$
-That is, $f'(x)$ tells us how fast $f$ is scaling input changes at $x$.
+If your introductory calculus class was like mine, you learned that the derivative |f' x| of a function |f :: R -> R| at a point |x| (in the domain of |f|) is a \emph{number}, defined as follows;
 
-How well does this definition hold up beyond functions of type $\R \to \R$?
-It will do fine with complex numbers ($\C \to \C$), where division is also defined.
-Extending to $\R \to \R^n$ also works if we interpret the ratio as dividing a vector by a scalar in the usual way.
-When we extend to $\R^m \to \R^n$, however, this definition no longer makes sense, as it would rely on dividing \emph{by} a vector.
-Fortunately, a more abstract version of the $f'$ above does generalize.
+$$|f' x = lim(eps -> 0)(frac(f (x+eps) - f x) eps)|$$
 
-First, change the $f'$ definition above ...: unique scalar $s$ such that
+That is, |f' x| tells us how fast |f| is scaling input changes at |x|.
+
+How well does this definition hold up beyond functions of type |R -> R|?
+It will do fine with complex numbers (|C -> C|), where division is also defined.
+Extending to |R -> Rn| also works if we interpret the ratio as dividing a vector (in |Rn|) by a scalar in the usual way.
+When we extend to |Rm -> Rn| (or even |Rm -> R|), however, this definition no longer makes sense, as it would rely on dividing \emph{by} a vector |eps :: Rm|.
+Fortunately, a more abstract version of the |f'| above does generalize.
+
+First, change the |f'| definition above to say that |f' x| is the unique |v :: Rn| such that
+$$ |lim(eps -> 0)(frac(f (x+eps) - f x) eps) - v == 0| $$
+or (equivalently)
+$$ |lim(eps -> 0)(frac(f (x+eps) - (f x + eps *^ v)) eps) == 0|. $$
+Notice that |v| is used to linearly transform |eps|.
+Next, generalize this condition to say that the derivative of |f| at |x| is the unique \emph{linear map} |T| such that
+$$|lim(eps -> 0)(frac(norm (f (x+eps) - (f x + T eps)))(norm eps)) == 0|$$
+This definition comes from \citet[chapter 2]{calculus-on-manifolds}, along with a proof that |T| is indeed unique when it exists.
+
+\bibliography{bib}
 
 \end{document}
-
- \[ |lim(epsilon -> 0)(frac(f (x+epsilon) - f(x)) epsilon) - s == 0| \]
-
-\pause
-Equivalently,
-
- \[ |lim(epsilon -> 0)(frac(f (x+epsilon) - f(x) - s *^ epsilon) epsilon) == 0| \]
-or
- \[ |lim(epsilon -> 0)(frac(f (x+epsilon) - (f(x) + s *^ epsilon)) epsilon) == 0| \]
-
-}
-
-\frame{\frametitle{What's a derivative -- really?}
- \[ |lim(epsilon -> 0)(frac(f (x+epsilon) - (f(x) + s *^ epsilon)) epsilon) == 0| \]
-
-\pause
-
-\ 
-
-Now generalize: unique \wow{linear map} $T$ such that:
-
-$$|lim(epsilon -> 0)(frac(abs (f (x+epsilon) - (f(x) + T epsilon)))(abs epsilon)) == 0|$$
-
-\ 
 
 
 \framet{What's a derivative?}{

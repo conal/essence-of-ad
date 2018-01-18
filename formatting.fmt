@@ -14,14 +14,9 @@
 %% optional double-dollar spelling, to avoid $ confusing emacs latex-mode.
 %format <$$> = <$>
 %format <#> = <$>
-%format <$$ = <$
-%format <# = <$
 
 %format <$> = "\mathbin{<\!\!\!\$\!\!\!>}"
-%format <$ = "\mathbin{<\!\!\!\$}"
 %format <*> = "\mathbin{<\!\!\!*\!\!\!>}"
-
-%% %format <*> = "\circledast"
 
 %% hack: add missing space, e.g., before "{" in data type decl
 %format SPC = "\, {}"
@@ -41,8 +36,6 @@
 %format @@ = "@"
 
 %format ~> = " \leadsto "
-
-%format (toCCC (e)) = "\db{" e "}"
 
 %format ~ = "\mathbin{\sim}"
 
@@ -64,8 +57,6 @@
 %% %format <.> = "\mathbin{<\!\!\! \cdot \!\!\!>}"
 
 %format <.> = "\cdot"
-%% %format $@ = "\mathbin{\hat\$}"
-%% %% %format $@ = "\mathbin{\$\!@}"
 
 %format (abs(a)) = "|" a "|"
 %format (norm(a)) = "\lVert" a "\rVert"
@@ -80,8 +71,7 @@
 
 %format :-* = "\multimap"
 
-%format Par1 = "\Varid{Id}"
-%format unPar1 = "\Varid{unId}"
-
-%format :*: = "\btimes"
-%format :.: = "\bcomp"
+%format (abs(a)) = "|" a "|"
+%format lim(w)(b) = "\lim_{"w"}{"b"}"
+%format frac(a)(b) = "\frac{"a"}{"b"}"
+%format `approx` = "\approx"

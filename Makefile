@@ -9,8 +9,11 @@ see: $(TARG).see
 dots = $(wildcard Figures/*.dot)
 pdfs = $(addsuffix .pdf, $(basename $(dots))) $(wildcard Figures/circuits/*-scaled.pdf)
 
+#latex=pdflatex
+latex=latexmk -pdf
+
 %.pdf: %.tex $(pdfs) Makefile
-	pdflatex $*.tex
+	$(latex) $*.tex
 
 %.tex: %.lhs macros.tex formatting.fmt Makefile
 	lhs2TeX -o $*.tex $*.lhs
