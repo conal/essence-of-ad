@@ -1,10 +1,6 @@
 ## The simple essence of automatic differentiation
 
-This paper is based on an [invited talk for PEPM 2018](https://popl18.sigplan.org/track/PEPM-2018#Invited-Talks).
-Links:
-
-*   [Slides](http://conal.net/talks/simple-essence-of-automatic-differentiation.pdf) (529K PDF).
-*   [Video (slides + audio)](https://youtu.be/Shl3MtWGu18) (60 minutes, 104MB).
+This paper is based on an [invited talk for PEPM 2018](https://github.com/conal/talk-2018-essence-of-ad/blob/master/readme.md) (with slides and video) by the same name.
 
 ### Abstract
 
