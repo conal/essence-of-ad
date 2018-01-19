@@ -64,10 +64,14 @@
 %format frac(a)(b) = "\frac{"a"}{"b"}"
 %format `approx` = "\approx"
 
+
 %format *** = "\times"
-%format &&& = "\mathbin{\smalltriangleup}"
-%format ||| = "\mathbin{\smalltriangledown}"
+%format &&& = "\mathbin{\triangle}"
+%format ||| = "\mathbin{\triangledown}"
 %format +++ = "\!+\!"
+
+%% Because ||| between inline-code "|" delimiters confuses lhs2tex
+%format ### = "\mathbin{\triangledown}"
 
 %format :-* = "\multimap"
 
@@ -75,3 +79,12 @@
 %format lim(w)(b) = "\lim_{"w"}{"b"}"
 %format frac(a)(b) = "\frac{"a"}{"b"}"
 %format `approx` = "\approx"
+
+
+% Got from Andres L:
+\newcommand{\calculationcomments}{%
+  \let\onelinecomment=\onelinecommentchars
+  \def\commentbegin{\quad\{ }%
+  \def\commentend{\}}%
+}
+\calculationcomments
