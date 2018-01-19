@@ -91,29 +91,121 @@ Here, |u| and |v| must be vector spaces that share a common underlying field.
 Written as a Haskell-style type signature,
 
 %% %format der = "\mathcal{D}"
-%format der = "\der"
+%format der = "{}\der{} "
 
-> der :: NOP (u -> v) -> (u -> (u :-* v))
+> der :: (u -> v) -> (u -> (u :-* v))
 
 The chain rule now has a lovely form, namely that the derivative of a composition is the \emph{composition} of derivatives:
-
-> der (g . f) x = der g (f x) . der f x
-
+\begin{align} \label{eq:chain-rule}
+|der (g . f) x = der g (f x) . der f x|
+\end{align}
 If |f :: u -> v|, |g :: v -> w|, and |x :: u|, then |der f x :: u :-* v|, and |der g (f x) :: v :-* w|, so both sides of this equation have type |u :-* w|.
 The numbers, vectors, matrices, etc mentioned above are all different \emph{representations} of linear maps; and the various forms of ``multiplication'' appearing in their associated chain rules are all implementations of linear map composition for those representations.
 
 %format der2 = der "^2"
 
-It follows that differentiating twice as the following type\footnote{As with |(->)|, we take |(:-*)| to associate rightward, so |a :-* b :-* c| means |a :-* (b :-* c)|}:
+From the type of |der|, it follows that differentiating twice has the following type\footnote{As with ``|->|'', we will take ``|:-*|'' to associate rightward, so |a :-* b :-* c| is equivalent to |a :-* (b :-* c)|}:
 
 > der2 = der . der :: NOP (u -> v) -> (u -> (u :-* u :-* v))
 
 The type |u :-* u :-* v| is a linear map that yields a linear map, which is the curried form of a \emph{bilinear} map.
 Likewise, differentiating $k$ times yields a $k$-linear map curried $k-1$ times.
 In particular, the \emph{Hessian} matrix $H$ corresponds to the second derivative of a function |f :: Rm -> R|, having $m$ rows and $m$ columns and satisfying the symmetry condition $H_{i,j} = H_{j,i}$.
+
+\emph{A comment on type safety:}
 Considering the shape of the matrix |H|, it would be easy to mistakenly treat it as representing the first derivative of some other function |g :: Rm -> Rm|.
 Doing so would be unsafe, however, since second derivatives are (curried) bilinear maps, not linear maps.
 By providing an explicit abstract type for linear maps rather than using a bare matrix representation, such unsafe uses become type errors, easily caught at compile-time.
+\mynote{Hm. I guess one could say that |H| really does represent a first derivative, namely of |f'| itself considered as a vector.
+However, |f'| is a covector, not a vector.
+Noodle more on this explanation.}
+
+\section{Compositionality}
+
+Strictly speaking, the chain rule in Equation \ref{eq:chain-rule} is not compositional, i.e., it is \emph{not} the case |der (g . f)| can be constructed solely from |der g| and |der f|.
+Instead, it also needs |f| itself.
+Compositionality is very helpful for the style of implementation used in this paper, and fortunately, there is a simple solution.
+Instead of constructing just the derivative of a function |f|, suppose we \emph{augment} |f| with its derivative:
+
+%format ad = der"\!^+\!"
+%format ad0 = der"\!_{\scriptscriptstyle 0}\!\!^+\!"
+
+\begin{code}
+ad0 :: (u -> v) -> ((u -> v) :* (u -> (u :-* v)))   -- first guess
+ad0 f = (f, der f)
+\end{code}
+As desired, this altered specification is compositional:
+\begin{code}
+   ad0 (g . f)
+==  {- definition of |ad0| -}
+   (g . f, der (g . f))
+==  {- chain rule -}
+   (g . f, \ x -> der g (f x) . der f x)
+\end{code}
+
+Note that |ad0 (g . f)| is assembled entirely out of the parts of |ad0 g| and |ad0 f|, which is to say from |g|, |der g|, |f|, and |der f|.
+Writing out |g . f| as |\ x -> g (f x)| underscores that the two parts of |ad0 (g . f)| when applied to |x| both involve |f x|.
+Computing these parts independently thus requires redundant work.
+Moreover, the chain rule itself requires applying a function and its derivative (namely |f| and |der f|) to the same |x|.
+Since the chain gets applied recursively to nested compositions, the redundant work multiplies greatly, resulting in an impractically expensive algorithm.
+
+This efficiency problem is also easily fixed.
+Instead of pairing |f| and |der f|, let's instead \emph{combine} them into a single function\footnote{The precedence of ``|:*|'' is tighter than that of ``|->|'' and ``|:-*|'', so |u -> v :* (u :-* v)| is equivalent to |u -> (v :* (u :-* v))|}:
+\begin{code}
+ad :: (u -> v) -> (u -> v :* (u :-* v))   -- better!
+ad f = f &&& der f
+\end{code}
+where |(&&&)| is pronounced ``fork'' and defined as follows \citep{Gibbons2002:Calculating}:
+\begin{code}
+(&&&) :: (a -> c) -> (a -> d) -> (a -> c :* d)
+f &&& g = \ a -> (f a, g a)
+\end{code}
+Combining |f| and |der f| into a single function in the specification of |ad|, allows us to eliminate the redundant composition of |f x| in |ad (g . f) x|:
+\begin{code}
+   ad (g . f) x
+==  {- definition of |ad| -}
+   ((g . f) x, der (g . f) x)
+==  {- definition of |(.)|; chain rule -}
+   (g (f x), der g (f x) . der f x)
+==  {- refactoring to share |f x| -}
+   let y = f x in (g y, der g y . der f x)
+==  {- refactoring to show compositionality -}
+   let { (y,f') = ad f x ; (z,g') = ad g y } in (z, g' . f')
+\end{code}
+
+\section{Other forms of composition}
+
+The chain rule, telling how to differentiate sequential compositions, gets a lot of attention in calculus classes and in automatic and symbolic differentiation.\notefoot{To do: introduce AD and SD early.}
+There are other important ways to combine functions, however, and perhaps examining them will also yield helpful tools.
+We have already seen one such combining form, namely |(&&&)|.
+While the derivative of the (sequential) composition is a composition of derivatives, the derivative of a fork is the fork of the derivatives:\notefoot{Is there a name for this rule? I've never seen it mentioned.}
+\begin{code}
+der (f &&& g) x == der f x &&& der g x
+\end{code}
+If |f :: a -> c|, |g :: a -> d|, and |x :: a|, then |der f x :: a :-* c| and |der g x :: a :-* d|, so |der f x &&& der g x :: a :-* c :* d|, as needed.
+
+There is another, dual, form of composition as well, pronounced ``join'' and defined as follows \citep{Gibbons2002:Calculating}:
+\begin{code}
+(|||) :: (a -> c) -> (b -> c) -> (a :* b -> c)
+f ||| g = \ x -> f x + g x
+\end{code}
+Where |(&&&)| combines two functions with the same domain and pairs their results, |(###)| combines two functions with the same codomain and \emph{adds} their results.\footnote{You may have expected a different type and definition, using \emph{sums} instead of products:
+\begin{code}
+(|||) :: (a -> c) -> (b -> c) -> (a :+ b -> c)
+(f ||| g) (Left   a) = f a
+(f ||| g) (Right  b) = g b
+\end{code}
+More generally, |(&&&)| and |(###)| work with categorical products and coproducts.
+The categories involved in this paper (functions on additive types, linear maps, and differentiable functions) are all \emph{biproduct} categories, where categorical products and coproducts coincide \needcite{}.
+}
+
+Happily, there is differentiation rule for |(###)| as well, having the same poetry as the rules for |(.)| and |(&&&)|, namely that the derivative of a join is a join of the derivatives:
+\begin{code}
+der (f ||| g) (x,y) == der f x ||| der g y
+\end{code}
+If |f :: a -> c|, |g :: b -> c|, |x :: a|, and |y :: b|, then |der f x :: a :-* c| and |der g y :: b :-* c|, so |der f x ### der g y :: a :* b :-* c|, as needed.
+
+\section{Linear functions}
 
 \bibliography{bib}
 
