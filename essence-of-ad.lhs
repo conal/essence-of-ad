@@ -95,29 +95,30 @@ $$|lim(eps -> 0)(frac(norm (f (x+eps) - (f x + T eps)))(norm eps)) = 0| .$$
 In other words, |T| is a \emph{local linear approximation} of |f| at |x|.
 This definition comes from \citet[chapter 2]{Spivak65}, along with a proof that |T| is indeed unique when it exists.
 
-The derivative of a function |f :: u -> v| at some |x :: u| is thus not a number, vector, matrix, or higher-dimensional variant, but rather a \emph{linear map} (also called ``linear transformations'') from |u| to |v|, which we will write as ``|u :-* v|''.
-Here, |u| and |v| must be vector spaces that share a common underlying field.
+The derivative of a function |f :: a -> b| at some value in |a| is thus not a number, vector, matrix, or higher-dimensional variant, but rather a \emph{linear map} (also called ``linear transformations'') from |a| to |b|, which we will write as ``|a :-* b|''.
+The numbers, vectors, matrices, etc mentioned above are all different \emph{representations} of linear maps; and the various forms of ``multiplication'' appearing in their associated chain rules are all implementations of linear map composition for those representations.
+Here, |a| and |b| must be vector spaces that share a common underlying field.
 Written as a Haskell-style type signature,
 
 %% %format der = "\mathcal{D}"
 %format der = "{}\der{} "
 
-> der :: (u -> v) -> (u -> (u :-* v))
+> der :: (a -> b) -> (a -> (a :-* b))
 
-The chain rule now has a lovely form, namely that the derivative of a composition is the \emph{composition} of derivatives \cite[Theorem 2-2]{Spivak65}:
+With the shift to linear maps, there is one general chain rule, having a lovely form, namely that the derivative of a composition is a \emph{composition} of the derivatives \cite[Theorem 2-2]{Spivak65}:
 \begin{align} \ruleLabel{chain}
-|der (g . f) x = der g (f x) . der f x|
+|der (g . f) a = der g (f a) . der f a|
 \end{align}
-If |f :: u -> v|, |g :: v -> w|, and |x :: u|, then |der f x :: u :-* v|, and |der g (f x) :: v :-* w|, so both sides of this equation have type |u :-* w|.
-The numbers, vectors, matrices, etc mentioned above are all different \emph{representations} of linear maps; and the various forms of ``multiplication'' appearing in their associated chain rules are all implementations of linear map composition for those representations.
+If |f :: a -> b| and |g :: b -> c|\out{, and |a :: a|}, then |der f a :: a :-* b|, and |der g (f a) :: b :-* c|, so both sides of this equation have type |a :-* c|.\footnote{I adopt the common, if sometimes confusing, Haskell convention of sharing names between type and value variables, e.g., with |a| (a value variable) having type |a| (a type variable).
+Haskell value and type variable names live in different name spaces and are distinguished by syntactic context.}
 
 %format der2 = der "^2"
 
-From the type of |der|, it follows that differentiating twice has the following type\footnote{As with ``|->|'', we will take ``|:-*|'' to associate rightward, so |a :-* b :-* c| is equivalent to |a :-* (b :-* c)|}:
+From the type of |der|, it follows that differentiating twice has the following type\footnote{As with ``|->|'', we will take ``|:-*|'' to associate rightward, so |u :-* v :-* w| is equivalent to |u :-* (v :-* w)|}:
 
-> der2 = der . der :: NOP (u -> v) -> (u -> (u :-* u :-* v))
+> der2 = der . der :: NOP (a -> b) -> (a -> (a :-* a :-* b))
 
-The type |u :-* u :-* v| is a linear map that yields a linear map, which is the curried form of a \emph{bilinear} map.
+The type |a :-* a :-* b| is a linear map that yields a linear map, which is the curried form of a \emph{bilinear} map.
 Likewise, differentiating $k$ times yields a $k$-linear map curried $k-1$ times.
 In particular, the \emph{Hessian} matrix $H$ corresponds to the second derivative of a function |f :: Rm -> R|, having $m$ rows and $m$ columns and satisfying the symmetry condition $H_{i,j} = H_{j,i}$.
 
@@ -131,16 +132,16 @@ Noodle more on this explanation.}
 
 \section{Compositionality}
 
-Strictly speaking, the chain rule in Equation \ruleRef{chain} is not compositional, i.e., it is \emph{not} the case |der (g . f)| can be constructed solely from |der g| and |der f|.
+Strictly speaking, the chain rule in \ruleRef{chain} is not compositional, i.e., it is \emph{not} the case |der (g . f)| can be constructed solely from |der g| and |der f|.
 Instead, it also needs |f| itself.
-Compositionality is very helpful for the style of implementation used in this paper, and fortunately, there is a simple solution.
+Compositionality is very helpful for the implementation style used in this paper, and fortunately, there is a simple way to restore compositionality.
 Instead of constructing just the derivative of a function |f|, suppose we \emph{augment} |f| with its derivative:
 
 %format ad = der"\!^+\!"
 %format ad0 = der"\!_{\scriptscriptstyle 0}\!\!^+\!"
 
 \begin{code}
-ad0 :: (u -> v) -> ((u -> v) :* (u -> (u :-* v)))   -- first guess
+ad0 :: (a -> b) -> ((a -> b) :* (a -> (a :-* b)))   -- first guess
 ad0 f = (f, der f)
 \end{code}
 As desired, this altered specification is compositional:
@@ -149,19 +150,19 @@ As desired, this altered specification is compositional:
 ==  {- definition of |ad0| -}
    (g . f, der (g . f))
 ==  {- chain rule -}
-   (g . f, \ x -> der g (f x) . der f x)
+   (g . f, \ a -> der g (f a) . der f a)
 \end{code}
 
 Note that |ad0 (g . f)| is assembled entirely out of the parts of |ad0 g| and |ad0 f|, which is to say from |g|, |der g|, |f|, and |der f|.
-Writing out |g . f| as |\ x -> g (f x)| underscores that the two parts of |ad0 (g . f)| when applied to |x| both involve |f x|.
+Writing out |g . f| as |\ a -> g (f a)| underscores that the two parts of |ad0 (g . f)| when applied to |a| both involve |f a|.
 Computing these parts independently thus requires redundant work.
-Moreover, the chain rule itself requires applying a function and its derivative (namely |f| and |der f|) to the same |x|.
+Moreover, the chain rule itself requires applying a function and its derivative (namely |f| and |der f|) to the same |a|.
 Since the chain gets applied recursively to nested compositions, the redundant work multiplies greatly, resulting in an impractically expensive algorithm.
 
 This efficiency problem is also easily fixed.
-Instead of pairing |f| and |der f|, let's instead \emph{combine} them into a single function\footnote{The precedence of ``|:*|'' is tighter than that of ``|->|'' and ``|:-*|'', so |u -> v :* (u :-* v)| is equivalent to |u -> (v :* (u :-* v))|}:
+Instead of pairing |f| and |der f|, let's instead \emph{combine} them into a single function\footnote{The precedence of ``|:*|'' is tighter than that of ``|->|'' and ``|:-*|'', so |a -> b :* (a :-* b)| is equivalent to |a -> (b :* (a :-* b))|}:
 \begin{code}
-ad :: (u -> v) -> (u -> v :* (u :-* v))   -- better!
+ad :: (a -> b) -> (a -> b :* (a :-* b))   -- better!
 ad f = f &&& der f
 \end{code}
 where |(&&&)| is pronounced ``fork'' and defined as follows \citep{Gibbons2002:Calculating}:
@@ -169,17 +170,17 @@ where |(&&&)| is pronounced ``fork'' and defined as follows \citep{Gibbons2002:C
 (&&&) :: (a -> c) -> (a -> d) -> (a -> c :* d)
 f &&& g = \ a -> (f a, g a)
 \end{code}
-Combining |f| and |der f| into a single function in the specification of |ad|, allows us to eliminate the redundant composition of |f x| in |ad (g . f) x|:
+Combining |f| and |der f| into a single function in the specification of |ad|, allows us to eliminate the redundant composition of |f a| in |ad (g . f) a|:
 \begin{code}
-   ad (g . f) x
+   ad (g . f) a
 ==  {- definition of |ad| -}
-   ((g . f) x, der (g . f) x)
+   ((g . f) a, der (g . f) a)
 ==  {- definition of |(.)|; chain rule -}
-   (g (f x), der g (f x) . der f x)
-==  {- refactoring to share |f x| -}
-   let y = f x in (g y, der g y . der f x)
+   (g (f a), der g (f a) . der f a)
+==  {- refactoring to share |f a| -}
+   let b = f a in (g b, der g b . der f a)
 ==  {- refactoring to show compositionality -}
-   let { (y,f') = ad f x ; (z,g') = ad g y } in (z, g' . f')
+   let { (b,f') = ad f a ; (d,g') = ad g b } in (d, g' . f')
 \end{code}
 
 \section{Other forms of composition}
@@ -189,31 +190,31 @@ There are other important ways to combine functions, however, and examining them
 We have already seen one such combining form, namely |(&&&)|.
 While the derivative of the (sequential) composition is a composition of derivatives, the derivative of a fork is the fork of the derivatives:\notefoot{Is there a name for this rule? I've never seen it mentioned.}
 \begin{align} \ruleLabel{fork}
-|der (f &&& g) x = der f x &&& der g x|
+|der (f &&& g) a = der f a &&& der g a|
 \end{align}
-If |f :: a -> c|, |g :: a -> d|, and |x :: a|, then |der f x :: a :-* c| and |der g x :: a :-* d|, so |der f x &&& der g x :: a :-* c :* d|, as needed.
+If |f :: a -> c| and |g :: a -> d|, then |der f a :: a :-* c| and |der g a :: a :-* d|, so |der f a &&& der g a :: a :-* c :* d|, as needed.
 
 \ruleRef{fork} gives us what we need to construct |ad (f &&& g)| compositionally:
 \begin{code}
-   ad (f &&& g) x
+   ad (f &&& g) a
 ==  {- definition of |ad| -}
-   ((f &&& g) x, der (f &&& g) x)
+   ((f &&& g) a, der (f &&& g) a)
 ==  {- definition of |(&&&)| -}
-   ((f x, g x), der (f &&& g) x)
+   ((f a, g a), der (f &&& g) a)
 ==  {- \ruleRef{fork} -}
-   ((f x, g x), der f x &&& der g x)
+   ((f a, g a), der f a &&& der g a)
 ==  {- refactoring -}
-   let { (w,f') = (f x, der f x) ; (z,g') = (g x, der g x) } in ((w,z), (f' &&& g'))
+   let { (c,f') = (f a, der f a) ; (d,g') = (g a, der g a) } in ((c,d), (f' &&& g'))
 ==  {- definition of |ad| -}
-   let { (w,f') = ad f x ; (z,g') = ad g x } in ((w,z), (f' &&& g'))
+   let { (c,f') = ad f a ; (d,g') = ad g a } in ((c,d), (f' &&& g'))
 \end{code}
-%%    ((f &&& g) &&& der (f &&& g)) x
+%%    ((f &&& g) &&& der (f &&& g)) a
 %% ==  {- definition of |(&&&)| -}
 
 There is another, dual, form of composition as well, pronounced ``join'' and defined as follows \citep{Gibbons2002:Calculating}:
 \begin{code}
 (|||) :: (a -> c) -> (b -> c) -> (a :* b -> c)
-f ||| g = \ x -> f x + g x
+f ||| g = \ a -> f a + g a
 \end{code}
 Where |(&&&)| combines two functions with the same domain and pairs their results, |(###)| combines two functions with the same codomain and \emph{adds} their results.\footnote{You may have expected a different type and definition, using \emph{sums} instead of products:
 \begin{code}
@@ -227,23 +228,23 @@ The categories involved in this paper (functions on additive types, linear maps,
 
 Happily, there is differentiation rule for |(###)| as well, having the same poetry as the rules for |(.)| and |(&&&)|, namely that the derivative of a join is a join of the derivatives:
 \begin{align} \ruleLabel{join}
-|der (f ### g) (x,y) = der f x ### der g y|
+|der (f ### g) (a,b) = der f a ### der g b|
 \end{align}
-If |f :: a -> c|, |g :: b -> c|, |x :: a|, and |y :: b|, then |der f x :: a :-* c| and |der g y :: b :-* c|, so |der f x ### der g y :: a :* b :-* c|, as needed.
+If |f :: a -> c| and |g :: b -> c|, then |der f a :: a :-* c| and |der g b :: b :-* c|, so |der f a ### der g b :: a :* b :-* c|, as needed.
 
 \ruleRef{join} is exactly what we need to construct |ad (f ### g)| compositionally:
 \begin{code}
-   ad (f ||| g) (x,y)
+   ad (f ||| g) (a,b)
 ==  {- definition of |ad| -}
-   ((f ||| g) (x,y), der (f ||| g) (x,y))
+   ((f ||| g) (a,b), der (f ||| g) (a,b))
 ==  {- definition of |(###)| -}
-   ((f x + g y), der (f ||| g) (x,y))
+   ((f a + g b), der (f ||| g) (a,b))
 ==  {- \ruleRef{join} -}
-   ((f x + g y), der f x ||| der g y)
+   ((f a + g b), der f a ||| der g b)
 ==  {- refactoring -}
-   let { (w,f') = (f x, der f x) ; (z,g') = (g y, der g y) } in ((w + z), (f' ||| g'))
+   let { (c,f') = (f a, der f a) ; (d,g') = (g b, der g b) } in ((c + d), (f' ||| g'))
 ==  {- definition of |ad| -}
-   let { (w,f') = ad f x ; (z,g') = ad g y } in (w + z, (f' ||| g'))
+   let { (c,f') = ad f a ; (d,g') = ad g b } in (c + d, (f' ||| g'))
 \end{code}
 
 An important point left implicit in the discussion above is that our three combining forms |(.)|, |(&&&)|, and |(###)| all preserve linearity.
@@ -251,30 +252,30 @@ This property is what makes it meaningful to use these forms to combine derivati
 
 \section{Linear functions}
 
-A function |f :: u -> v| is said to be \emph{linear} when |f| distributes over (preserves the structure of) vector addition and scalar multiplication, i.e.,
+A function |f :: a -> b| is said to be \emph{linear} when |f| distributes over (preserves the structure of) vector addition and scalar multiplication, i.e.,
 \begin{code}
-f (x + y)   == f x + f y
-f (s *^ x)  == s *^ f x
+f (a + a')  == f a + f a'
+f (s *^ a)  == s *^ f a
 \end{code}
-for |x,y :: u| and |s| taken from the scalar field underlying |u| and |v|.
+for all |a,a' :: a| and |s| taken from the scalar field underlying |a| and |b|.
 
 In addition to the derivative rules for |(.)|, |(&&&)|, and |(###)|, there is one more broadly useful tool to be added to our collection, which we'll call the ``linearity rule'': \emph{the derivative of every linear function is itself, everywhere}, i.e., for all linear functions |f|,
 \begin{align} \ruleLabel{linear}
-|der f u = f|
+|der f a = f|
 \end{align}
-This statement may sound surprising, but less so when we recall that the |der f x| is a local linear approximation of |f| at |x|, so we're simply saying that linear functions are their own perfect linear approximations.
+This statement may sound surprising, but less so when we recall that the |der f a| is a local linear approximation of |f| at |a|, so we're simply saying that linear functions are their own perfect linear approximations.
 
-For example, consider the (linear) function |id = \ x -> x|.
-The linearity rule says that |der id x = id|.
-When expressed in terms of typical \emph{representations} of linear maps, this property may appear as saying that |der id x| is the number one or as an identity matrix (with ones on the diagonal and zeros elsewhere).
+For example, consider the (linear) function |id = \ a -> a|.
+The linearity rule says that |der id a = id|.
+When expressed in terms of typical \emph{representations} of linear maps, this property may be expressed as saying that |der id a| is the number one or as an identity matrix (with ones on the diagonal and zeros elsewhere).
 
 %format Rmn = R"^{m+n}"
 
-Alternatively, consider the function |fst (x,y) = x|, for which the linearity rule says |der fst (x,y) = fst|.
-This property, when expressed in terms of typical \emph{representations} of linear maps, would appear as saying that |der fst x| comprises the partial derivatives one and zero if |x, y :: R|.
-More generally, if |x :: Rm| and |y :: Rn|, then the Jacobian matrix representation has shape |m :* (m+n)| (ie |m| rows and |m + n| columns) and is formed by the horizontal abutment of an |m :* m| identity matrix on the left with an |m :* n| zero matrix on the right.
+As another example, consider the function |fst (a,b) = a|, for which the linearity rule says |der fst (a,b) = fst|.
+This property, when expressed in terms of typical \emph{representations} of linear maps, would appear as saying that |der fst a| comprises the partial derivatives one and zero if |a, b :: R|.
+More generally, if |a :: Rm| and |b :: Rn|, then the Jacobian matrix representation has shape |m :* (m+n)| (ie |m| rows and |m + n| columns) and is formed by the horizontal abutment of an |m :* m| identity matrix on the left with an |m :* n| zero matrix on the right.
 This |m :* (m+n)| matrix, however, represents |fst :: Rmn :-* Rm|.
-Note how much simpler it is to say |der fst (x,y) = fst|, and with no loss of precision!
+Note how much simpler it is to say |der fst (a,b) = fst|, and with no loss of precision!
 
 Given \ruleRef{linear}, we can construct |ad f| for all linear |f|:
 \begin{code}
@@ -282,9 +283,9 @@ Given \ruleRef{linear}, we can construct |ad f| for all linear |f|:
 ==  {- definition of |ad| -}
    f &&& der f
 ==  {- definition of |(&&&)| -}
-   \ x -> (f x, der f x)
+   \ a -> (f a, der f a)
 ==  {- \ruleRef{linear} -}
-   \ x -> (f x, f)
+   \ a -> (f a, f)
 ==  {- definition of |(&&&)| -}
    f &&& const f
 \end{code}
@@ -295,6 +296,7 @@ Given \ruleRef{linear}, we can construct |ad f| for all linear |f|:
 \section{To do}
 
 \begin{itemize}
+\item Delay introducing |(&&&)| until the section on other forms of composition.
 \item AD for linear functions.
 \item The rest of the talk.
 \item More biproduct operations: |(***)|, |dup|, |jam|, |(+)| (arrow addition).
