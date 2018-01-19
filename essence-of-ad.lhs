@@ -13,9 +13,15 @@
 %include greek.fmt
 %include formatting.fmt
 
+%% \pagestyle{headings}
+%% \pagestyle{myheadings}
+
+%% \markboth{...}{...}
+
 \title{The simple essence of automatic differentiation}
 \author{Conal Elliott}
-\date{Draft of \today}
+\date{Target, USA \\[2ex]
+Draft of \today}
 %% \institute[]{Target}
 
 %% \setlength{\itemsep}{2ex}
@@ -265,10 +271,18 @@ More generally, if |x :: Rm| and |y :: Rn|, then the Jacobian matrix representat
 This |m :* (m+n)| matrix, however, represents |fst :: Rmn :-* Rm|.
 Note how much simpler it is to say |der fst (x,y) = fst|, and with no loss of precision!
 
-
 %if False
 
 %endif
+
+\section{To do}
+
+\begin{itemize}
+\item The rest of the talk.
+\item More biproduct operations: |(***)|, |dup|, |jam|, |(+)| (arrow addition).
+\item Indexed biproducts.
+\end{itemize}
+
 
 \bibliography{bib}
 
