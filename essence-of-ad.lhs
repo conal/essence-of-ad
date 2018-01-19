@@ -84,6 +84,7 @@ $$ |lim(eps -> 0)(frac(f (x+eps) - (f x + eps *^ v)) eps) = 0|. $$
 Notice that |v| is used to linearly transform |eps|.
 Next, generalize this condition to say that the derivative of |f| at |x| is the unique \emph{linear map} |T| such that
 $$|lim(eps -> 0)(frac(norm (f (x+eps) - (f x + T eps)))(norm eps)) = 0| .$$
+In other words, |T| is a \emph{local linear approximation} of |f| at |x|.
 This definition comes from \citet[chapter 2]{calculus-on-manifolds}, along with a proof that |T| is indeed unique when it exists.
 
 The derivative of a function |f :: u -> v| at some |x :: u| is thus not a number, vector, matrix, or higher-dimensional variant, but rather a \emph{linear map} (also called ``linear transformations'') from |u| to |v|, which we will write as ``|u :-* v|''.
@@ -176,13 +177,30 @@ Combining |f| and |der f| into a single function in the specification of |ad|, a
 \section{Other forms of composition}
 
 The chain rule, telling how to differentiate sequential compositions, gets a lot of attention in calculus classes and in automatic and symbolic differentiation.\notefoot{To do: introduce AD and SD early.}
-There are other important ways to combine functions, however, and perhaps examining them will also yield helpful tools.
+There are other important ways to combine functions, however, and examining them yields more helpful tools.
 We have already seen one such combining form, namely |(&&&)|.
 While the derivative of the (sequential) composition is a composition of derivatives, the derivative of a fork is the fork of the derivatives:\notefoot{Is there a name for this rule? I've never seen it mentioned.}
 \begin{code}
 der (f &&& g) x == der f x &&& der g x
 \end{code}
 If |f :: a -> c|, |g :: a -> d|, and |x :: a|, then |der f x :: a :-* c| and |der g x :: a :-* d|, so |der f x &&& der g x :: a :-* c :* d|, as needed.
+
+This derivative rule for |(&&&)| gives us what we need to construct |ad (f &&& g)| compositionally:
+\begin{code}
+   ad (f &&& g) x
+==  {- definition of |ad| -}
+   ((f &&& g) x, der (f &&& g) x)
+==  {- definition of |(&&&)| -}
+   ((f x, g x), der (f &&& g) x)
+==  {- derivative rule for |(&&&)| -}
+   ((f x, g x), der f x &&& der g x)
+==  {- refactoring -}
+   let { (w,f') = (f x, der f x) ; (z,g') = (g x, der g x) } in ((w,z), (f' &&& g'))
+==  {- definition of |ad| -}
+   let { (w,f') = ad f x ; (z,g') = ad g x } in ((w,z), (f' &&& g'))
+\end{code}
+%%    ((f &&& g) &&& der (f &&& g)) x
+%% ==  {- definition of |(&&&)| -}
 
 There is another, dual, form of composition as well, pronounced ``join'' and defined as follows \citep{Gibbons2002:Calculating}:
 \begin{code}
@@ -205,7 +223,52 @@ der (f ||| g) (x,y) == der f x ||| der g y
 \end{code}
 If |f :: a -> c|, |g :: b -> c|, |x :: a|, and |y :: b|, then |der f x :: a :-* c| and |der g y :: b :-* c|, so |der f x ### der g y :: a :* b :-* c|, as needed.
 
+This derivative rule for |(###)| is exactly what we need to construct |ad (f ### g)| compositionally:
+\begin{code}
+   ad (f ||| g) (x,y)
+==  {- definition of |ad| -}
+   ((f ||| g) (x,y), der (f ||| g) (x,y))
+==  {- definition of |(###)| -}
+   ((f x + g y), der (f ||| g) (x,y))
+==  {- derivative rule for |(###)| -}
+   ((f x + g y), der f x ||| der g y)
+==  {- refactoring -}
+   let { (w,f') = (f x, der f x) ; (z,g') = (g y, der g y) } in ((w + z), (f' ||| g'))
+==  {- definition of |ad| -}
+   let { (w,f') = ad f x ; (z,g') = ad g y } in (w + z, (f' ||| g'))
+\end{code}
+
+An important point left implicit in the discussion above is that our three combining forms |(.)|, |(&&&)|, and |(###)| all preserve linearity.
+This property is what makes it meaningful to use these forms to combine derivatives, i.e., linear maps, as we've done above.
+
 \section{Linear functions}
+
+A function |f :: u -> v| is said to be \emph{linear} when |f| distributes over (preserves the structure of) vector addition and scalar multiplication, i.e.,
+\begin{code}
+f (x + y)   == f x + f y
+f (s *^ x)  == s *^ f x
+\end{code}
+for |x,y :: u| and |s| taken from the scalar field underlying |u| and |v|.
+
+In addition to the derivative rules for |(.)|, |(&&&)|, and |(###)|, there is one more broadly useful tool to be added to our collection, which we'll call the ``linearity rule'': \emph{the derivative of every linear function is itself, everywhere.}
+This statement may sound surprising, but less so when we recall that the |der f x| is a local linear approximation of |f| at |x|, so we're simply saying that linear functions are their own perfect linear approximations.
+
+For example, consider the (linear) function |id = \ x -> x|.
+The linearity rule says that |der id x = id|.
+When expressed in terms of typical \emph{representations} of linear maps, this property may appear as saying that |der id x| is the number one or as an identity matrix (with ones on the diagonal and zeros elsewhere).
+
+%format Rmn = R"^{m+n}"
+
+Alternatively, consider the function |fst (x,y) = x|, for which the linearity rule says |der fst (x,y) = fst|.
+This property, when expressed in terms of typical \emph{representations} of linear maps, would appear as saying that |der fst x| comprises the partial derivatives one and zero if |x, y :: R|.
+More generally, if |x :: Rm| and |y :: Rn|, then the Jacobian matrix representation has shape |m :* (m+n)| (ie |m| rows and |m + n| columns) and is formed by the horizontal abutment of an |m :* m| identity matrix on the left with an |m :* n| zero matrix on the right.
+This |m :* (m+n)| matrix, however, represents |fst :: Rmn :-* Rm|.
+Note how much simpler it is to say |der fst (x,y) = fst|, and with no loss of precision!
+
+
+%if False
+
+%endif
 
 \bibliography{bib}
 
