@@ -163,14 +163,9 @@ This efficiency problem is also easily fixed.
 Instead of pairing |f| and |der f|, let's instead \emph{combine} them into a single function\footnote{The precedence of ``|:*|'' is tighter than that of ``|->|'' and ``|:-*|'', so |a -> b :* (a :-* b)| is equivalent to |a -> (b :* (a :-* b))|}:
 \begin{code}
 ad :: (a -> b) -> (a -> b :* (a :-* b))   -- better!
-ad f = f &&& der f
+ad f a = (f a, der f a)
 \end{code}
-where |(&&&)| is pronounced ``fork'' and defined as follows \citep{Gibbons2002:Calculating}:
-\begin{code}
-(&&&) :: (a -> c) -> (a -> d) -> (a -> c :* d)
-f &&& g = \ a -> (f a, g a)
-\end{code}
-Combining |f| and |der f| into a single function in the specification of |ad|, allows us to eliminate the redundant composition of |f a| in |ad (g . f) a|:
+Combining |f| and |der f| into a single function in this way allows us to eliminate the redundant composition of |f a| in |ad (g . f) a|:
 \begin{code}
    ad (g . f) a
 ==  {- definition of |ad| -}
@@ -183,11 +178,19 @@ Combining |f| and |der f| into a single function in the specification of |ad|, a
    let { (b,f') = ad f a ; (d,g') = ad g b } in (d, g' . f')
 \end{code}
 
+\mynote{Clarify that this |ad| definition is a specification, not an implementation.}
+
 \section{Other forms of composition}
 
 The chain rule, telling how to differentiate sequential compositions, gets a lot of attention in calculus classes and in automatic and symbolic differentiation.\notefoot{To do: introduce AD and SD early.}
 There are other important ways to combine functions, however, and examining them yields more helpful tools.
-We have already seen one such combining form, namely |(&&&)|.
+
+One other tool combines two functions sharing a domain type into a single function that pairs the result:
+\begin{code}
+(&&&) :: (a -> c) -> (a -> d) -> (a -> c :* d)
+f &&& g = \ a -> (f a, g a)
+\end{code}
+We will sometimes refer to the |(&&&)| operation as ``fork'' \citep{Gibbons2002:Calculating}.
 While the derivative of the (sequential) composition is a composition of derivatives, the derivative of a fork is the fork of the derivatives:\notefoot{Is there a name for this rule? I've never seen it mentioned.}
 \begin{align} \ruleLabel{fork}
 |der (f &&& g) a = der f a &&& der g a|
@@ -210,6 +213,10 @@ If |f :: a -> c| and |g :: a -> d|, then |der f a :: a :-* c| and |der g a :: a 
 \end{code}
 %%    ((f &&& g) &&& der (f &&& g)) a
 %% ==  {- definition of |(&&&)| -}
+
+The |(&&&)| operation can be used to give a terser specification for |ad|:
+
+> ad f = f &&& der f
 
 There is another, dual, form of composition as well, pronounced ``join'' and defined as follows \citep{Gibbons2002:Calculating}:
 \begin{code}
@@ -296,7 +303,6 @@ Given \ruleRef{linear}, we can construct |ad f| for all linear |f|:
 \section{To do}
 
 \begin{itemize}
-\item Delay introducing |(&&&)| until the section on other forms of composition.
 \item AD for linear functions.
 \item The rest of the talk.
 \item More biproduct operations: |(***)|, |dup|, |jam|, |(+)| (arrow addition).
