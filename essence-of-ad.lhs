@@ -53,7 +53,7 @@ Another instance of generalized AD is automatic incremental evaluation of functi
 
 \end{abstract}
 
-\section{What's a derivative?}
+\sectionl{What's a derivative?}
 
 %format eps = epsilon
 
@@ -106,7 +106,7 @@ Written as a Haskell-style type signature,
 > der :: (a -> b) -> (a -> (a :-* b))
 
 With the shift to linear maps, there is one general chain rule, having a lovely form, namely that the derivative of a composition is a \emph{composition} of the derivatives \cite[Theorem 2-2]{Spivak65}:
-\begin{align} \ruleLabel{chain}
+\begin{align} \ruleLabel{compose}
 |der (g . f) a = der g (f a) . der f a|
 \end{align}
 If |f :: a -> b| and |g :: b -> c|\out{, and |a :: a|}, then |der f a :: a :-* b|, and |der g (f a) :: b :-* c|, so both sides of this equation have type |a :-* c|.\footnote{I adopt the common, if sometimes confusing, Haskell convention of sharing names between type and value variables, e.g., with |a| (a value variable) having type |a| (a type variable).
@@ -130,9 +130,9 @@ By providing an explicit abstract type for linear maps rather than using a bare 
 However, |f'| is a covector, not a vector.
 Noodle more on this explanation.}
 
-\section{Compositionality}
+\sectionl{Compositionality}
 
-Strictly speaking, the chain rule in \ruleRef{chain} is not compositional, i.e., it is \emph{not} the case |der (g . f)| can be constructed solely from |der g| and |der f|.
+Strictly speaking, the chain rule in \ruleRef{compose} is not compositional, i.e., it is \emph{not} the case |der (g . f)| can be constructed solely from |der g| and |der f|.
 Instead, it also needs |f| itself.
 Compositionality is very helpful for the implementation style used in this paper, and fortunately, there is a simple way to restore compositionality.
 Instead of constructing just the derivative of a function |f|, suppose we \emph{augment} |f| with its derivative:
@@ -178,9 +178,7 @@ Combining |f| and |der f| into a single function in this way allows us to elimin
    let { (b,f') = ad f a ; (d,g') = ad g b } in (d, g' . f')
 \end{code}
 
-\mynote{Clarify that this |ad| definition is a specification, not an implementation.}
-
-\section{Other forms of composition}
+\sectionl{Other forms of composition}
 
 The chain rule, telling how to differentiate sequential compositions, gets a lot of attention in calculus classes and in automatic and symbolic differentiation.\notefoot{To do: introduce AD and SD early.}
 There are other important ways to combine functions, however, and examining them yields more helpful tools.
@@ -257,7 +255,7 @@ If |f :: a -> c| and |g :: b -> c|, then |der f a :: a :-* c| and |der g b :: b 
 An important point left implicit in the discussion above is that our three combining forms |(.)|, |(&&&)|, and |(###)| all preserve linearity.
 This property is what makes it meaningful to use these forms to combine derivatives, i.e., linear maps, as we've done above.
 
-\section{Linear functions}
+\sectionl{Linear functions}
 
 A function |f :: a -> b| is said to be \emph{linear} when |f| distributes over (preserves the structure of) vector addition and scalar multiplication, i.e.,
 \begin{code}
@@ -297,13 +295,50 @@ Given \ruleRef{linear}, we can construct |ad f| for all linear |f|:
    f &&& const f
 \end{code}
 
+\sectionl{Putting the pieces together}
+
+The definition of |ad| is a well-defined specification, not an implementation, since |D| itself is not computable.
+Rules (\ref{rule:compose}) through (\ref{rule:linear}) provide insight into the compositional nature of |ad|, in exactly the form we can now assemble into an efficient, correct-by-construction implementation.
+
+Although differentiation is not computable when given just an arbitrary computable function, we can instead build up differentiable functions compositionally, using exactly the combining forms introduced above, namely |(.)|, |(&&&)|, |(###)|, and linear functions, together with various non-linear primitives.
+Computations constructed using that vocabulary are differentiable by construction thanks to Rules (\ref{rule:compose}) through (\ref{rule:linear}).
+The building blocks above are not just a random assortment, but rather a fundamental language of mathematics, logic, and computation, known as category theory \needcite.
+Although it would be unpleasant to program directly in this language, its fundamental nature enables instead an automatic collection from conventionally written functional programs \citep{Elliott-2017-compiling-to-categories}.
+
+%format (arr c) = "\mathbin{\to_{"c"}}"
+
+%format CU = "\mathcal{U}"
+%format CV = "\mathcal{V}"
+%format CF = "\mathcal{F}"
+
+The central notion in category theory is that of a ``category''---a generalization of functions abstractly called ``morphisms'' between ``objects''.
+For the purpose of this paper, we will take objects to be types in our program (though they can be other things in general).
+We will introduce morphisms using Haskell-style type signatures, such as ``|f :: a (arr CU) b|'', where ``|(arr CU)|'' refers to the morphisms for a given category |CU|, with |a| and |b| being the \emph{domain} and \emph{codomain} objects/types (respectively) for |f|.
+Each category has a distinguished \emph{identity} morphism |id :: a (arr CU) a| for every object/type |a| in the category.
+For any two morphisms |f :: a (arr CU) b| and |g :: b (arr CU) c| (note matching types), there is also the composition |g . f :: a (arr CU) c|.
+The category laws state that
+(a) |id| is the left and right identity for composition, and (b) composition is associative.
+
+You are probably already familiar with at least one example of a category, namely functions, in which |id| and |(.)| are the identity function and function composition.
+Another example is the restriction to \emph{computable} functions.
+Still another example is \emph{differentiable} functions between vector spaces sharing a common scalar field, which we can see by noting two facts:
+\begin{itemize}
+\item The identity function is differentiable, as witnessed by \ruleRef{linear} and the linearity if |id|; and
+\item The composition of differentiable functions is differentiable, as \ruleRef{compose} attests.
+\end{itemize}
+That the category laws (identity and associativity) hold follows from differentiable functions being a subset of all functions.
+There are many examples of categories besides restricted forms of functions, including relations, logics, partial orders, and even matrices.
+
+Each category forms its own world, with morphisms relating objects within that category.
+To bridge between these worlds, there are \emph{functors} that connect one category |CU| to another category |CV|.
+Such a functor |F| maps objects in |CU| to objects in |CV|, \emph{and} morphisms in |CU| to morphisms in |CV|, all while preserving ``categorical'' structure, i.e., if |f :: A (arr CU) B| is in |CU|, then |F f :: F A (arr CV) F b|.
+
 %if False
 %endif
 
-\section{To do}
+\sectionl{To do}
 
 \begin{itemize}
-\item AD for linear functions.
 \item The rest of the talk.
 \item More biproduct operations: |(***)|, |dup|, |jam|, |(+)| (arrow addition).
 \item Indexed biproducts.
