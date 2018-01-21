@@ -715,28 +715,29 @@ Furthermore, if we can \emph{automatically} convert conventionally written funct
 
 \sectionl{Examples}
 
-\sectionl{Generalizing automatic differentiation}
-\sectionl{A vocabulary for linear arrows}
-\sectionl{Extracting a data representation}
-\sectionl{Generalized matrices}
-\sectionl{Efficiency of composition}
-\sectionl{Left-associating composition (RAD)}
-\sectionl{Continuation category}
-\sectionl{Reverse-mode AD without tears}
-\sectionl{Duality}
-\sectionl{Backpropagation}
-\sectionl{Reverse AD examples}
-\sectionl{Incremental evaluation}
-\sectionl{Symbolic vs automatic differentiation}
-\sectionl{Conclusions}
-
 %if False
 %endif
 
 \sectionl{To do}
 
 \begin{itemize}
-\item The rest of the talk.
+\item The rest of the talk:
+  \begin{itemize}
+  \item {Generalizing automatic differentiation}
+  \item {A vocabulary for linear arrows}
+  \item {Extracting a data representation}
+  \item {Generalized matrices}
+  \item {Efficiency of composition}
+  \item {Left-associating composition (RAD)}
+  \item {Continuation category}
+  \item {Reverse-mode AD without tears}
+  \item {Duality}
+  \item {Backpropagation}
+  \item {Reverse AD examples}
+  \item {Incremental evaluation}
+  \item {Symbolic vs automatic differentiation}
+  \item {Conclusions}
+  \end{itemize}
 \item More biproduct operations: |(***)|, |dup|, |jam|, |(+)| (arrow addition).
 \item Indexed biproducts.
 \item Relate the methodology of this paper to denotational design \citep{Elliott2009-type-class-morphisms-TR}.
