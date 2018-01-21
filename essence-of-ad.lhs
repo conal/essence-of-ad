@@ -34,6 +34,7 @@
 
 \nc\thmLabel[1]{\label{thm:#1}}
 \nc\thmRef[1]{Theorem \ref{thm:#1}}
+\nc\thmRefTwo[2]{Theorems \ref{thm:#1} and \ref{thm:#2}}
 
 \nc\corLabel[1]{\label{cor:#1}}
 \nc\corRef[1]{Corollary \ref{cor:#1}}
@@ -209,7 +210,7 @@ f &&& g = \ a -> (f a, g a)
 We will sometimes refer to the |(&&&)| operation as ``fork'' \citep{Gibbons2002:Calculating}.
 As an example, the |(&&&)| operation can be used to give a terser specification: |ad f = f &&& der f|.
 
-While the derivative of the (sequential) composition is a composition of derivatives, the derivative of a fork is the fork of the derivatives:\notefoot{Is there a name for this rule? I've never seen it mentioned.}
+While the derivative of the (sequential) composition is a composition of derivatives, the derivative of a fork is the fork of the derivatives \citep[Theorem 2-3 (3)]{Spivak65}:\notefoot{Is there a name for this rule? I've never seen it mentioned.}
 \begin{theorem}[fork rule] \thmLabel{fork}
 $$|der (f &&& g) a == der f a &&& der g a|$$
 \end{theorem}
@@ -252,7 +253,7 @@ More generally, |(&&&)| and |(###)| work with categorical products and coproduct
 The categories involved in this paper (functions on additive types, linear maps, and differentiable functions) are all \emph{biproduct} categories, where categorical products and coproducts coincide \needcite{}.
 }
 
-Happily, there is differentiation rule for |(###)| as well, having the same poetry as the rules for |(.)| and |(&&&)|, namely that the derivative of a join is a join of the derivatives:
+Happily, there is differentiation rule for |(###)| as well, having the same poetry as the rules for |(.)| and |(&&&)|, namely that the derivative of a join is a join of the derivatives:\notefoot{Prove, or cite \citep{Spivak65}.}
 \begin{theorem}[join rule] \thmLabel{join}
 $$|der (f ### g) (a,b) = der f a ### der g b|$$
 \end{theorem}
@@ -292,7 +293,7 @@ In addition to the derivative rules for |(.)|, |(&&&)|, and |(###)|, there is on
 \begin{theorem}[linearity rule] \thmLabel{linear}
 $$|der f a == f|$$
 \end{theorem}
-This statement may sound surprising, but less so when we recall that the |der f a| is a local linear approximation of |f| at |a|, so we're simply saying that linear functions are their own perfect linear approximations.
+This statement \citep[Theorem 2-3 (2)]{Spivak65} may sound surprising, but less so when we recall that the |der f a| is a local linear approximation of |f| at |a|, so we're simply saying that linear functions are their own perfect linear approximations.
 
 For example, consider the (linear) function |id = \ a -> a|.
 The linearity rule says that |der id a == id|.
@@ -375,7 +376,12 @@ Each category forms its own world, with morphisms relating objects within that c
 To bridge between these worlds, there are \emph{functors} that connect a category |CU| to a (possibly different) category |CV|.
 Such a functor |F| maps objects in |CU| to objects in |CV|, \emph{and} morphisms in |CU| to morphisms in |CV|.
 If |f :: u ~> v <- CU| is a morphism, then a \emph{functor} |F| from |CU| to |CV| transforms |f <- CU| to a morphism |F f :: F u --> F v <- CV|, i.e., the domain and codomain of the transformed morphism |F f <- CV| must be the transformed versions of the domain and codomain of |f <- CU|.
-The functor must also preserve ``categorical'' structure, i.e., |F id == id| and |F (g . f) == F g . F f|.\footnote{Making the categories explicit, |F (id <- CU) == id <- CV| and |F (g . f <- CU) == F g . F f <- CV|.}
+The functor must also preserve ``categorical'' structure:\footnote{Making the categories explicit, |F (id <- CU) == id <- CV| and |F (g . f <- CU) == F g . F f <- CV|.}
+\begin{code}
+F id == id
+
+F (g . f) == F g . F f
+\end{code}
 
 Crucially to the topic of this paper, \corRefTwo{linear}{compose} say more than that differentiable functions form a category.
 They also point us to a new, easily implemented category, for which |ad| is in fact a functor.
@@ -437,7 +443,7 @@ instance Category D where
 Before we get too pleased with this definition, let's remember that for |D| to be a category requires more than having definitions for |id| and |(.)|.
 These definitions must also satisfy the identity and composition laws.
 How might we go about proving that they do?
-Perhaps the most obvious route is take those laws, substitute our definitions of |id| and |(.)|, and do the required equational reasoning in terms of these definitions.
+Perhaps the most obvious route is take those laws, substitute our definitions of |id| and |(.)|, and reason equationally toward the desired conclusion.
 For instance, let's prove that |id . D f == D f| for all |D f :: D a b|:\footnote{Note that \emph{every} morphism in |D| has the form |D f| for some |f|, so it suffices to consider this form.}
 \begin{code}
    id . D f
@@ -472,7 +478,7 @@ The slightly more specialized requirement of our first identity property is that
    adf f
 \end{code}
 The other identity law is proved similarly.
-For associativity,
+Associativity has a similar flavor as well:
 \begin{code}
    adf h . (adf g . adf f)
 ==  {- functor law for |(.)| (specification of |adf|) -}
@@ -489,6 +495,81 @@ Note how mechanical these proofs are.
 Each one uses only the functor laws plus the particular category law on functions that corresponds to the one being proved for |D|.
 The proofs do \emph{not} rely on anything about the nature |D| or |adf| other than the functor laws.
 The importance of this observation is that we \emph{never} need to do these proofs when we specify category instances via a functor.
+
+%format ProductCat = Cartesian
+%format CoproductCat = Cocartesian
+%format CoproductPCat = Cocartesian
+
+% \nc\scrk[1]{_{\hspace{#1}\scaleto{(\leadsto)\!}{4pt}}}
+\nc\scrk[1]{}
+
+%format (Prod (k) a b) = a "\times\scrk{-0.4ex}" b
+%format (Coprod (k) a b) = a "+\scrk{-0.4ex}" b
+%% %format (Exp (k) a b) = a "\Rightarrow\scrk{-0.2ex}" b
+
+\secref{Products in the codomain} introduced another combining form\out{ (pronounced ``fork'')}:\footnote{Consider instead going with |(***)| and |dup| for |Cartesian| and add |jam| for biproducts.}
+\begin{code}
+(&&&) :: (a -> c) -> (a -> d) -> (a -> c :* d)
+f &&& g = \ a -> (f a, g a)
+\end{code}
+This operation generalizes to play an important role in category theory as part of the notion of a \emph{cartesian category}, along with two projection operations:
+\begin{code}
+class Category k => ProductCat k where
+  exl    ::  (Prod k a b) `k` a
+  exr    ::  (Prod k a b) `k` b
+  (&&&)  ::  (a `k` c)  -> (a `k` d)  -> (a `k` (Prod k c d))
+\end{code}
+More generally, each category |k| can have its own notion of products, but cartesian products (ordered pairs) suffice for this paper.
+For functions,\notefoot{Give a similar instance for |Category (->)|, and don't bother repeating the definition of |(&&&)| just above.}
+\begin{code}
+instance ProductCat (->) where
+  exl = \ (a,b) -> a
+  exr = \ (a,b) -> b
+  f &&& g = \ a -> (f a, g a)
+\end{code}
+
+Two cartesian categories can be related by a \emph{cartesian functor}, which is a functor that also preserves the cartesian structure.
+That is, a cartesian functor |F| from cartesian category |CU| to cartesian category |CV|, besides mapping objects and morphisms in |CU| to counterparts in |CV| while preserving the category structure (|id| and |(.)|), \emph{also} preserves the cartesian structure:
+\begin{code}
+F exl  == exl
+
+F exr  == exr
+
+F (f &&& g) == F f &&& F g
+\end{code}
+Just as \corRefTwo{linear}{compose} were key to deriving a correct-by-construction |Category| instance from the specification that |adf| is a functor, \corRefTwo{linear}{fork} guides correct-by-construction |ProductCat| instance from the specification that |adf| is a cartesian functor.
+
+Let |F| be |adf| in the reversed forms of cartesian functor equations above, and expand |adf| to its definition as |D . ad|:
+\begin{code}
+exl == D (ad exl)
+
+exr == D (ad exr)
+
+D (ad f) &&& D (ad g) == D (ad (f &&& g))
+\end{code}
+Next, by \corRefTwo{linear}{fork}, together with the linearity of |exl| and |exr|,
+\begin{code}
+ad exl == \ (a,b) -> (a, exl)
+
+ad exr == \ (a,b) -> (b, exr)
+
+ad (f &&& g) == \ a -> let { (c,f') = ad f a ; (d,g') = ad g a } in ((c,d), (f' &&& g'))
+\end{code}
+Now substitute the left-hand sides of these three properties into the right-hand sides of the of the cartesian functor properties for |adf|, and \emph{strengthen} the last condition (on |(&&&)|) by generalizing from |ad f| and |ad g|:\notefoot{Define |linearD| early and use for |id|, |exl|, and |exr|.}
+\begin{code}
+exl == D (\ (a,b) -> (a, exl))
+
+exr == D (\ (a,b) -> (b, exr))
+
+D f &&& D g == D(\a -> let { (c,f') = f a ; (d,g') = g a } in ((c,d), (f' &&& g')))
+\end{code}
+This somewhat strengthened form of the specification can be turned directly into a sufficient definition:
+\begin{code}
+instance ProductCat D where
+  exl = D (\ (a,b) -> (a, exl))
+  exr = D (\ (a,b) -> (b, exr))
+  D f &&& D g = D (\a -> let { (c,f') = f a ; (d,g') = g a } in ((c,d), (f' &&& g')))
+\end{code}
 
 \sectionl{Programming as defining and solving algebra problems}
 
