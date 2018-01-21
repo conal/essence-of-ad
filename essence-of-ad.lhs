@@ -664,7 +664,11 @@ Multiplication is a little more involved \citep[Theorem 2-3 (2)]{Spivak65}:
 \begin{code}
 der mulC (a,b) = \ (da,db) -> b*da + a*db
 \end{code}
-Note the linearity of the right-hand side, so that the derivative of |mulC| at |(a,b)| for real values has the expected type: |R :* R :-* R|.
+Note the linearity of the right-hand side, so that the derivative of |mulC| at |(a,b)| for real values has the expected type: |R :* R :-* R|.\footnote{The derivative of uncurried multiplication generalizes to an arbitrary \emph{bilinear} function |f :: a :* b -> c| \citep[Problem 2-12]{Spivak65}:
+\begin{code}
+der f (a,b) = \ (da,db) -> f (a,db) + f (da,b)
+\end{code}
+}
 
 This product rule, along with the linearity of negation and uncurried addition, enables using the same style of derivation as with operations from |Category|, |Cartesian|, and |Cocartesian| above.
 As usual, specify the |NumCat| instance for differentiable functions by saying that |adf| preserves |NumCat| structure, i.e., |adf negateC == negateC|, |adf addC == addC|, and |adf mulC == mulC|.
