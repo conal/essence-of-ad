@@ -137,7 +137,7 @@ By providing an explicit abstract type for linear maps rather than using a bare 
 However, |f'| is a covector, not a vector.
 Noodle more on this explanation.}
 
-\sectionl{Compositionality}
+\sectionl{Rules for differentiation}
 
 \subsectionl{Sequential composition}
 
@@ -238,7 +238,7 @@ If |f :: a -> c| and |g :: a -> d|, then |der f a :: a :-* c| and |der g a :: a 
 
 There is another, dual, form of composition as well, defined as follows and which we will pronounce ``join'':
 \begin{code}
-(|||) :: (a -> c) -> (b -> c) -> (a :* b -> c)
+(|||) :: Additive c => (a -> c) -> (b -> c) -> (a :* b -> c)
 f ||| g = \ a -> f a + g a
 \end{code}
 Where |(&&&)| combines two functions with the same domain and pairs their results, |(###)| combines two functions with the same codomain and \emph{adds} their results.\footnote{\mynote{Move this commentary to a later place when I've introduced categories, and cite \cite{Gibbons2002:Calculating}.}
@@ -289,8 +289,8 @@ f (s *^ a)  == s *^ f a
 \end{code}
 for all |a,a' :: a| and |s| taken from the scalar field underlying |a| and |b|.
 
-In addition to the derivative rules for |(.)|, |(&&&)|, and |(###)|, there is one more broadly useful tool to be added to our collection, which we'll call the ``linearity rule'': \emph{the derivative of every linear function is itself, everywhere}, i.e., for all linear functions |f|,
-\begin{theorem}[linearity rule] \thmLabel{linear}
+In addition to the derivative rules for |(.)|, |(&&&)|, and |(###)|, there is one more broadly useful tool to be added to our collection: \emph{the derivative of every linear function is itself, everywhere}, i.e., for all linear functions |f|,
+\begin{theorem}[linear rule] \thmLabel{linear}
 $$|der f a == f|$$
 \end{theorem}
 This statement \citep[Theorem 2-3 (2)]{Spivak65} may sound surprising, but less so when we recall that the |der f a| is a local linear approximation of |f| at |a|, so we're simply saying that linear functions are their own perfect linear approximations.
@@ -318,9 +318,9 @@ Given \thmRef{linear}, we can construct |ad f| for all linear |f|:
    \ a -> (f a, der f a)
 ==  {- \thmRef{linear} -}
    \ a -> (f a, f)
-==  {- definition of |(&&&)| -}
-   f &&& const f
 \end{code}
+%% ==  {- definition of |(&&&)| -}
+%%    f &&& const f
 \end{corollary}
 
 \sectionl{Putting the pieces together}
@@ -340,6 +340,8 @@ Although it would be unpleasant to program directly in this language, its fundam
 %format CF = "\mathcal{F}"
 
 %format <- = `elem`
+
+\subsectionl{Categories}
 
 The central notion in category theory is that of a \emph{category}, comprising \emph{objects} (generalizing sets or types) \emph{morphisms} (generalizing functions between sets or types).
 For the purpose of this paper, we will take objects to be types in our program, and morphisms to be enhanced functions.
@@ -428,19 +430,23 @@ Now use these two facts to rewrite the right-hand sides of the functor specifica
 id == D (\ a -> (a,id))
 D (ad g) . D (ad f) == D (\ a -> let { (b,f') = ad f a ; (c,g') = ad g b } in (c, g' . f'))
 \end{code}
-The |id| equation is trivially solvable by \emph{defining} |id = D (\ a -> id)|.
+The |id| equation is trivially solvable by \emph{defining} |id = D (\ a -> (a,id))|.
 To solve the |(.)| equation, generalize it to a \emph{stronger} condition:\footnote{The new |f| is the old |ad f| and so has changed from type |a -> b| to type |a -> b :* (a :-* b)|.}
 \begin{code}
 D g . D f == D (\ a -> let { (b,f') = f a ; (c,g') = g b } in (c, g' . f'))
 \end{code}
 The of this stronger condition is immediate, leading to the following instance as a sufficient condition for |adf| being a functor:
 \begin{code}
+linearD :: (a -> b) -> D a b
+linearD f = D (\ a -> (f a,f))
+
 instance Category D where
-  id == D (\ a -> (a,id))
+  id == linearD id
   D g . D f == D (\ a -> let { (b,f') = f a ; (c,g') = g b } in (c, g' . f'))
 \end{code}
+Factoring out |linearD| will also tidy up treatment of other linear functions as well.
 
-Before we get too pleased with this definition, let's remember that for |D| to be a category requires more than having definitions for |id| and |(.)|.
+Before getting too pleased with this definition, let's remember that for |D| to be a category requires more than having definitions for |id| and |(.)|.
 These definitions must also satisfy the identity and composition laws.
 How might we go about proving that they do?
 Perhaps the most obvious route is take those laws, substitute our definitions of |id| and |(.)|, and reason equationally toward the desired conclusion.
@@ -465,7 +471,7 @@ We can prove the other required properties similarly.
 Fortunately, there is a way to bypass the need for these painstaking proofs, and instead rely \emph{only} on our original specification for this |Category| instance, namely that |ad| is a functor.
 Well, to buy this prove convenience, we have to make one concession, namely that we consider only morphisms in |D| that arise from |adf|, i.e., only |hat f :: D a b| such that |hat f = adf f| for some |f :: a -> b|.
 We can ensure that indeed only such |hat f| do arise by making |D a b| an \emph{abstract} type, i.e., hiding its data |constructor|.\notefoot{%
-Interestingly, for the |Category D| instance given above, the painstaking proofs appear to succeed even without this condition.
+For the |Category D| instance given above, the painstaking proofs appear to succeed even without this condition.
 Am I missing something?}
 The slightly more specialized requirement of our first identity property is that |id . adf f == adf f| for any |f :: a -> b|, which we prove as follows:
 \begin{code}
@@ -495,6 +501,8 @@ Note how mechanical these proofs are.
 Each one uses only the functor laws plus the particular category law on functions that corresponds to the one being proved for |D|.
 The proofs do \emph{not} rely on anything about the nature |D| or |adf| other than the functor laws.
 The importance of this observation is that we \emph{never} need to do these proofs when we specify category instances via a functor.
+
+\subsectionl{Cartesian}
 
 %format ProductCat = Cartesian
 %format CoproductCat = Cocartesian
@@ -555,21 +563,137 @@ ad exr == \ (a,b) -> (b, exr)
 
 ad (f &&& g) == \ a -> let { (c,f') = ad f a ; (d,g') = ad g a } in ((c,d), (f' &&& g'))
 \end{code}
-Now substitute the left-hand sides of these three properties into the right-hand sides of the of the cartesian functor properties for |adf|, and \emph{strengthen} the last condition (on |(&&&)|) by generalizing from |ad f| and |ad g|:\notefoot{Define |linearD| early and use for |id|, |exl|, and |exr|.}
+Now substitute the left-hand sides of these three properties into the right-hand sides of the of the cartesian functor properties for |adf|, and \emph{strengthen} the last condition (on |(&&&)|) by generalizing from |ad f| and |ad g|:
 \begin{code}
-exl == D (\ (a,b) -> (a, exl))
+exl == linearD exr
 
-exr == D (\ (a,b) -> (b, exr))
+exr == linearD exr
 
 D f &&& D g == D(\a -> let { (c,f') = f a ; (d,g') = g a } in ((c,d), (f' &&& g')))
 \end{code}
 This somewhat strengthened form of the specification can be turned directly into a sufficient definition:
 \begin{code}
 instance ProductCat D where
-  exl = D (\ (a,b) -> (a, exl))
-  exr = D (\ (a,b) -> (b, exr))
+  exl = linearD exl
+  exr = linearD exr
   D f &&& D g = D (\a -> let { (c,f') = f a ; (d,g') = g a } in ((c,d), (f' &&& g')))
 \end{code}
+
+\subsectionl{Cocartesian}
+
+Cartesian categories have a dual, known as \emph{cocartesian categories}, with each cartesian operation having a mirror image with morphisms reversed (swapping domain and codomain):\notefoot{Mention sums again.}
+\begin{code}
+class Category k => CoproductPCat k where
+  inl    ::  Additive b => a `k` (Prod k a b)
+  inr    ::  Additive a => b `k` (Prod k a b)
+  (|||)  ::  Additive c => (a `k` c)  -> (b `k` c)  -> ((Prod k a b) `k` c)
+\end{code}
+Unlike |Category| and |ProductCat|, we've had to add an additivity requirement (having a notion of addition and corresponding identity) to the types involved, in order to have an instance for functions\out{\footnote{Alternatively, we can skip the instance for |(->)| and instead begin in a category of functions on additive types.}}:
+%format zero = 0
+\begin{code}
+instance CoproductPCat (->) where
+  inl  = \ a -> (a,zero)
+  inr  = \ b -> (zero,b)
+  f ||| g = \ a -> f a + g a
+\end{code}
+Unsurprisingly, there is a notion of \emph{cocartesian functor}, saying that the cocartesian structure is preserved, i.e.,
+\begin{code}
+F inl  == inl
+
+F inr  == inr
+
+F (f ||| g) == F f ||| F g
+\end{code}
+From the specification that |adf| is a cocartesian functor, along with \corRef{join} and the linearity of |inl| and |inr|, we can derive a correct-by-construction |CoproductPCat| instance for differentiable functions:
+\begin{code}
+instance CoproductPCat D where
+  inl  = linearD inl
+  inr  = linearD inr
+  D f ||| D g = D (\ (a,b) -> let { (c,f') = f a ; (d,g') = g b } in (c+d, (f' ||| g')))
+\end{code}
+
+\subsectionl{Numeric operations}
+
+So far, the vocabulary we've considered comprises linear functions and combining forms (|(.)|, |(&&&)|, and |(###)|) that preserve linearity.
+To make differentiation at all interesting, we'll need some non-linear primitives as well.
+Let's now add these primitives, while continuing to derive correct implementations from simple, regular specifications in terms of structure preservation.
+We'll define a collection of interfaces for numeric operations, roughly imitating Haskell's numeric type class hierarchy\needcite.
+
+Haskell provides the following basic class:
+\begin{code}
+class Num a where
+  negate :: a -> a
+  (+), (*) :: a -> a -> a
+  ...
+\end{code}
+Although this class can accommodate many different types of ``numbers'', the class operations are all committed to being functions.
+A more flexible alternative allows operations to be non-functions as well:
+\begin{code}
+class NumCat k a where
+  negateC :: a `k` a
+  addC, mulC :: (a :* a) `k` a
+  ...
+\end{code}
+Besides generalizing from |(->)| to |k|, we've also uncurried the operations, so as demand less of supporting categories |k|.
+There are similar classes for other operations, such as division, powers and roots, and transcendental functions (|sin|, |cos|, |exp| etc).
+Instances for functions use the operations from |Num| etc:
+%format * = "\cdot"
+\begin{code}
+instance Num a => NumCat (->) a where
+  negateC = negate
+  addC  = uncurry (+)
+  mulC  = uncurry (*)
+  ...
+\end{code}
+
+Differentiation rules for these operations are part of basic differential calculus:
+\begin{code}
+der (negate u) == negate (der u)
+der (u + v) == der u + der v
+der (u * v) == u * der v + v * der u
+\end{code}
+This conventional form is unnecessarily complex, as each of these rules involves not just a numeric operation, but also the chain rule itself.
+This form is also imprecise about the nature of |u| and |v|.
+If they are functions, then one needs to explain arithmetic on functions; and if they are not functions, then differentiation of non-functions needs explanation.
+
+A simpler presentation is to remove the arguments and talk about differentiating the primitive operations \emph{themselves}, without context.
+We already have the chain rule to account for context, so we do not need to involve it in every numeric operation.
+Since negation and (uncurried) addition are linear, we already know how to differentiate them.
+Multiplication is a little more involved \citep[Theorem 2-3 (2)]{Spivak65}:
+\begin{code}
+der mulC (a,b) = \ (da,db) -> b*da + a*db
+\end{code}
+Note the linearity of the right-hand side, so that the derivative of |mulC| at |(a,b)| for real values has the expected type: |R :* R :-* R|.
+
+This product rule, along with the linearity of negation and uncurried addition, enables using the same style of derivation as with operations from |Category|, |Cartesian|, and |Cocartesian| above.
+As usual, specify the |NumCat| instance for differentiable functions by saying that |adf| preserves |NumCat| structure, i.e., |adf negateC == negateC|, |adf addC == addC|, and |adf mulC == mulC|.
+Reasoning as before, we get another correct-by-construction instance for differentiable functions:
+\begin{code}
+instance NumCat D where
+  negateC = linearD negateC
+  addC  = linearD addC
+  mulC  = D (\ (a,b) -> (a * b, \ (da,db) -> b*da + a*db))
+\end{code}
+
+Similar reasoning applies to other numeric operations, e.g.,
+\begin{code}
+instance FloatingCat D where
+  sinC = D (\ a -> (sin a, \ da -> cos a * da))
+  cosC = D (\ a -> (cos a, \ da -> - sin a * da))
+  expC = D (\ a -> let e = exp a in (e, \ da -> e * da))
+  ...
+\end{code}
+A bit of refactoring makes for tidier definitions:
+\begin{code}
+scale :: a -> a -> a
+scale a = \ da -> a * da
+
+instance FloatingCat D where
+  sinC = D (\ a -> (sin a, scale (cos a)))
+  cosC = D (\ a -> (cos a, scale (- sin a)))
+  expC = D (\ a -> let e = exp a in (e, scale e))
+\end{code}
+In what follows, the |scale| operation will play a more important role than merely tidying definitions.
 
 \sectionl{Programming as defining and solving algebra problems}
 
