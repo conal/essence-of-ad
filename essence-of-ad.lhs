@@ -561,7 +561,7 @@ ad exl == \ (a,b) -> (a, exl)
 
 ad exr == \ (a,b) -> (b, exr)
 
-ad (f &&& g) == \ a -> let { (c,f') = ad f a ; (d,g') = ad g a } in ((c,d), (f' &&& g'))
+ad (f &&& g) == \ a -> let { (c,f') = ad f a ; (d,g') = ad g a } in ((c,d), f' &&& g')
 \end{code}
 Now substitute the left-hand sides of these three properties into the right-hand sides of the of the cartesian functor properties for |adf|, and \emph{strengthen} the last condition (on |(&&&)|) by generalizing from |ad f| and |ad g|:
 \begin{code}
@@ -569,14 +569,14 @@ exl == linearD exr
 
 exr == linearD exr
 
-D f &&& D g == D(\a -> let { (c,f') = f a ; (d,g') = g a } in ((c,d), (f' &&& g')))
+D f &&& D g == D(\a -> let { (c,f') = f a ; (d,g') = g a } in ((c,d), f' &&& g'))
 \end{code}
 This somewhat strengthened form of the specification can be turned directly into a sufficient definition:
 \begin{code}
 instance ProductCat D where
   exl = linearD exl
   exr = linearD exr
-  D f &&& D g = D (\a -> let { (c,f') = f a ; (d,g') = g a } in ((c,d), (f' &&& g')))
+  D f &&& D g = D (\a -> let { (c,f') = f a ; (d,g') = g a } in ((c,d), f' &&& g'))
 \end{code}
 
 \subsectionl{Cocartesian}
@@ -590,11 +590,12 @@ class Category k => CoproductPCat k where
 \end{code}
 Unlike |Category| and |ProductCat|, we've had to add an additivity requirement (having a notion of addition and corresponding identity) to the types involved, in order to have an instance for functions\out{\footnote{Alternatively, we can skip the instance for |(->)| and instead begin in a category of functions on additive types.}}:
 %format zero = 0
+%format ^+^ = +
 \begin{code}
 instance CoproductPCat (->) where
   inl  = \ a -> (a,zero)
   inr  = \ b -> (zero,b)
-  f ||| g = \ a -> f a + g a
+  f ||| g = \ a -> f a ^+^ g a
 \end{code}
 Unsurprisingly, there is a notion of \emph{cocartesian functor}, saying that the cocartesian structure is preserved, i.e.,
 \begin{code}
@@ -609,7 +610,7 @@ From the specification that |adf| is a cocartesian functor, along with \corRef{j
 instance CoproductPCat D where
   inl  = linearD inl
   inr  = linearD inr
-  D f ||| D g = D (\ (a,b) -> let { (c,f') = f a ; (d,g') = g b } in (c+d, (f' ||| g')))
+  D f ||| D g = D (\ (a,b) -> let { (c,f') = f a ; (d,g') = g b } in (c ^+^ d, f' ||| g'))
 \end{code}
 
 \subsectionl{Numeric operations}
@@ -697,7 +698,7 @@ In what follows, the |scale| operation will play a more important role than mere
 
 \sectionl{Programming as defining and solving algebra problems}
 
-Stepping back to consider what we've done, a general recipe emerges:\notefoot{Go over the wording of this paragraph to make as clear as I can.}
+Stepping back to consider what we've done, a general recipe emerges:\notefoot{Go over the wording of this section to make as clear as I can.}
 \begin{itemize}
 \item Start with an expensive or even non-computable specification (here involving differentiation).
 \item Build the desired result into the representation of a new data type (here as the combination of a function and its derivative).
@@ -711,6 +712,23 @@ These algebra problems always have a particular stylized form, namely that the o
 The result of this recipe is not quite an implementation of our homomorphic specification, which may after all be non-computable.
 Rather, it gives a computable alternative that is almost as useful: if the input to the specified conversion is expressed in vocabulary of the chosen algebraic abstraction, then a re-interpretation of that vocabulary in the new data type is the result of the (possibly non-computable) specification.
 Furthermore, if we can \emph{automatically} convert conventionally written functional programs into the chosen algebraic vocabulary (as in \citep{Elliott-2017-compiling-to-categories}), then those programs can be re-interpreted to compute the desired specification.
+
+\sectionl{Examples}
+
+\sectionl{Generalizing automatic differentiation}
+\sectionl{A vocabulary for linear arrows}
+\sectionl{Extracting a data representation}
+\sectionl{Generalized matrices}
+\sectionl{Efficiency of composition}
+\sectionl{Left-associating composition (RAD)}
+\sectionl{Continuation category}
+\sectionl{Reverse-mode AD without tears}
+\sectionl{Duality}
+\sectionl{Backpropagation}
+\sectionl{Reverse AD examples}
+\sectionl{Incremental evaluation}
+\sectionl{Symbolic vs automatic differentiation}
+\sectionl{Conclusions}
 
 %if False
 %endif
