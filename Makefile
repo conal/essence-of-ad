@@ -12,7 +12,7 @@ pdfs = $(addsuffix .pdf, $(basename $(dots))) $(wildcard Figures/circuits/*-scal
 #latex=pdflatex
 latex=latexmk -pdf
 
-%.pdf: %.tex $(pdfs) Makefile
+%.pdf: %.tex $(pdfs) bib.bib Makefile
 	$(latex) $*.tex
 
 %.tex: %.lhs macros.tex formatting.fmt Makefile
