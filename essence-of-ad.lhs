@@ -35,10 +35,12 @@
 \nc\thmLabel[1]{\label{thm:#1}}
 \nc\thmRef[1]{Theorem \ref{thm:#1}}
 \nc\thmRefTwo[2]{Theorems \ref{thm:#1} and \ref{thm:#2}}
+\nc\thmRefs[2]{Theorems \ref{thm:#1} through \ref{thm:#2}}
 
 \nc\corLabel[1]{\label{cor:#1}}
 \nc\corRef[1]{Corollary \ref{cor:#1}}
 \nc\corRefTwo[2]{Corollaries \ref{cor:#1} and \ref{cor:#2}}
+\nc\corRefs[2]{Corollaries \ref{cor:#1} through \ref{cor:#2}}
 
 \begin{document}
 
@@ -326,10 +328,10 @@ Given \thmRef{linear}, we can construct |ad f| for all linear |f|:
 \sectionl{Putting the pieces together}
 
 The definition of |ad| is a well-defined specification, not an implementation, since |D| itself is not computable.
-Corollaries \ref{cor:compose} through \ref{cor:linear} provide insight into the compositional nature of |ad|, in exactly the form we can now assemble into an efficient, correct-by-construction implementation.
+\corRefs{compose}{linear} provide insight into the compositional nature of |ad|, in exactly the form we can now assemble into an efficient, correct-by-construction implementation.
 
 Although differentiation is not computable when given just an arbitrary computable function, we can instead build up differentiable functions compositionally, using exactly the combining forms introduced above, namely |(.)|, |(&&&)|, |(###)|, and linear functions, together with various non-linear primitives.
-Computations constructed using that vocabulary are differentiable by construction thanks to Corollaries \ref{cor:compose} through \ref{cor:linear}.
+Computations constructed using that vocabulary are differentiable by construction thanks to \corRefs{compose}{linear}.
 The building blocks above are not just a random assortment, but rather a fundamental language of mathematics, logic, and computation, known as \emph{category theory} \needcite.
 Although it would be unpleasant to program directly in this language, its fundamental nature enables instead an automatic conversion from conventionally written functional programs \citep{Lambek:1980:LambdaToCCC,Lambek:1985:CCC,Elliott-2017-compiling-to-categories}.
 
@@ -743,9 +745,9 @@ cosSinProd = (cosC &&& sinC) . mulC
 \end{code}
 To visualize computations before differentiation, we can interpret these categorical expressions in a category of graphs \citep[Section 7]{Elliott-2017-compiling-to-categories}, with the results rendered in \figreftwo{magSqr}{cosSinProd}.
 \figp{
-\figoneW{0.35}{magSqr}{|magSqr|}}{
-\hspace{1in}
-\figoneW{0.35}{cosSinProd}{|cosSinProd|}}
+\figoneW{0.375}{magSqr}{|magSqr|}}{
+\hspace{0.75in}
+\figoneW{0.375}{cosSinProd}{|cosSinProd|}}
 To see the differentiable versions, interpret these same expressions in the category of differentiable functions (|D| from \secref{Categories}), remove the |D| constructors to reveal the function representation, convert these functions to categorical form as well, and finally interpret the result in the graph category.
 The results are rendered in \figreftwo{magSqr-adf}{cosSinProd-adf}.
 \figp{
@@ -754,15 +756,30 @@ The results are rendered in \figreftwo{magSqr-adf}{cosSinProd-adf}.
 Note that the derivatives are (linear) functions, as depicted in boxes.
 Also note the sharing of work between the a function's result and its derivative in \figref{cosSinProd-adf}.\notefoot{Introduce the term ``primal'' early on and use it throughout.}
 
-%if False
-%endif
+\sectionl{Generalizing automatic differentiation}
+
+\corRefs{compose}{linear} all have the same form: an operation on |D| (differentiable functions) is defined entirely via the same operation on |(:-*)| (linear maps).
+Specifically, the composition of differentiable functions relies on the composition of linear maps, and likewise for |(&&&)|, |(###)|, and linear functions.
+These corollaries follow closely from \thmRefs{compose}{linear}, which relate derivatives for these operations to the corresponding operations on linear maps.
+These properties make for a pleasantly poetic theory, but they also have a powerful, tangible benefit, which is that we can replace linear maps by any of a much broader variety of underlying categories to arrive at a greatly generalized notion of AD.
+
+The generalized representation of differentiable functions takes a category |k| as parameter:
+\begin{code}
+newtype GD k a b = D (a -> b :* (a `k` b))
+\end{code}
+For simplicity, we have thus far treated linear maps simply as an informal synonym for functions expected satisfy the properties of linearity.
+Generalizing, we will need to distinguish funcdtions from the morphisms that generalize linear maps.\notefoot{%
+Consider making the formal distinction between functions and linear maps earlier.
+I think I'd need to make it explicit in \secref{Numeric operations}, and even earlier in |linearD|.
+Perhaps posit an embedding function |lin :: (a :-* b) -> (a -> b)|, and write \thmRef{linear} as |der (lin f) a = f|, and change to |linearD :: (a :-* b) -> D a b|.
+Then retroactively make |linearD| a method of a new class.
+}
 
 \sectionl{To do}
 
 \begin{itemize}
 \item The rest of the talk:
   \begin{itemize}
-  \item {Generalizing automatic differentiation}
   \item {A vocabulary for linear arrows}
   \item {Extracting a data representation}
   \item {Generalized matrices}
