@@ -42,6 +42,11 @@
 \nc\corRefTwo[2]{Corollaries \ref{cor:#1} and \ref{cor:#2}}
 \nc\corRefs[2]{Corollaries \ref{cor:#1} through \ref{cor:#2}}
 
+\setlength{\blanklineskip}{2ex}
+
+%% Needs a "%"after \end{closerCodePars} to avoid a blank space. Fixable?
+\newenvironment{closerCodePars}{\setlength{\blanklineskip}{1.3ex}}{}
+
 \begin{document}
 
 \maketitle
@@ -385,7 +390,6 @@ The categories in this paper use types as objects, while the functors in this pa
 The functor must also preserve ``categorical'' structure:\footnote{Making the categories explicit, |F (id <- CU) == id <- CV| and |F (g . f <- CU) == F g . F f <- CV|.}
 \begin{code}
 F id == id
-
 F (g . f) == F g . F f
 \end{code}
 
@@ -412,26 +416,31 @@ adf :: (a -> b) -> D a b
 adf f = D (ad f)
 \end{code}
 
+\begin{closerCodePars}
 Our goal is to give a |Category| instance for |D| such that |adf| is a functor.
 This goal is essentially an algebra problem, and the desired |Category| is the solution to that problem.
 Saying that |adf| is a functor is equivalent to the following two conditions for all (suitably typed) functions |f| and |g|:\footnote{The |id| and |(.)| on the left-hand sides are for |D|, while the ones on the right are for |(->)|.}
 \begin{code}
 id == adf id
+
 D (ad g) . D (ad f) == adf (g . f)
 \end{code}
 Equivalently, by the definition of |adf|,
 \begin{code}
 id == D (ad id)
+
 adf g . adf f == D (ad (g . f))
 \end{code}
 Now recall the following results from \corRefTwo{linear}{compose}:
 \begin{code}
 ad id == \ a -> (id a, id)
+
 ad (g . f) == \ a -> let { (b,f') = ad f a ; (c,g') = ad g b } in (c, g' . f')
 \end{code}
 Now use these two facts to rewrite the right-hand sides of the functor specification for |adf|:
 \begin{code}
 id == D (\ a -> (a,id))
+
 D (ad g) . D (ad f) == D (\ a -> let { (b,f') = ad f a ; (c,g') = ad g b } in (c, g' . f'))
 \end{code}
 The |id| equation is trivially solvable by \emph{defining} |id = D (\ a -> (a,id))|.
@@ -439,11 +448,12 @@ To solve the |(.)| equation, generalize it to a \emph{stronger} condition:\footn
 \begin{code}
 D g . D f == D (\ a -> let { (b,f') = f a ; (c,g') = g b } in (c, g' . f'))
 \end{code}
-The of this stronger condition is immediate, leading to the following instance as a sufficient condition for |adf| being a functor:
+The solution of this stronger condition is immediate, leading to the following instance as a sufficient condition for |adf| being a functor:
+\end{closerCodePars}
 \begin{code}
 linearD :: (a -> b) -> D a b
 linearD f = D (\ a -> (f a,f))
-NOP
+
 instance Category D where
   id == linearD id
   D g . D f == D (\ a -> let { (b,f') = f a ; (c,g') = g b } in (c, g' . f'))
@@ -540,6 +550,7 @@ instance ProductCat (->) where
   f &&& g = \ a -> (f a, g a)
 \end{code}
 
+\begin{closerCodePars}
 Two cartesian categories can be related by a \emph{cartesian functor}, which is a functor that also preserves the cartesian structure.
 That is, a cartesian functor |F| from cartesian category |CU| to cartesian category |CV|, besides mapping objects and morphisms in |CU| to counterparts in |CV| while preserving the category structure (|id| and |(.)|), \emph{also} preserves the cartesian structure:
 \begin{code}
@@ -575,6 +586,7 @@ exr == linearD exr
 
 D f &&& D g == D(\a -> let { (c,f') = f a ; (d,g') = g a } in ((c,d), f' &&& g'))
 \end{code}
+\end{closerCodePars}%
 This somewhat strengthened form of the specification can be turned directly into a sufficient definition:
 \begin{code}
 instance ProductCat D where
@@ -666,13 +678,27 @@ We already have the chain rule to account for context, so we do not need to invo
 Since negation and (uncurried) addition are linear, we already know how to differentiate them.
 Multiplication is a little more involved \citep[Theorem 2-3 (2)]{Spivak65}:
 \begin{code}
-der mulC (a,b) = \ (da,db) -> a*db + da*b
+der mulC (a,b) = \ (da,db) -> da*b + a*db
 \end{code}
 Note the linearity of the right-hand side, so that the derivative of |mulC| at |(a,b)| for real values has the expected type: |R :* R :-* R|.\footnote{The derivative of uncurried multiplication generalizes to an arbitrary \emph{bilinear} function |f :: a :* b -> c| \citep[Problem 2-12]{Spivak65}:
 \begin{code}
-der f (a,b) = \ (da,db) -> f (a,db) + f (da,b)
+der f (a,b) = \ (da,db) -> f (da,b) + f (a,db)
 \end{code}
 }
+To make the linearity more apparent, and to prepare for variations later in this paper, let's now rephrase `der mulC` without using lambda directly.
+Just as |Category|, |Cartesian|, |Cocartesian|, |NumCat|, etc generalize operations beyond functions, it will also be handy to generalize scaling as well:
+\begin{code}
+class ScalarCat k a where
+  scale :: a -> (a `k` a)
+
+instance Num a => ScalarCat (->) a where
+  scale a = \ da -> a * da
+\end{code}
+Since uncurried multiplication is bilinear, its partial application as `scale a` (for functions) is linear for all |a|.
+Now we can rephrase the product rule in terms of more general, linear language.
+\begin{code}
+der mulC (a,b) = scale b ||| scale a
+\end{code}
 
 This product rule, along with the linearity of negation and uncurried addition, enables using the same style of derivation as with operations from |Category|, |Cartesian|, and |Cocartesian| above.
 As usual, specify the |NumCat| instance for differentiable functions by saying that |adf| preserves |NumCat| structure, i.e., |adf negateC == negateC|, |adf addC == addC|, and |adf mulC == mulC|.
@@ -681,26 +707,16 @@ Reasoning as before, we get another correct-by-construction instance for differe
 instance NumCat D where
   negateC = linearD negateC
   addC  = linearD addC
-  mulC  = D (\ (a,b) -> (a * b, \ (da,db) -> b*da + a*db))
+  mulC  = D (\ (a,b) -> (a * b, scale b ||| scale a))
 \end{code}
 
 Similar reasoning applies to other numeric operations, e.g.,
 \begin{code}
 instance FloatingCat D where
-  sinC = D (\ a -> (sin a, \ da -> cos a * da))
-  cosC = D (\ a -> (cos a, \ da -> - sin a * da))
-  expC = D (\ a -> let e = exp a in (e, \ da -> e * da))
-  ...
-\end{code}
-A bit of refactoring makes for tidier definitions:
-\begin{code}
-scale :: a -> a -> a
-scale a = \ da -> a * da
-NOP
-instance FloatingCat D where
-  sinC = D (\ a -> (sin a, scale (cos a)))
-  cosC = D (\ a -> (cos a, scale (- sin a)))
-  expC = D (\ a -> let e = exp a in (e, scale e))
+  sinC  = D (\ a -> (sin a, scale (cos a)))
+  cosC  = D (\ a -> (cos a, scale (- sin a)))
+  expC  = D (\ a -> let e = exp a in (e, scale e))
+        ...
 \end{code}
 In what follows, the |scale| operation will play a more important role than merely tidying definitions.
 
@@ -763,24 +779,70 @@ Specifically, the composition of differentiable functions relies on the composit
 These corollaries follow closely from \thmRefs{compose}{linear}, which relate derivatives for these operations to the corresponding operations on linear maps.
 These properties make for a pleasantly poetic theory, but they also have a powerful, tangible benefit, which is that we can replace linear maps by any of a much broader variety of underlying categories to arrive at a greatly generalized notion of AD.
 
-The generalized representation of differentiable functions takes a category |k| as parameter:
+%format GD = GAD
+The generalized AD definitions, shown in \figref{GAD} result from making a few small changes to the non-generalized definitions derived in \secref{Putting the pieces together}:
+\begin{itemize}
+\item The new category |GD| takes as parameter a category |k| that replaces |(:-*)| in |D|.
+\item The |linearD| function to take two arrows, previously identified.\notefoot{Alternatively, posit an embedding function |lin :: (a :-* b) -> (a -> b)|, write \thmRef{linear} as |der (lin f) a = f|, and change to |linearD :: (a :-* b) -> D a b|.
+Then retroactively make |linearD| a method of a new class.}
+\item The functionality needed of the underlying category become explicit.
+\end{itemize}
+
+\begin{figure}
+\begin{center}
 \begin{code}
 newtype GD k a b = D (a -> b :* (a `k` b))
+
+linearD :: (a -> b) -> (a `k` b) -> D a b
+linearD f f' = D (\ a -> (f a,f'))
+
+instance Category k => Category (GD k) where
+  id = linearD id id
+  D g . D f = D (\ a -> let { (b,f') = f a ; (c,g') = g b } in (c, g' . f'))
+
+instance Cartesian k => Cartesian (GD k) where
+  exl  = linearD exl exl
+  exr  = linearD exr exr
+  D f &&& D g = D (\ a -> let { (b,f') = f a ; (c,g') = g a } in ((b,c), f' &&& g'))
+
+instance ScalarCat k s => NumCat GD s where
+  negateC = linearD negateC
+  addC  = linearD addC
+  mulC  = D (\ (a,b) -> (a * b, scale b ||| scale a))
 \end{code}
-For simplicity, we have thus far treated linear maps simply as an informal synonym for functions expected satisfy the properties of linearity.
-Generalizing, we will need to distinguish funcdtions from the morphisms that generalize linear maps.\notefoot{%
-Consider making the formal distinction between functions and linear maps earlier.
-I think I'd need to make it explicit in \secref{Numeric operations}, and even earlier in |linearD|.
-Perhaps posit an embedding function |lin :: (a :-* b) -> (a -> b)|, and write \thmRef{linear} as |der (lin f) a = f|, and change to |linearD :: (a :-* b) -> D a b|.
-Then retroactively make |linearD| a method of a new class.
-}
+\caption{Generalized automatic differentiation}
+\figlabel{GAD}
+\end{center}
+\end{figure}
+
+\sectionl{Generalized matrices}
+
+The vocabulary we have needed from generalized linear maps so far is exactly that of |Category|, |Cartesian|, |Cocartesian|, and |ScalarCat|.
+Let's now focus on just three operation from this vocabulary:
+\begin{closerCodePars}
+\begin{code}
+  scale  :: a -> (a `k` a)
+
+  (|||)  :: (a `k` c) -> (b `k` c) -> ((a :* b) `k` c)
+
+  (&&&)  :: (a `k` c) -> (a `k` d) -> (a `k` (c :* d))
+\end{code}
+\end{closerCodePars}%
+
+Now consider (rectangular) matrices, the representation typically used in linear algebra.
+There are three possibilities (with the last two non-exclusive) for a nonempty matrix |W|:
+\begin{itemize}
+\item |W| has size $1 \times 1$;
+\item |W| is the horizontal juxtaposition of two matrices having the same height; or
+\item |W| is the vertical juxtaposition of two matrices having the same width.
+\end{itemize}
+These three shape constraints establish and preserve rectangularity.
 
 \sectionl{To do}
 
 \begin{itemize}
 \item The rest of the talk:
   \begin{itemize}
-  \item {A vocabulary for linear arrows}
   \item {Extracting a data representation}
   \item {Generalized matrices}
   \item {Efficiency of composition}
