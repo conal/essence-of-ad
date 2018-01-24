@@ -331,7 +331,7 @@ Corollaries \ref{cor:compose} through \ref{cor:linear} provide insight into the 
 Although differentiation is not computable when given just an arbitrary computable function, we can instead build up differentiable functions compositionally, using exactly the combining forms introduced above, namely |(.)|, |(&&&)|, |(###)|, and linear functions, together with various non-linear primitives.
 Computations constructed using that vocabulary are differentiable by construction thanks to Corollaries \ref{cor:compose} through \ref{cor:linear}.
 The building blocks above are not just a random assortment, but rather a fundamental language of mathematics, logic, and computation, known as \emph{category theory} \needcite.
-Although it would be unpleasant to program directly in this language, its fundamental nature enables instead an automatic collection from conventionally written functional programs \citep{Lambek:1980:LambdaToCCC,Lambek:1985:CCC,Elliott-2017-compiling-to-categories}.
+Although it would be unpleasant to program directly in this language, its fundamental nature enables instead an automatic conversion from conventionally written functional programs \citep{Lambek:1980:LambdaToCCC,Lambek:1985:CCC,Elliott-2017-compiling-to-categories}.
 
 %format (arr c) = "\mathbin{\to_{"c"}}"
 
@@ -343,7 +343,7 @@ Although it would be unpleasant to program directly in this language, its fundam
 
 \subsectionl{Categories}
 
-The central notion in category theory is that of a \emph{category}, comprising \emph{objects} (generalizing sets or types) \emph{morphisms} (generalizing functions between sets or types).
+The central notion in category theory is that of a \emph{category}, comprising \emph{objects} (generalizing sets or types) and \emph{morphisms} (generalizing functions between sets or types).
 For the purpose of this paper, we will take objects to be types in our program, and morphisms to be enhanced functions.
 We will introduce morphisms using Haskell-style type signatures, such as ``|f :: a ~> b <- CU|'', where ``|~>|'' refers to the morphisms for a category |CU|, with |a| and |b| being the \emph{domain} and \emph{codomain} objects/types (respectively) for |f|.
 In most cases, we will omit the ``|<- CU|'', where choice of category is (hopefully) clear from context.
@@ -378,6 +378,8 @@ Each category forms its own world, with morphisms relating objects within that c
 To bridge between these worlds, there are \emph{functors} that connect a category |CU| to a (possibly different) category |CV|.
 Such a functor |F| maps objects in |CU| to objects in |CV|, \emph{and} morphisms in |CU| to morphisms in |CV|.
 If |f :: u ~> v <- CU| is a morphism, then a \emph{functor} |F| from |CU| to |CV| transforms |f <- CU| to a morphism |F f :: F u --> F v <- CV|, i.e., the domain and codomain of the transformed morphism |F f <- CV| must be the transformed versions of the domain and codomain of |f <- CU|.
+The categories in this paper use types as objects, while the functors in this paper map these types to themselves.%
+\footnote{In contrast, Haskell's functors stay within the same category and can do change types.}
 The functor must also preserve ``categorical'' structure:\footnote{Making the categories explicit, |F (id <- CU) == id <- CV| and |F (g . f <- CU) == F g . F f <- CV|.}
 \begin{code}
 F id == id
@@ -439,7 +441,7 @@ The of this stronger condition is immediate, leading to the following instance a
 \begin{code}
 linearD :: (a -> b) -> D a b
 linearD f = D (\ a -> (f a,f))
-
+NOP
 instance Category D where
   id == linearD id
   D g . D f == D (\ a -> let { (b,f') = f a ; (c,g') = g b } in (c, g' . f'))
@@ -662,7 +664,7 @@ We already have the chain rule to account for context, so we do not need to invo
 Since negation and (uncurried) addition are linear, we already know how to differentiate them.
 Multiplication is a little more involved \citep[Theorem 2-3 (2)]{Spivak65}:
 \begin{code}
-der mulC (a,b) = \ (da,db) -> b*da + a*db
+der mulC (a,b) = \ (da,db) -> a*db + da*b
 \end{code}
 Note the linearity of the right-hand side, so that the derivative of |mulC| at |(a,b)| for real values has the expected type: |R :* R :-* R|.\footnote{The derivative of uncurried multiplication generalizes to an arbitrary \emph{bilinear} function |f :: a :* b -> c| \citep[Problem 2-12]{Spivak65}:
 \begin{code}
@@ -692,7 +694,7 @@ A bit of refactoring makes for tidier definitions:
 \begin{code}
 scale :: a -> a -> a
 scale a = \ da -> a * da
-
+NOP
 instance FloatingCat D where
   sinC = D (\ a -> (sin a, scale (cos a)))
   cosC = D (\ a -> (cos a, scale (- sin a)))
@@ -718,6 +720,36 @@ Rather, it gives a computable alternative that is almost as useful: if the input
 Furthermore, if we can \emph{automatically} convert conventionally written functional programs into the chosen algebraic vocabulary (as in \citep{Elliott-2017-compiling-to-categories}), then those programs can be re-interpreted to compute the desired specification.
 
 \sectionl{Examples}
+
+Let's look at some AD examples.
+In this section and later ones, we will use a few running examples:
+\begin{code}
+sqr :: Num a => a -> a
+sqr a = a * a
+
+magSqr :: Num a => a :* a -> a
+magSqr (a,b) = sqr a + sqr b
+
+cosSinProd :: Floating a => a :* a -> a :* a
+cosSinProd (x,y) = (cos z, sin z) where z = x * y
+\end{code}
+A compiler plugin converts these definitions to categorical vocabulary \citep{Elliott-2017-compiling-to-categories}:
+\begin{code}
+sqr = mulC . (id &&& id)
+
+magSqr = addC . (mulC . (exl &&& exl) &&& mulC . (exr &&& exr))
+
+cosSinProd = (cosC &&& sinC) . mulC
+\end{code}
+To visualize computations before differentiation, we can interpret these categorical expressions in a category of graphs \citep[Section 7]{Elliott-2017-compiling-to-categories}, with the results rendered in \figrefthree{sqr}{magSqr}{cosSinProd}.
+\fig{sqr}{|sqr|}
+\fig{magSqr}{|magSqr|}
+\fig{cosSinProd}{|cosSinProd|}
+To see the differentiable versions, interpret these same expressions in the category of differentiable functions (|D| from \secref{Categories}), remove the |D| constructors to reveal the function representation, convert these functions to categorical form as well, and finally interpret the result in the graph category.
+The results are rendered in \figrefthree{sqr-adf}{magSqr-adf}{cosSinProd-adf}.
+\fig{sqr-adf}{|adf sqr|}
+\fig{magSqr-adf}{|adf magSqr|}
+\fig{cosSinProd-adf}{|adf cosSinProd|}
 
 %if False
 %endif
