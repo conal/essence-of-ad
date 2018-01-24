@@ -741,15 +741,18 @@ magSqr = addC . (mulC . (exl &&& exl) &&& mulC . (exr &&& exr))
 
 cosSinProd = (cosC &&& sinC) . mulC
 \end{code}
-To visualize computations before differentiation, we can interpret these categorical expressions in a category of graphs \citep[Section 7]{Elliott-2017-compiling-to-categories}, with the results rendered in \figrefthree{sqr}{magSqr}{cosSinProd}.
-\fig{sqr}{|sqr|}
-\fig{magSqr}{|magSqr|}
-\fig{cosSinProd}{|cosSinProd|}
+To visualize computations before differentiation, we can interpret these categorical expressions in a category of graphs \citep[Section 7]{Elliott-2017-compiling-to-categories}, with the results rendered in \figreftwo{magSqr}{cosSinProd}.
+\figp{
+\figoneW{0.35}{magSqr}{|magSqr|}}{
+\hspace{1in}
+\figoneW{0.35}{cosSinProd}{|cosSinProd|}}
 To see the differentiable versions, interpret these same expressions in the category of differentiable functions (|D| from \secref{Categories}), remove the |D| constructors to reveal the function representation, convert these functions to categorical form as well, and finally interpret the result in the graph category.
-The results are rendered in \figrefthree{sqr-adf}{magSqr-adf}{cosSinProd-adf}.
-\fig{sqr-adf}{|adf sqr|}
-\fig{magSqr-adf}{|adf magSqr|}
-\fig{cosSinProd-adf}{|adf cosSinProd|}
+The results are rendered in \figreftwo{magSqr-adf}{cosSinProd-adf}.
+\figp{
+\figone{magSqr-adf}{|adf magSqr|}}{
+\figone{cosSinProd-adf}{|adf cosSinProd|}}
+Note that the derivatives are (linear) functions, as depicted in boxes.
+Also note the sharing of work between the a function's result and its derivative in \figref{cosSinProd-adf}.\notefoot{Introduce the term ``primal'' early on and use it throughout.}
 
 %if False
 %endif

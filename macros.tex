@@ -48,9 +48,6 @@
 
 \nc\todo{\mynote{To do.}}
 
-\nc\figlabel[1]{\label{fig:#1}}
-\nc\figref[1]{Figure~\ref{fig:#1}}
-
 \nc\needcite{\mynote{ref}}
 
 \nc\seclabel[1]{\label{sec:#1}}
@@ -59,3 +56,31 @@
 
 \nc\sectionl[1]{\section{#1}\seclabel{#1}}
 \nc\subsectionl[1]{\subsection{#1}\seclabel{#1}}
+
+%%%% Figures
+
+\usepackage{subcaption}
+
+\nc\figlabel[1]{\label{fig:#1}}
+\nc\figref[1]{Figure~\ref{fig:#1}}
+\nc\figreftwo[2]{Figures~\ref{fig:#1} and \ref{fig:#2}}
+\nc\figrefthree[3]{Figures~\ref{fig:#1}, \ref{fig:#2}, and \ref{fig:#3}}
+
+\nc\incpic[1]{\includegraphics[width=\linewidth]{Figures/#1}}
+
+\nc\figp[2]{\begin{figure}\centering #1 \hspace{-2ex} #2\end{figure}}
+
+%% \figone{fraction}{label}{caption}{content}
+\nc\figoneW[3]{
+{% \fbox
+\begin{minipage}{#1\linewidth}
+  \centering
+  \setlength\mathindent{0ex}
+  \incpic{#2}
+  \vspace*{-4ex}
+  \captionof{figure}{#3}
+  \label{fig:#2}
+\end{minipage}
+}
+}
+\nc\figone{\figoneW{0.45}}
