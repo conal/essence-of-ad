@@ -80,6 +80,8 @@
 %format frac(a)(b) = "\frac{"a"}{"b"}"
 %format `approx` = "\approx"
 
+%format U1
+%format Par1
 %format :*: = " \boldsymbol{\times} "
 %format :.: = " \boldsymbol{\circ} "
 

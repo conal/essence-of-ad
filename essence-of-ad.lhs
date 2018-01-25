@@ -882,8 +882,6 @@ Rather than using functions directly as a representation, one can instead use an
 In particular, we can represent vector spaces over a given field as a \emph{representable functor}, i.e., a functor |f| such that |f s =~ p -> s| for some |p|.\notefoot{Relate this notion of \emph{functor} to the one used for specifying |adf|.}
 This method is convenient in a richly typed functional language like Haskell, which comes with libraries of functor-level building blocks.
 Four such building blocks are functor product, functor composition, and their corresponding identities, which are the unit functor (containing no elements) and the identity functor (containing one element) \citep{Magalhaes:2010,HaskellWikiGhcGenerics}.
-%format U1
-%format Par1
 \begin{code}
 data     (f  :*:  g)  a = f a :*: g a               -- product
 newtype  (g  :.:  f)  a = Comp1 (g (f a)) NOP       -- composition
