@@ -969,6 +969,8 @@ The problem of optimally associating a chain of matrix multiplications can be so
 Solving this problem requires knowing only the sizes (heights and widths) of the matrices involved, and those sizes depend only on the types involved for the sort of strongly typed linear map representation |L s a b| above.
 One can thus choose an optimal association at compile time rather than waiting for run-time and then solving the problem repeatedly.
 
+\mynote{Read, grok, and cite \cite {Naumann2008OptimalJA}.}
+
 \sectionl{To do}
 \begin{itemize}
 \item The rest of the talk:
