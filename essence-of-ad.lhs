@@ -47,6 +47,9 @@
 %% Needs a "%"after \end{closerCodePars} to avoid a blank space. Fixable?
 \newenvironment{closerCodePars}{\setlength{\blanklineskip}{1.3ex}}{}
 
+%format ith = i"th"
+%format ith = i"^{\text{th}}"
+
 \begin{document}
 
 \maketitle
@@ -91,7 +94,7 @@ Extending to |R -> Rn| also works if we interpret the ratio as dividing a vector
 When we extend to |Rm -> Rn| (or even |Rm -> R|), however, this definition no longer makes sense, as it would rely on dividing \emph{by} a vector |eps :: Rm|.
 
 This difficulty of differentiation with non-scalar domains is usually addressed with the notion of ``partial derivatives'' with respect to the |m| scalar components of the domain |Rm|, often written ``$\partial f / \partial x_j$'' for $j \in \set{1,\ldots,m}$.
-When the codomain |Rn| is also non-scalar (i.e., |n > 1|), we have a \emph{matrix} $\mathbf J$ (the \emph{Jacobian}), with $\mathbf J_{ij} = \partial f_i / \partial x_j$ for $i \in \set{1,\ldots,n}$, where each $f_i$ projects out the $i^{\text{th}}$ scalar value from the result of $f$.
+When the codomain |Rn| is also non-scalar (i.e., |n > 1|), we have a \emph{matrix} $\mathbf J$ (the \emph{Jacobian}), with $\mathbf J_{ij} = \partial f_i / \partial x_j$ for $i \in \set{1,\ldots,n}$, where each $f_i$ projects out the |ith| scalar value from the result of $f$.
 
 So far, we've seen that the derivative of a function could be a single number (for |R -> R|), or a vector (for |R -> Rn|), or a matrix (for |Rm -> Rn|).
 Moreover, each of these situations has an accompanying chain rule, which says how to differentiate the composition of two functions.
@@ -815,10 +818,19 @@ instance ScalarCat k s => NumCat GD s where
 \end{center}
 \end{figure}
 
-\sectionl{Generalized matrices}
+\sectionl{Matrices}
+
+As an aside, let's consider matrices--the representation typically used in linear algebra---and especially the property of rectangularity.
+There are three possibilities (with the last two non-exclusive) for a nonempty matrix |W|:
+\begin{itemize}
+\item |width W == height W == 1|;
+\item |W| is the horizontal juxtaposition of two matrices |U| and |V| with |height W == height U == height V|, and |width W = width U + width V|; or
+\item |W| is the vertical juxtaposition of two matrices |U| and |V| with |width W == width U == width V|, and |height W = height U + height V|.
+\end{itemize}
+These three shape constraints establish and preserve rectangularity.
 
 The vocabulary we have needed from generalized linear maps so far is exactly that of |Category|, |Cartesian|, |Cocartesian|, and |ScalarCat|.
-Let's now focus on just three operation from this vocabulary:
+Let's now extract just three operation from this vocabulary:
 \begin{closerCodePars}
 \begin{code}
   scale  :: a -> (a `k` a)
@@ -828,24 +840,141 @@ Let's now focus on just three operation from this vocabulary:
   (&&&)  :: (a `k` c) -> (a `k` d) -> (a `k` (c :* d))
 \end{code}
 \end{closerCodePars}%
+These three operations exactly correspond to the three possibilities above for a nonempty matrix |W|, with the width and height constraints captured neatly by types.
+When matrices are used to represent linear maps, the domain and codomain types for the corresponding linear map are determined by the width and height of the matrix, respectively (assuming the convention of matrix on the left multiplied by a column vector on the right), together with the type of the matrix elements.
 
-Now consider (rectangular) matrices, the representation typically used in linear algebra.
-There are three possibilities (with the last two non-exclusive) for a nonempty matrix |W|:
+\mynote{Say something about block matrices and their use in efficient matrix computations.}
+
+
+\sectionl{Extracting a data representation}
+
+%format R2
+%format R3
+The generalized form of AD in \secref{Generalizing automatic differentiation} allows for different representations of linear maps (as well as alternatives to linear maps, still to be explored).
+One simple choice is to use functions, as in \figreftwo{magSqr-adf}{cosSinProd-adf}.
+Although this choice is simple and reliable, sometimes we need a \emph{data} representation, e.g.,
 \begin{itemize}
-\item |W| has size $1 \times 1$;
-\item |W| is the horizontal juxtaposition of two matrices having the same height; or
-\item |W| is the vertical juxtaposition of two matrices having the same width.
+\item Gradient-based optimization (including deep learning) works by searching for local minima in the domain of a differentiable function |f :: a -> s|, where |a| is a vector space over the scalar field |s|.
+      Each step in the search is in the direction opposite of the gradient of |f|, which is a vector form of |der f|.
+\item Computer graphics shading models rely on normal vectors.
+      For surfaces represented in parametric form, i.e., as |f :: R2 -> R3|, normal vectors are calculated from the partial derivatives of |f| as vectors, which are the rows of the $2 \times 3$ Jacobian matrix that represents the derivative of |f| at any given point |p :: R2|.
 \end{itemize}
-These three shape constraints establish and preserve rectangularity.
+
+Given a linear map $f' :: U :-* V$ represented as a function, it is possible to extract a Jacobian matrix from (including the special case of a gradient vector), by applying |f'| to every vector in a basis of |U|.
+A particularly convenient basis is the sequence of column vectors of an identity matrix, where the |ith| such vector has a one in the |ith| position and zeros elsewhere.
+If |U| has dimension |n| (e.g., |U = Rm|), this sampling requires |m| passes.
+Considering the nature of the sparse vectors used as arguments, each pass likely computes inefficiently.
+Alternatively, the computations can be done using a sparse vector representation, but such an implementation involves considerable complexity and poses difficulties for efficient, massively parallel, SIMD implementations, such as graphics processors \needcite.
+
+If |U| has very low dimension, then this method of extracting a Jacobian is tolerably efficient, but as dimension grows, it becomes quite expensive.
+In particular, many useful problems involve gradient-based optimization over very high-dimensional spaces, which is the worst case for this technique.
+
+\sectionl{Generalized matrices}
+
+Rather than representing derivatives as functions and then extracting a (Jacobian) matrix, a more conventional alternative is to construct and combine matrices in the first place.
+These matrices are usually rectangular arrays, representing |Rm -> Rn|, which interferes with the composability we get from  organizing around binary cartesian products, as in the |Cartesian| and |Cocartesian| categorical interfaces.
+
+There is an especially perspective on linear algebra, known as \emph{free vector spaces}.
+Given a scalar field |s|, any free vector space has the form |p -> s| for some |p|.
+The size of |p| is the dimension of the vector space.
+Scaling a vector |v :: p -> s| or adding two such vectors is defined in the usual was as for functions.
+Rather than using functions directly as a representation, one can instead use any representation isomorphic to such a function.
+In particular, we can represent vector spaces over a given field as a \emph{representable functor}, i.e., a functor |f| such that |f s =~ p -> s| for some |p|.\notefoot{Relate this notion of \emph{functor} to the one used for specifying |adf|.}
+This method is convenient in a richly typed functional language like Haskell, which comes with libraries of functor-level building blocks.
+Four such building blocks are functor product, functor composition, and their corresponding identities, which are the unit functor (containing no elements) and the identity functor (containing one element) \citep{Magalhaes:2010,HaskellWikiGhcGenerics}.
+%format U1
+%format Par1
+\begin{code}
+data     (f  :*:  g)  a = f a :*: g a               -- product
+newtype  (g  :.:  f)  a = Comp1 (g (f a)) NOP       -- composition
+
+newtype  U1           a = U1                        -- unit
+newtype  Par1         a = Par1 a                    -- identity
+\end{code}
+Use of these functors gives data representation of functions that saves recomputation over a native function representation, as a form of functional memoization \cite{Hinze00memofunctions}.
+
+One way to relate these representable functors to the types that appear in our categorical operations is to use associated types \needcite, associating a functor representation to various types.
+Given a scalar field |s| and type |a| of values, presumably built up from a scalar type |s|, the associated |V s a| is a functor such that |V s a s =~ a|.
+In other words, the type |a| is modeled as a structure of |s| values, where the structure is given by the associated functor |V s a|.
+A ``generalized matrix'' for the linear map type |a :-* b| is the composition of two functors, an outer functor for |b| and an inner functor for |a|, together containing elements from the underlying scalar field |s|:
+\begin{code}
+newtype L s a b = L (V s b (V s a s))
+\end{code}
+For a given type |t|, in addition to the choice of functor |V s t|, there must be functions to convert from |t| to |V s t s| and back:
+%format toV = to"_"V
+%format unV = un"_"V
+%format Type = "\ast"
+\begin{code}
+class HasV s t where
+  type V s t :: Type -> Type -- Free vector space as representable functor
+  toV  :: t -> V s t s
+  unV  :: V s t s -> t
+\end{code}
+%format Double = R
+Some |HasV| instances (vector representations and conversions) are shown in \figref{HasV instances}.
+Note that products are represented as functor products, and uses of existing functors such as length-typed vectors \citep{vector-sized} are represented by functor compositions.
+\begin{figure}
+\begin{minipage}[b]{0.31\textwidth}
+\begin{code}
+instance HasV s () where
+  type V s () = U1
+  toV () = U1
+  unV U1 = ()
+
+instance HasV Double Double where
+  type V Double Double = Par1
+  toV x = Par1 x
+  unV (Par1 x) = x
+\end{code}
+\end{minipage}
+\begin{minipage}[b]{0ex}{\rule[1.3ex]{0.5pt}{1.8in}}\end{minipage}
+\begin{minipage}[b]{0.45\textwidth}
+\mathindent1em
+\begin{code}
+instance (HasV s a, HasV s b) => HasV s (a :* b) where
+  type V s (a :* b) = V s a :*: V s b
+  toV (a,b) = toV a :*: toV b
+  unV (f :*: g) = (unV f,unV g)
+
+instance (HasV s b, KnownNat n) => HasV s (Vector n b) where
+  type V s (Vector n b) = Vector n :.: V s b
+  toV bs = Comp1 (fmap toV bs)
+  unV (Comp1 vs) = fmap unV vs
+\end{code}
+\end{minipage}
+\caption{Some ``vector'' representations}
+\figlabel{HasV instances}
+\end{figure}
+Finally, one must define the standard functionality for linear maps in the form of instances of the following form, whose details are left as an exercise for the reader:\footnote{In particular, the operations of matrix/vector multiplication (representing linear map application) and matrix/matrix multiplication (representing linear map composition) are easily implemented in terms of standard functional programming maps, zips, and folds.}
+\begin{closerCodePars}
+\begin{code}
+instance Category       (L s)    where ...
+
+instance ProductCat     (L s)    where ...
+
+instance CoproductPCat  (L s)    where ...
+
+instance ScalarCat      (L s) s  where ...
+\end{code}
+\end{closerCodePars}
+
+\mynote{Mention upcoming categorical generalizations, which rely on \emph{indexed} biproducts.}
+
+\sectionl{Efficiency of composition}
+
+With the function representation of linear maps, composition is simple and efficient, but extracting a matrix can be quite expensive, as described in \secref{Extracting a data representation}.
+The generalized matrix representation of \secref{Generalized matrices} eliminates the need for this expensive extraction step but at the cost of more expensive composition operation used throughout.
+
+One particularly important efficiency concern is that of (generalized) matrix multiplication.
+Although matrix multiplication is associative (because it correctly implements composition of linear maps represented as matrices), different associations can result in very different computational cost.
+The problem of optimally associating a chain of matrix multiplications can be solved via dynamic programming in $O(n^3)$ time \citep[Section 15.2]{CLRS} or with a more subtle algorithm in $O(n \log n)$ time \citep{Hu:Shing:1981}.
+Solving this problem requires knowing only the sizes (heights and widths) of the matrices involved, and those sizes depend only on the types involved for the sort of strongly typed linear map representation |L s a b| above.
+One can thus choose an optimal association at compile time rather than waiting for run-time and then solving the problem repeatedly.
 
 \sectionl{To do}
-
 \begin{itemize}
 \item The rest of the talk:
   \begin{itemize}
-  \item {Extracting a data representation}
-  \item {Generalized matrices}
-  \item {Efficiency of composition}
   \item {Left-associating composition (RAD)}
   \item {Continuation category}
   \item {Reverse-mode AD without tears}
@@ -866,5 +995,3 @@ They're quite similar.
 \bibliography{bib}
 
 \end{document}
-
-
