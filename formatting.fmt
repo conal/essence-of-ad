@@ -80,6 +80,8 @@
 %format frac(a)(b) = "\frac{"a"}{"b"}"
 %format `approx` = "\approx"
 
+%format :*: = " \boldsymbol{\times} "
+%format :.: = " \boldsymbol{\circ} "
 
 % Got from Andres L:
 \newcommand{\calculationcomments}{%
