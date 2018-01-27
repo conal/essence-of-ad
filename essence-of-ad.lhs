@@ -391,10 +391,13 @@ If |f :: u ~> v <- CU| is a morphism, then a \emph{functor} |F| from |CU| to |CV
 The categories in this paper use types as objects, while the functors in this paper map these types to themselves.%
 \footnote{In contrast, Haskell's functors stay within the same category and can do change types.}
 The functor must also preserve ``categorical'' structure:\footnote{Making the categories explicit, |F (id <- CU) == id <- CV| and |F (g . f <- CU) == F g . F f <- CV|.}
+\begin{closerCodePars}
 \begin{code}
 F id == id
+
 F (g . f) == F g . F f
 \end{code}
+\end{closerCodePars}%
 
 Crucially to the topic of this paper, \corRefTwo{linear}{compose} say more than that differentiable functions form a category.
 They also point us to a new, easily implemented category, for which |ad| is in fact a functor.
@@ -426,13 +429,13 @@ Saying that |adf| is a functor is equivalent to the following two conditions for
 \begin{code}
 id == adf id
 
-D (ad g) . D (ad f) == adf (g . f)
+adf g . adf f == adf (g . f)
 \end{code}
 Equivalently, by the definition of |adf|,
 \begin{code}
 id == D (ad id)
 
-adf g . adf f == D (ad (g . f))
+D (ad g) . D (ad f) == D (ad (g . f))
 \end{code}
 Now recall the following results from \corRefTwo{linear}{compose}:
 \begin{code}
@@ -968,14 +971,37 @@ Although matrix multiplication is associative (because it correctly implements c
 The problem of optimally associating a chain of matrix multiplications can be solved via dynamic programming in $O(n^3)$ time \citep[Section 15.2]{CLRS} or with a more subtle algorithm in $O(n \log n)$ time \citep{Hu:Shing:1981}.
 Solving this problem requires knowing only the sizes (heights and widths) of the matrices involved, and those sizes depend only on the types involved for the sort of strongly typed linear map representation |L s a b| above.
 One can thus choose an optimal association at compile time rather than waiting for run-time and then solving the problem repeatedly.
-
 \mynote{Read, grok, and cite \cite {Naumann2008OptimalJA}.}
+
+Alternatively, for some kinds of problems we might want to choose a particular association for sequential composition.
+For instance, gradient-based optimization (including its use in deep learning) uses ``reverse-mode'' automatic differentiation (RAD), which is to say fully left-associated compositions.\notefoot{Is RAD always optimal for gradient problems?}
+(Dually, ``foward-mode'' AD fully right-associates.)
+Reverse mode (including its specialization, back-propagation) is much more efficient for these problems, but is also typically given much more complicated explanations and implementations, involving mutation, graph construction, and ``tapes'' \needcite.
+One the main purposes of this paper is to demonstrate that RAD can be accounted for quite simply, while retaining or improving its efficiency of implementation.
+
+\sectionl{Left-associating composition (reverse mode AD)}
+
+The AD algorithm derived in \secref{Putting the pieces together} and generalized in \figref{GAD} can be thought of as a family of algorithms.
+For fully right-associated compositions, it becomes forward mode AD; for fully left-associated compositions, reverse mode AD; and for all other associations, various mixed modes.
+
+Let's now look at how to separate the associations used in formulating a differentiable function from the associations used to compose its derivatives.
+A practical reason for making this separation is that we want to do gradient-based optimization (calling for left association), while modular program organization leads to a mixture of compositions.
+Fortunately, a fairly simple technique resolves the tension between program organization and efficient execution.
+
+Given any category |U|, we can represent its morphisms by the intent to left-compose with some to-be-given morphism.
+That is, represent |f :: a `k` b| by the function |(\ h -> h . f) :: (b `k` r) -> (a `k` r)|, where |r| is any object in |U|.
+The morphism |h| will be a \emph{continuation}, finishing the journey from |f| all the way to the codomain of the overall function being assembled.
+Building a category around this idea results in turning \emph{all} patterns of composition into fully left-associated.
+
+
+
+
+Cayley's Theorem: that any monoid is equivalent to a monoid of functions under composition.
 
 \sectionl{To do}
 \begin{itemize}
 \item The rest of the talk:
   \begin{itemize}
-  \item {Left-associating composition (RAD)}
   \item {Continuation category}
   \item {Reverse-mode AD without tears}
   \item {Duality}
@@ -990,6 +1016,7 @@ One can thus choose an optimal association at compile time rather than waiting f
 \item Relate the methodology of this paper to denotational design \citep{Elliott2009-type-class-morphisms-TR}.
 They're quite similar.
 \item Relate also to algebra of programming \citep{BirddeMoor96:Algebra}.
+\item Relate this work to backprop-as-functor \citep{Fong2017BackpropAF}.
 \end{itemize}
 
 \bibliography{bib}
