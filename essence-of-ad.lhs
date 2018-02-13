@@ -2,7 +2,7 @@
 
 %% While editing/previewing, use 12pt and tiny margin.
 \documentclass[12pt]{article}  % fleqn,
-\usepackage[margin=0.2in]{geometry}  % 0.9in
+\usepackage[margin=0.12in]{geometry}  % 0.9in
 
 \input{macros}
 
@@ -210,7 +210,7 @@ Combining |f| and |der f| into a single function in this way allows us to elimin
 \subsectionl{Products in the codomain}
 
 The chain rule, telling how to differentiate sequential compositions, gets a lot of attention in calculus classes and in automatic and symbolic differentiation.\notefoot{To do: introduce AD and SD early.}
-There are other important ways to combine functions, however, and examining them yields more helpful tools.
+There are other important ways to combine functions, however, and examining them yields additional helpful tools.
 
 One other tool combines two functions sharing a domain type into a single function that pairs the result:
 \begin{code}
@@ -218,7 +218,7 @@ One other tool combines two functions sharing a domain type into a single functi
 f &&& g = \ a -> (f a, g a)
 \end{code}
 We will sometimes refer to the |(&&&)| operation as ``fork'' \citep{Gibbons2002:Calculating}.
-As an example, the |(&&&)| operation can be used to give a terser specification: |ad f = f &&& der f|.
+Note that it can be used to give a terser specification: |ad f = f &&& der f|.
 
 While the derivative of the (sequential) composition is a composition of derivatives, the derivative of a fork is the fork of the derivatives \citep[Theorem 2-3 (3)]{Spivak65}:\notefoot{Is there a name for this rule? I've never seen it mentioned.}
 \begin{theorem}[fork rule] \thmLabel{fork}
@@ -292,12 +292,12 @@ This property is what makes it meaningful to use these forms to combine derivati
 
 \subsectionl{Linear functions}
 
-A function |f :: a -> b| is said to be \emph{linear} when |f| distributes over (preserves the structure of) vector addition and scalar multiplication, i.e.,
+A function |f :: u -> v| is said to be \emph{linear} when |f| distributes over (preserves the structure of) vector addition and scalar multiplication, i.e.,
 \begin{code}
 f (a + a')  == f a + f a'
 f (s *^ a)  == s *^ f a
 \end{code}
-for all |a,a' :: a| and |s| taken from the scalar field underlying |a| and |b|.
+for all |a,a' :: v| and |s| taken from the scalar field underlying |u| and |v|.
 
 In addition to the derivative rules for |(.)|, |(&&&)|, and |(###)|, there is one more broadly useful tool to be added to our collection: \emph{the derivative of every linear function is itself, everywhere}, i.e., for all linear functions |f|,
 \begin{theorem}[linear rule] \thmLabel{linear}
@@ -323,8 +323,6 @@ Given \thmRef{linear}, we can construct |ad f| for all linear |f|:
 \begin{code}
    ad f
 ==  {- definition of |ad| -}
-   f &&& der f
-==  {- definition of |(&&&)| -}
    \ a -> (f a, der f a)
 ==  {- \thmRef{linear} -}
    \ a -> (f a, f)
@@ -335,13 +333,13 @@ Given \thmRef{linear}, we can construct |ad f| for all linear |f|:
 
 \sectionl{Putting the pieces together}
 
-The definition of |ad| is a well-defined specification, not an implementation, since |D| itself is not computable.
+The definition of |ad| is a well-defined specification, but it is not an implementation, since |D| itself is not computable.
 \corRefs{compose}{linear} provide insight into the compositional nature of |ad|, in exactly the form we can now assemble into an efficient, correct-by-construction implementation.
 
 Although differentiation is not computable when given just an arbitrary computable function, we can instead build up differentiable functions compositionally, using exactly the combining forms introduced above, namely |(.)|, |(&&&)|, |(###)|, and linear functions, together with various non-linear primitives.
 Computations constructed using that vocabulary are differentiable by construction thanks to \corRefs{compose}{linear}.
 The building blocks above are not just a random assortment, but rather a fundamental language of mathematics, logic, and computation, known as \emph{category theory} \needcite.
-Although it would be unpleasant to program directly in this language, its fundamental nature enables instead an automatic conversion from conventionally written functional programs \citep{Lambek:1980:LambdaToCCC,Lambek:1985:CCC,Elliott-2017-compiling-to-categories}.
+Although it would be unpleasant to program directly in this language, its foundational nature enables instead an automatic conversion from conventionally written functional programs \citep{Lambek:1980:LambdaToCCC,Lambek:1985:CCC,Elliott-2017-compiling-to-categories}.
 
 %format (arr c) = "\mathbin{\to_{"c"}}"
 
@@ -380,7 +378,7 @@ Still another example is \emph{differentiable} functions, which we can see by no
 \item The identity function is differentiable, as witnessed by \thmRef{linear} and the linearity if |id|; and
 \item The composition of differentiable functions is differentiable, as \thmRef{compose} attests.
 \end{itemize}
-That the category laws (identity and associativity) hold follows from differentiable functions being a subset of all functions.\footnote{There are many examples of categories besides restricted forms of functions, including relations, logics, partial orders, and even matrices.}
+The category laws (identity and associativity) hold, because differentiable functions form a subset of all functions.\footnote{There are many examples of categories besides restricted forms of functions, including relations, logics, partial orders, and even matrices.}
 
 %format --> = "\dashrightarrow"
 
@@ -424,7 +422,7 @@ adf f = D (ad f)
 
 \begin{closerCodePars}
 Our goal is to give a |Category| instance for |D| such that |adf| is a functor.
-This goal is essentially an algebra problem, and the desired |Category| is the solution to that problem.
+This goal is essentially an algebra problem, and the desired |Category| instance is the solution to that problem.
 Saying that |adf| is a functor is equivalent to the following two conditions for all (suitably typed) functions |f| and |g|:\footnote{The |id| and |(.)| on the left-hand sides are for |D|, while the ones on the right are for |(->)|.}
 \begin{code}
 id == adf id
@@ -443,14 +441,14 @@ ad id == \ a -> (id a, id)
 
 ad (g . f) == \ a -> let { (b,f') = ad f a ; (c,g') = ad g b } in (c, g' . f')
 \end{code}
-Now use these two facts to rewrite the right-hand sides of the functor specification for |adf|:
+Then use these two facts to rewrite the right-hand sides of the functor specification for |adf|:
 \begin{code}
 id == D (\ a -> (a,id))
 
 D (ad g) . D (ad f) == D (\ a -> let { (b,f') = ad f a ; (c,g') = ad g b } in (c, g' . f'))
 \end{code}
 The |id| equation is trivially solvable by \emph{defining} |id = D (\ a -> (a,id))|.
-To solve the |(.)| equation, generalize it to a \emph{stronger} condition:\footnote{The new |f| is the old |ad f| and so has changed from type |a -> b| to type |a -> b :* (a :-* b)|.}
+To solve the |(.)| equation, generalize it to a \emph{stronger} condition:\footnote{The new |f| is the old |ad f| and so has changed from type |a -> b| to type |a -> b :* (a :-* b)|. Likewise for |g|.}
 \begin{code}
 D g . D f == D (\ a -> let { (b,f') = f a ; (c,g') = g b } in (c, g' . f'))
 \end{code}
@@ -489,7 +487,7 @@ For instance, let's prove that |id . D f == D f| for all |D f :: D a b|:\footnot
 
 We can prove the other required properties similarly.
 Fortunately, there is a way to bypass the need for these painstaking proofs, and instead rely \emph{only} on our original specification for this |Category| instance, namely that |ad| is a functor.
-Well, to buy this prove convenience, we have to make one concession, namely that we consider only morphisms in |D| that arise from |adf|, i.e., only |hat f :: D a b| such that |hat f = adf f| for some |f :: a -> b|.
+To buy this proof convenience, we have to make one concession, namely that we consider only morphisms in |D| that arise from |adf|, i.e., only |hat f :: D a b| such that |hat f = adf f| for some |f :: a -> b|.
 We can ensure that indeed only such |hat f| do arise by making |D a b| an \emph{abstract} type, i.e., hiding its data |constructor|.\notefoot{%
 For the |Category D| instance given above, the painstaking proofs appear to succeed even without this condition.
 Am I missing something?}
@@ -512,8 +510,10 @@ Associativity has a similar flavor as well:
 ==  {- functor law for |(.)| (specification of |adf|) -}
    adf (h . (g . f))
 ==  {- category law for functions -}
+   adf ((h . g) . f)
+==  {- functor law for |(.)| (specification of |adf|) -}
    adf (h . g) . adf f
-==  {- category law for functions -}
+==  {- functor law for |(.)| (specification of |adf|) -}
    (adf h . adf g) . adf f
 \end{code}
 
@@ -620,6 +620,7 @@ instance CoproductPCat (->) where
   f ||| g = \ a -> f a ^+^ g a
 \end{code}
 Unsurprisingly, there is a notion of \emph{cocartesian functor}, saying that the cocartesian structure is preserved, i.e.,
+\begin{closerCodePars}
 \begin{code}
 F inl  == inl
 
@@ -627,6 +628,7 @@ F inr  == inr
 
 F (f ||| g) == F f ||| F g
 \end{code}
+\end{closerCodePars}
 From the specification that |adf| is a cocartesian functor, along with \corRef{join} and the linearity of |inl| and |inr|, we can derive a correct-by-construction |CoproductPCat| instance for differentiable functions:
 \begin{code}
 instance CoproductPCat D where
@@ -640,7 +642,7 @@ instance CoproductPCat D where
 So far, the vocabulary we've considered comprises linear functions and combining forms (|(.)|, |(&&&)|, and |(###)|) that preserve linearity.
 To make differentiation at all interesting, we'll need some non-linear primitives as well.
 Let's now add these primitives, while continuing to derive correct implementations from simple, regular specifications in terms of structure preservation.
-We'll define a collection of interfaces for numeric operations, roughly imitating Haskell's numeric type class hierarchy\needcite.
+We'll define a collection of interfaces for numeric operations, roughly imitating Haskell's numeric type class hierarchy \needcite.
 
 Haskell provides the following basic class:
 \begin{code}
@@ -732,7 +734,7 @@ Stepping back to consider what we've done, a general recipe emerges:\notefoot{Go
 \begin{itemize}
 \item Start with an expensive or even non-computable specification (here involving differentiation).
 \item Build the desired result into the representation of a new data type (here as the combination of a function and its derivative).
-\item Try to show that conversion from a simpler form (here regular functions) to the new data type---even if not computable---is \emph{compositional} with respect to a well-understood algebraic abstraction (here category).
+\item Try to show that conversion from a simpler form (here regular functions) to the new data type---even if not computable---is \emph{compositional} with respect to a well-understood algebraic abstraction (here |Category|).
 \item If compositionality fails (as with |der|, unadorned differentiation, in \secref{Sequential composition}), then examine the failure to find an augmented specification, iterating as needed until converging on a representation and corresponding specification that \emph{is} compositional.
 \item Set up an algebra problem whose solution will be an instance of the well-understood algebraic abstraction for the chosen representation.
 These algebra problems always have a particular stylized form, namely that the operation being solved for is a \emph{homomorphism} for the chosen abstraction (here a category homomorphism, also called a ``functor'').
@@ -791,7 +793,7 @@ The generalized AD definitions, shown in \figref{GAD} result from making a few s
 \item The new category |GD| takes as parameter a category |k| that replaces |(:-*)| in |D|.
 \item The |linearD| function to take two arrows, previously identified.\notefoot{Alternatively, posit an embedding function |lin :: (a :-* b) -> (a -> b)|, write \thmRef{linear} as |der (lin f) a = f|, and change to |linearD :: (a :-* b) -> D a b|.
 Then retroactively make |linearD| a method of a new class.}
-\item The functionality needed of the underlying category become explicit.
+\item The functionality needed of the underlying category becomes explicit.
 \end{itemize}
 
 \begin{figure}
@@ -823,7 +825,7 @@ instance ScalarCat k s => NumCat GD s where
 
 \sectionl{Matrices}
 
-As an aside, let's consider matrices--the representation typically used in linear algebra---and especially the property of rectangularity.
+As an aside, let's consider matrices---the representation typically used in linear algebra---and especially the property of rectangularity.
 There are three possibilities (with the last two non-exclusive) for a nonempty matrix |W|:
 \begin{itemize}
 \item |width W == height W == 1|;
@@ -863,7 +865,7 @@ Although this choice is simple and reliable, sometimes we need a \emph{data} rep
       For surfaces represented in parametric form, i.e., as |f :: R2 -> R3|, normal vectors are calculated from the partial derivatives of |f| as vectors, which are the rows of the $2 \times 3$ Jacobian matrix that represents the derivative of |f| at any given point |p :: R2|.
 \end{itemize}
 
-Given a linear map $f' :: U :-* V$ represented as a function, it is possible to extract a Jacobian matrix from (including the special case of a gradient vector), by applying |f'| to every vector in a basis of |U|.
+Given a linear map |f' :: U :-* V| represented as a function, it is possible to extract a Jacobian matrix from (including the special case of a gradient vector), by applying |f'| to every vector in a basis of |U|.
 A particularly convenient basis is the sequence of column vectors of an identity matrix, where the |ith| such vector has a one in the |ith| position and zeros elsewhere.
 If |U| has dimension |n| (e.g., |U = Rm|), this sampling requires |m| passes.
 Considering the nature of the sparse vectors used as arguments, each pass likely computes inefficiently.
@@ -882,7 +884,7 @@ Given a scalar field |s|, any free vector space has the form |p -> s| for some |
 The size of |p| is the dimension of the vector space.
 Scaling a vector |v :: p -> s| or adding two such vectors is defined in the usual was as for functions.
 Rather than using functions directly as a representation, one can instead use any representation isomorphic to such a function.
-In particular, we can represent vector spaces over a given field as a \emph{representable functor}, i.e., a functor |f| such that |f s =~ p -> s| for some |p|.\notefoot{Relate this notion of \emph{functor} to the one used for specifying |adf|.}
+In particular, we can represent vector spaces over a given field as a \emph{representable functor}, i.e., a functor |F| such that |F s =~= p -> s| for some |p| (where ``|=~=|'' denotes isomorphism).\notefoot{Relate this notion of \emph{functor} to the one used for specifying |adf|.}
 This method is convenient in a richly typed functional language like Haskell, which comes with libraries of functor-level building blocks.
 Four such building blocks are functor product, functor composition, and their corresponding identities, which are the unit functor (containing no elements) and the identity functor (containing one element) \citep{Magalhaes:2010,HaskellWikiGhcGenerics}.
 \begin{code}
@@ -895,7 +897,7 @@ newtype  Par1         a = Par1 a                    -- identity
 Use of these functors gives data representation of functions that saves recomputation over a native function representation, as a form of functional memoization \cite{Hinze00memofunctions}.
 
 One way to relate these representable functors to the types that appear in our categorical operations is to use associated types \needcite, associating a functor representation to various types.
-Given a scalar field |s| and type |a| of values, presumably built up from a scalar type |s|, the associated |V s a| is a functor such that |V s a s =~ a|.
+Given a scalar field |s| and type |a| of values, presumably built up from a scalar type |s|, the associated |V s a| is a functor such that |V s a s =~= a|.
 In other words, the type |a| is modeled as a structure of |s| values, where the structure is given by the associated functor |V s a|.
 A ``generalized matrix'' for the linear map type |a :-* b| is the composition of two functors, an outer functor for |b| and an inner functor for |a|, together containing elements from the underlying scalar field |s|:
 \begin{code}
@@ -968,7 +970,7 @@ The generalized matrix representation of \secref{Generalized matrices} eliminate
 
 One particularly important efficiency concern is that of (generalized) matrix multiplication.
 Although matrix multiplication is associative (because it correctly implements composition of linear maps represented as matrices), different associations can result in very different computational cost.
-The problem of optimally associating a chain of matrix multiplications can be solved via dynamic programming in $O(n^3)$ time \citep[Section 15.2]{CLRS} or with a more subtle algorithm in $O(n \log n)$ time \citep{Hu:Shing:1981}.
+The problem of optimally associating a chain of matrix multiplications can be solved via dynamic programming in $O(n^3)$ time \citep[Section 15.2]{CLRS} or in $O(n \log n)$ time with a more subtle algorithm \citep{Hu:Shing:1981}.
 Solving this problem requires knowing only the sizes (heights and widths) of the matrices involved, and those sizes depend only on the types involved for the sort of strongly typed linear map representation |L s a b| above.
 One can thus choose an optimal association at compile time rather than waiting for run-time and then solving the problem repeatedly.
 \mynote{Read, grok, and cite \cite {Naumann2008OptimalJA}.}
@@ -993,7 +995,92 @@ That is, represent |f :: a `k` b| by the function |(\ h -> h . f) :: (b `k` r) -
 The morphism |h| will be a \emph{continuation}, finishing the journey from |f| all the way to the codomain of the overall function being assembled.
 Building a category around this idea results in turning \emph{all} patterns of composition into fully left-associated.
 
+First, package up the continuation representation as a transformation from one category |k| to a new category, |Cont k|:
+\begin{code}
+newtype Cont k r a b = Cont ((b `k` r) -> (a `k` r))
 
+cont :: Category k => (a `k` b) -> Cont k r a b
+cont f = Cont (. NOP f)
+\end{code}
+As usual, let's derive instances for our new category by homomorphic specification.
+To say that |cont| is a functor (|Category| homomorphism), is equivalent to the following two equations:
+\begin{closerCodePars}
+\begin{code}
+cont id == id
+
+cont (g . f) == cont g . cont f
+\end{code}
+\end{closerCodePars}
+Simplify the first homomorphism equation:
+\begin{code}
+   cont id
+==  {- definition of |cont| -}
+   Cont (. NOP id)
+==  {- definition of right section -}
+   Cont (\ h -> h . id)
+==  {- category law -}
+   Cont (\ h -> h)
+==  {- definition of |id| -}
+   Cont id
+\end{code}
+The first homomorphism equation is thus equivalent to `id == Cont id`, which is in solved form.
+For the second homomorphism equation, simplify both sides:
+\begin{code}
+   cont g . cont f
+==  {- definition of |cont| -}
+   Cont (. g) . Cont (. f)
+   
+   cont (g . f)
+==  {- definition of |cont| -}
+   cont (. (g . f))
+==  {- definition of right section -}
+   cont (\ h -> h . (g . f))
+==  {- category law -}
+   cont (\ h -> (h . g) . f)
+==  {- definition of right section -}
+   cont (\ h -> (. f) ((. g) h))
+==  {- definition of |(.)| -}
+   Cont ((. f) . (. g))
+\end{code}
+The simplified requirement;
+\begin{code}
+Cont (. g) . Cont (. f) == Cont ((. f) . (. g))
+\end{code}
+Generalize to a stronger condition, replacing |(. g)| and |(. f)| with |g| and |f| (appropriately re-typed):
+\begin{code}
+Cont g . Cont f == Cont (f . g)
+\end{code}
+This strengthened condition is also in solved form, so we have a sufficient definition:
+\begin{code}
+instance Category k => Category (Cont k) where
+  id = Cont id
+  Cont g . Cont f = Cont (f . g)
+\end{code}
+Notice the reversal of composition (and, more subtly, of |id|).
+
+Likewise, we can derive a |ProductCat| instance from the specification that |cont| is a cartesian functor (i.e., a |ProductCat| homomorphism), i.e.,
+\begin{closerCodePars}
+\begin{code}
+cont exl == exl
+
+cont exr == exr
+
+cont (f &&& g) == cont f &&& cont g
+\end{code}
+\end{closerCodePars}
+
+\begin{code}
+   cont exl
+==  {- definition of |cont| -}
+   Cont (. NOP exl)
+\end{code}
+
+\begin{code}
+instance (ProductCat k, CoproductPCat k) => ProductCat (Cont k r) where
+  exl  = cont exl
+  exr  = cont exr
+  Cont f &&& Cont g = Cont ((f |||| g) . unjoinP)
+\end{code}
 
 
 Cayley's Theorem: that any monoid is equivalent to a monoid of functions under composition.
@@ -1017,6 +1104,7 @@ Cayley's Theorem: that any monoid is equivalent to a monoid of functions under c
 They're quite similar.
 \item Relate also to algebra of programming \citep{BirddeMoor96:Algebra}.
 \item Relate this work to backprop-as-functor \citep{Fong2017BackpropAF}.
+\item |ConstCat| for |Dual| and for linear arrows in general.
 \end{itemize}
 
 \bibliography{bib}
