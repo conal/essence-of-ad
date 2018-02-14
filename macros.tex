@@ -17,7 +17,6 @@
 \usepackage{latexsym}
 \usepackage{amssymb}
 \usepackage{color}
-\usepackage{hyperref}
 
 \usepackage{setspace}
 %% \usepackage{mathabx}
@@ -31,6 +30,9 @@
 
 %% %% lhs2tex messes with verbatim, and I lose spacing.
 %% \usepackage{fancyvrb}
+
+%% Load late. See http://texblog.net/hyperref/
+\usepackage{hyperref}
 
 \nc\out[1]{}
 
@@ -84,3 +86,13 @@
 }
 }
 \nc\figone{\figoneW{0.45}}
+
+\nc\workingHere{
+\vspace{1ex}
+\begin{center}
+\setlength{\fboxsep}{3ex}
+\setlength{\fboxrule}{4pt}
+\huge\textcolor{red}{\framebox{Working here}}
+\end{center}
+\vspace{1ex}
+}
