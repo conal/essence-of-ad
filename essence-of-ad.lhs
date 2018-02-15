@@ -1304,7 +1304,7 @@ Similarly,
 \begin{code}
    cont inr == Cont (exr . unjoin)
 \end{code}
-Finally,
+Then
 \begin{code}
    cont jam
 ==  {- definition of |cont| -}
@@ -1323,6 +1323,27 @@ Finally,
 
 Note the pleasant symmetries in these definitions.
 Each |ProductCat| or |CoproductPCat| operation on |Cont k r| is defined via the dual |CoproductPCat| or |ProductCat| operation, together with the |join|/|unjoin| isomorphism.
+
+The final element of our linear vocabulary is scalar multiplication.
+From \secref{Numeric operations},
+\begin{code}
+class ScalarCat k a where
+   scale :: a -> (a `k` a)
+\end{code}
+The |Cont| version:\notefoot{Is there a more general argument to make? I haven't wanted to say that |h| is linear.}
+\begin{code}
+   cont (scale s)
+==  {- definition of |cont| -}
+   Cont (\ h -> h . scale s)
+==  {- linearity of |h| -}
+   Cont (\ h -> scale s . h)
+==  {- Definition of |scale| for functions/maps -}
+   Cont (\ h -> scale s h)
+==  {- $\eta$-reduction -}
+   Cont (scale s)
+\end{code}
+
+\workingHere
 
 \mynote{Mention Cayley's Theorem: that any monoid is equivalent to a monoid of functions under composition.
 I think |Cont| is a generalization from |Monoid| to |Category|.}
