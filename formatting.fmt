@@ -66,9 +66,13 @@
 
 
 %format *** = "\times"
-%format &&& = "\mathbin{\triangle}"
+%format &&& = "\mathbin{\vartriangle}"
 %format ||| = "\mathbin{\triangledown}"
-%format +++ = "\!+\!"
+
+%format |||| = |||
+
+%format +++ = ***
+%format ++++ = +++
 
 %% Because ||| between inline-code "|" delimiters confuses lhs2tex
 %format ### = "\mathbin{\triangledown}"
@@ -84,6 +88,7 @@
 %format Par1
 %format :*: = " \boldsymbol{\times} "
 %format :.: = " \boldsymbol{\circ} "
+%format Comp1
 
 % Got from Andres L:
 \newcommand{\calculationcomments}{%
