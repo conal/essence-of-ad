@@ -207,42 +207,45 @@ Combining |f| and |der f| into a single function in this way allows us to elimin
 \end{code}
 \end{corollary}
 
-\subsectionl{Products in the codomain}
+\subsectionl{Parallel composition}
 
 The chain rule, telling how to differentiate sequential compositions, gets a lot of attention in calculus classes and in automatic and symbolic differentiation.\notefoot{To do: introduce AD and SD early.}
 There are other important ways to combine functions, however, and examining them yields additional helpful tools.
-
-One other tool combines two functions sharing a domain type into a single function that pairs the result:
+One other tool combines two functions in \emph{parallel}:\footnote{By ``parallel'', I simply mean without data dependencies. Operationally, the two functions can be applied simultaneously or not.}
 \begin{code}
-(&&&) :: (a -> c) -> (a -> d) -> (a -> c :* d)
-f &&& g = \ a -> (f a, g a)
+(***) :: (a -> c) -> (b -> d) -> (a :* b -> c :* d)
+f *** g = \ (a,b) -> (f a, g b)
 \end{code}
-We will sometimes refer to the |(&&&)| operation as ``fork'' \citep{Gibbons2002:Calculating}.
-Note that it can be used to give a terser specification: |ad f = f &&& der f|.
+We will sometimes refer to the |(***)| operation as ``cross'' \citep{Gibbons2002:Calculating}.
 
-While the derivative of the (sequential) composition is a composition of derivatives, the derivative of a fork is the fork of the derivatives \citep[Theorem 2-3 (3)]{Spivak65}:\notefoot{Is there a name for this rule? I've never seen it mentioned.}
-\begin{theorem}[fork rule] \thmLabel{fork}
-$$|der (f &&& g) a == der f a &&& der g a|$$
+%% %% Move to the later introduction of |(&&&)|.
+%% Note that it can be used to give a terser specification: |ad f = f &&& der f|.
+
+While the derivative of the sequential composition is a sequential composition of derivatives, the derivative of a parallel composition is the parallel composition of the derivatives \citep[variant of Theorem 2-3 (3)]{Spivak65}:\notefoot{Is there a name for this rule? I've never seen it mentioned.}
+\begin{theorem}[cross rule] \thmLabel{cross}
+$$|der (f *** g) (a,b) == der f a *** der g b|$$
 \end{theorem}
-If |f :: a -> c| and |g :: a -> d|, then |der f a :: a :-* c| and |der g a :: a :-* d|, so |der f a &&& der g a :: a :-* c :* d|, as needed.
+If |f :: a -> c| and |g :: b -> d|, then |der f a :: a :-* c| and |der g b :: b :-* d|, so |der f a *** der g b :: a :* b :-* c :* d|, as needed.
 
-\thmRef{fork} gives us what we need to construct |ad (f &&& g)| compositionally:
-\begin{corollary} \corLabel{fork}
-|ad| is compositional with respect to |(###)|. Specifically,
+\thmRef{cross} gives us what we need to construct |ad (f *** g)| compositionally:
+\begin{corollary} \corLabel{cross}
+|ad| is compositional with respect to |(***)|. Specifically,
 \begin{code}
-   ad (f &&& g) a
+   ad (f *** g) (a,b)
 ==  {- definition of |ad| -}
-   ((f &&& g) a, der (f &&& g) a)
-==  {- definition of |(&&&)| -}
-   ((f a, g a), der (f &&& g) a)
-==  {- \thmRef{fork} -}
-   ((f a, g a), der f a &&& der g a)
+   ((f *** g) (a,b), der (f *** g) (a,b))
+==  {- definition of |(***)| -}
+   ((f a, g b), der (f *** g) (a,b))
+==  {- \thmRef{cross} -}
+   ((f a, g b), der f a *** der g b)
 ==  {- refactoring -}
-   let { (c,f') = (f a, der f a) ; (d,g') = (g a, der g a) } in ((c,d), (f' &&& g'))
+   let { (c,f') = (f a, der f a) ; (d,g') = (g b, der g b) } in ((c,d), (f' *** g'))
 ==  {- definition of |ad| -}
-   let { (c,f') = ad f a ; (d,g') = ad g a } in ((c,d), (f' &&& g'))
+   let { (c,f') = ad f a ; (d,g') = ad g b } in ((c,d), (f' *** g'))
 \end{code}
 \end{corollary}
+
+%if False
 
 \subsectionl{Products in the domain}
 
@@ -287,7 +290,9 @@ If |f :: a -> c| and |g :: b -> c|, then |der f a :: a :-* c| and |der g b :: b 
 \end{code}
 \end{corollary}
 
-An important point left implicit in the discussion above is that our three combining forms |(.)|, |(&&&)|, and |(###)| all preserve linearity.
+%endif
+
+An important point left implicit in the discussion above is that sequential and parallel composition preserve linearity.
 This property is what makes it meaningful to use these forms to combine derivatives, i.e., linear maps, as we've done above.
 
 \subsectionl{Linear functions}
@@ -319,7 +324,7 @@ Note how much simpler it is to say |der fst (a,b) == fst|, and with no loss of p
 
 Given \thmRef{linear}, we can construct |ad f| for all linear |f|:
 \begin{corollary} \corLabel{linear}
-|ad| is compositional with respect to linear functions. Specifically,
+|ad| is compositional with respect to linear functions. Specifically, if |f| is linear, then
 \begin{code}
    ad f
 ==  {- definition of |ad| -}
@@ -336,7 +341,7 @@ Given \thmRef{linear}, we can construct |ad f| for all linear |f|:
 The definition of |ad| is a well-defined specification, but it is not an implementation, since |D| itself is not computable.
 \corRefs{compose}{linear} provide insight into the compositional nature of |ad|, in exactly the form we can now assemble into an efficient, correct-by-construction implementation.
 
-Although differentiation is not computable when given just an arbitrary computable function, we can instead build up differentiable functions compositionally, using exactly the combining forms introduced above, namely |(.)|, |(&&&)|, |(###)|, and linear functions, together with various non-linear primitives.
+Although differentiation is not computable when given just an arbitrary computable function, we can instead build up differentiable functions compositionally, using exactly the combining forms introduced above, namely |(.)|, |(***)|, and linear functions, together with various non-linear primitives.
 Computations constructed using that vocabulary are differentiable by construction thanks to \corRefs{compose}{linear}.
 The building blocks above are not just a random assortment, but rather a fundamental language of mathematics, logic, and computation, known as \emph{category theory} \needcite.
 Although it would be unpleasant to program directly in this language, its foundational nature enables instead an automatic conversion from conventionally written functional programs \citep{Lambek:1980:LambdaToCCC,Lambek:1985:CCC,Elliott-2017-compiling-to-categories}.
@@ -522,38 +527,79 @@ Each one uses only the functor laws plus the particular category law on function
 The proofs do \emph{not} rely on anything about the nature |D| or |adf| other than the functor laws.
 The importance of this observation is that we \emph{never} need to do these proofs when we specify category instances via a functor.
 
-\subsectionl{Cartesian}
+\subsectionl{Monoidal categories}
 
-%format ProductCat = Cartesian
-%format CoproductCat = Cocartesian
-%format CoproductPCat = Cocartesian
+%format MonoidalPCat = Monoidal
 
 % \nc\scrk[1]{_{\hspace{#1}\scaleto{(\leadsto)\!}{4pt}}}
 \nc\scrk[1]{}
 
 %format (Prod (k) a b) = a "\times\scrk{-0.4ex}" b
+
+\secref{Parallel composition} introduced parallel composition.
+This operation generalizes to play an important role in category theory as part of the notion of a \emph{monoidal category}:
+\begin{code}
+class Category k => MonoidalPCat k where
+  (***) :: (a `k` c) -> (b `k` d) -> (Prod k a b `k` Prod k c d)
+
+instance MonoidalPCat (->) where
+  f *** g = \ (a,b) -> (f a, g b)
+\end{code}
+More generally, a category |k| can be monoidal over constructions other than products, but cartesian products (ordered pairs) suffice for this paper.
+
+Two monoidal categories can be related by a \emph{monoidal functor}, which is a functor that also preserves the monoidal structure.
+That is, a monoidal functor |F| from monoidal category |CU| to monoidal category |CV|, besides mapping objects and morphisms in |CU| to counterparts in |CV| while preserving the category structure (|id| and |(.)|), \emph{also} preserves the monoidal structure:
+\begin{code}
+F (f *** g) == F f *** F g
+\end{code}
+Just as \corRefTwo{compose}{linear} were key to deriving a correct-by-construction |Category| instance from the specification that |adf| is a functor, \corRef{cross} guides correct-by-construction |MonoidalPCat| instance from the specification that |adf| is a cartesian functor.
+
+Let |F| be |adf| in the reversed forms of monoidal functor equation above, and expand |adf| to its definition as |D . ad|:
+\begin{code}
+D (ad f) *** D (ad g) == D (ad (f *** g))
+\end{code}
+By \corRef{cross},
+\begin{code}
+ad (f *** g) == \ (a,b) -> let { (c,f') = ad f a ; (d,g') = ad g b } in ((c,d), f' *** g')
+\end{code}
+Now substitute the left-hand side of this property into the right-hand side of the of the monoidal functor property for |adf|, and \emph{strengthen} the condition by generalizing from |ad f| and |ad g|:
+\begin{code}
+D f *** D g == D (\ (a,b) -> let { (c,f') = f a ; (d,g') = g b } in ((c,d), f' *** g'))
+\end{code}
+This somewhat strengthened form of the specification can be turned directly into a sufficient definition:
+\begin{code}
+instance MonoidalPCat D where
+  D f *** D g = D (\ (a,b) -> let { (c,f') = f a ; (d,g') = g b } in ((c,d), f' *** g'))
+
+\end{code}
+
+\subsectionl{Cartesian categories}
+
+%format TerminalCat = Terminal
+%format CoterminalCat = Coterminal
+
+%format ProductCat = Cartesian
+%format CoproductCat = Cocartesian
+%format CoproductPCat = Cocartesian
+
 %format (Coprod (k) a b) = a "+\scrk{-0.4ex}" b
 %% %format (Exp (k) a b) = a "\Rightarrow\scrk{-0.2ex}" b
 
-\secref{Products in the codomain} introduced another combining form\out{ (pronounced ``fork'')}:\footnote{Consider instead going with |(***)| and |dup| for |Cartesian| and add |jam| for biproducts.}
-\begin{code}
-(&&&) :: (a -> c) -> (a -> d) -> (a -> c :* d)
-f &&& g = \ a -> (f a, g a)
-\end{code}
-This operation generalizes to play an important role in category theory as part of the notion of a \emph{cartesian category}, along with two projection operations:
+The |MonoidalPCat| abstraction gives a way to combine two functions but not separate them.
+It also gives no way to duplicate or discard information.
+These additional abilities require another algebraic abstraction, namely that of \emph{cartesian category}, adding operations for projection and duplication:
 \begin{code}
 class Category k => ProductCat k where
-  exl    ::  (Prod k a b) `k` a
-  exr    ::  (Prod k a b) `k` b
-  (&&&)  ::  (a `k` c)  -> (a `k` d)  -> (a `k` (Prod k c d))
+  exl  :: (Prod k a b) `k` a
+  exr  :: (Prod k a b) `k` b
+  dup  :: a `k` (Prod k a a)
 \end{code}
-More generally, each category |k| can have its own notion of products, but cartesian products (ordered pairs) suffice for this paper.
 For functions,\notefoot{Give a similar instance for |Category (->)|, and don't bother repeating the definition of |(&&&)| just above.}
 \begin{code}
 instance ProductCat (->) where
-  exl = \ (a,b) -> a
-  exr = \ (a,b) -> b
-  f &&& g = \ a -> (f a, g a)
+  exl  = \ (a,b) -> a
+  exr  = \ (a,b) -> b
+  dup  = \ a -> (a,a)
 \end{code}
 
 \begin{closerCodePars}
@@ -561,81 +607,129 @@ Two cartesian categories can be related by a \emph{cartesian functor}, which is 
 That is, a cartesian functor |F| from cartesian category |CU| to cartesian category |CV|, besides mapping objects and morphisms in |CU| to counterparts in |CV| while preserving the category structure (|id| and |(.)|), \emph{also} preserves the cartesian structure:
 \begin{code}
 F exl  == exl
-
 F exr  == exr
-
-F (f &&& g) == F f &&& F g
+F dup  == dup
 \end{code}
-Just as \corRefTwo{linear}{compose} were key to deriving a correct-by-construction |Category| instance from the specification that |adf| is a functor, \corRefTwo{linear}{fork} guides correct-by-construction |ProductCat| instance from the specification that |adf| is a cartesian functor.
+Just as \corRefs{compose}{linear} were key to deriving a correct-by-construction |Category| and |MonoidalPCat| instances from the specification that |adf| is a functor and a monoidal functor respectively, \corRef{linear} guides correct-by-construction |ProductCat| instance from the specification that |adf| is a cartesian functor.
 
 Let |F| be |adf| in the reversed forms of cartesian functor equations above, and expand |adf| to its definition as |D . ad|:
 \begin{code}
-exl == D (ad exl)
-
-exr == D (ad exr)
-
-D (ad f) &&& D (ad g) == D (ad (f &&& g))
+exl  == D (ad exl)
+exr  == D (ad exr)
+dup  == D (ad dup)
 \end{code}
-Next, by \corRefTwo{linear}{fork}, together with the linearity of |exl| and |exr|,
+Next, by \corRef{linear}, together with the linearity of |exl|, |exr|, and |dup|,
 \begin{code}
-ad exl == \ (a,b) -> (a, exl)
-
-ad exr == \ (a,b) -> (b, exr)
-
-ad (f &&& g) == \ a -> let { (c,f') = ad f a ; (d,g') = ad g a } in ((c,d), f' &&& g')
+ad exl  == \ p  -> (exl  p  , exl  )
+ad exr  == \ p  -> (exr  p  , exr  )
+ad dup  == \ a  -> (dup  a  , dup  )
 \end{code}
-Now substitute the left-hand sides of these three properties into the right-hand sides of the of the cartesian functor properties for |adf|, and \emph{strengthen} the last condition (on |(&&&)|) by generalizing from |ad f| and |ad g|:
+Now substitute the left-hand sides of these three properties into the right-hand sides of the of the cartesian functor properties for |adf|, and recall the definition of |linearD|:
 \begin{code}
-exl == linearD exr
-
-exr == linearD exr
-
-D f &&& D g == D(\a -> let { (c,f') = f a ; (d,g') = g a } in ((c,d), f' &&& g'))
+exl  == linearD exr
+exr  == linearD exr
+dup  == linearD dup
 \end{code}
 \end{closerCodePars}%
-This somewhat strengthened form of the specification can be turned directly into a sufficient definition:
+This form of the specification can be turned directly into a sufficient definition:
 \begin{code}
 instance ProductCat D where
-  exl = linearD exl
-  exr = linearD exr
-  D f &&& D g = D (\a -> let { (c,f') = f a ; (d,g') = g a } in ((c,d), f' &&& g'))
+  exl  = linearD exl
+  exr  = linearD exr
+  dup  = linearD dup
 \end{code}
 
-\subsectionl{Cocartesian}
+\subsectionl{Cocartesian categories}
+
+%format inlP = inl
+%format inrP = inr
+%format jamP = jam
 
 Cartesian categories have a dual, known as \emph{cocartesian categories}, with each cartesian operation having a mirror image with morphisms reversed (swapping domain and codomain):\notefoot{Mention sums again.}
 \begin{code}
 class Category k => CoproductPCat k where
-  inl    ::  Additive b => a `k` (Prod k a b)
-  inr    ::  Additive a => b `k` (Prod k a b)
-  (|||)  ::  Additive c => (a `k` c)  -> (b `k` c)  -> ((Prod k a b) `k` c)
+  inl  ::  Additive b => a `k` (Prod k a b)
+  inr  ::  Additive a => b `k` (Prod k a b)
+  jam  ::  Additive c => (Prod k a a) `k` a
 \end{code}
-Unlike |Category| and |ProductCat|, we've had to add an additivity requirement (having a notion of addition and corresponding identity) to the types involved, in order to have an instance for functions\out{\footnote{Alternatively, we can skip the instance for |(->)| and instead begin in a category of functions on additive types.}}:
+Unlike |Category| and |ProductCat|, we've had to add an additivity requirement (having a notion of addition and corresponding identity) to the types involved, in order to have an instance for functions:\notefoot{Alternatively, skip the instance for |(->)| and instead begin in a category of functions on additive types.}
 %format zero = 0
 %format ^+^ = +
 \begin{code}
 instance CoproductPCat (->) where
   inl  = \ a -> (a,zero)
   inr  = \ b -> (zero,b)
-  f ||| g = \ a -> f a ^+^ g a
+  jam  = \ (a,b) -> a ^+^ b
 \end{code}
 Unsurprisingly, there is a notion of \emph{cocartesian functor}, saying that the cocartesian structure is preserved, i.e.,
 \begin{closerCodePars}
 \begin{code}
 F inl  == inl
-
 F inr  == inr
-
-F (f ||| g) == F f ||| F g
+F jam  == jam
 \end{code}
 \end{closerCodePars}
-From the specification that |adf| is a cocartesian functor, along with \corRef{join} and the linearity of |inl| and |inr|, we can derive a correct-by-construction |CoproductPCat| instance for differentiable functions:
+From the specification that |adf| is a cocartesian functor and the linearity of |inl|, |inr|, and |jam|, we can derive a correct-by-construction |CoproductPCat| instance for differentiable functions:
 \begin{code}
 instance CoproductPCat D where
   inl  = linearD inl
   inr  = linearD inr
-  D f ||| D g = D (\ (a,b) -> let { (c,f') = f a ; (d,g') = g b } in (c ^+^ d, f' ||| g'))
+  jam  = linearD jam
 \end{code}
+
+\subsectionl{Derived operations}
+
+With |dup|, we can define an alternative to |(***)| that takes two morphisms sharing a domain:
+\begin{code}
+(&&&) :: Cartesian k => (a `k` c) -> (a `k` d) -> (a `k` Prod k c d)
+f &&& g = (f *** g) . dup
+\end{code}
+The |(&&&)| operation is sometimes called ``fork'' \citep{Gibbons2002:Calculating} and is particularly useful for translating from the $\lambda$-calculus to categorical form \citep[Section 3]{Elliott-2017-compiling-to-categories}.
+
+Dually, |jam| lets us define a second alternative to |(***)| for two morphisms sharing a \emph{codomain}:\notefoot{Do I use |(###)|?}
+\begin{code}
+(|||) :: Cocartesian k => (c `k` a) -> (d `k` a) -> (Prod k c d `k` a)
+f ||| g = jam . (f +++ g)
+\end{code}
+The |(###)| operation is sometimes called ``join'' \citep{Gibbons2002:Calculating}.
+
+In their uncurried form, these two operations are invertible:\notefoot{For proofs, cite \cite{Gibbons2002:Calculating}.}
+\begin{code}
+fork    :: Cartesian    k => (a `k` c) :* (a `k` d) -> (a `k` Prod k c d)
+unfork  :: Cartesian    k => (a `k` Prod k c d) -> (a `k` c) :* (a `k` d)
+
+join    :: Cocartesian  k => (c `k` a) :* (d `k` a) -> (Prod k c d `k` a)
+unjoin  :: Cocartesian  k => (Prod k c d `k` a) -> (c `k` a) :* (d `k` a)
+\end{code}
+where
+\begin{code}
+fork (f,g) = f &&& g
+unfork h = (exl . h, exr . h)
+
+join (f,g) = f ||| g
+unjoin h = (h . inl, h . inr)
+\end{code}
+
+\subsectionl{Abelian categories}
+
+Another perspective on the operations we've considered is that morphisms of any particular domain and codomain form an abelian group.
+The zero for |a `k` b| results from the composition of initial and terminal morphisms\notefoot{Define |TerminalCat| and |CoterminalCat| earlier.}:
+%format zeroC = 0
+%format zeroC = "\mathbf{0}"
+%format `plusC` = "\boldsymbol{+}"
+%format plusC = (`plusC`)
+\begin{code}
+type AbelianCat k =
+  (ProductCat k, CoproductPCat k, TerminalCat k, CoterminalCat k)
+
+zeroC :: AbelianCat k => a `k` b
+zeroC = ti . it
+
+plusC :: forall k a b. AbelianCat k => Binop (a `k` b)
+f `plusC` g = jamP . (f *** g) . dup
+\end{code}
+
+\mynote{Relate |zeroC| and |plusC| to existing vocabulary in other ways as well.}
 
 \subsectionl{Numeric operations}
 
@@ -703,7 +797,7 @@ instance Num a => ScalarCat (->) a where
   scale a = \ da -> a * da
 \end{code}
 Since uncurried multiplication is bilinear, its partial application as `scale a` (for functions) is linear for all |a|.
-Now we can rephrase the product rule in terms of more general, linear language.
+Now we can rephrase the product rule in terms of more general, linear language, using the derived |(###)| operation defined in \secref{Derived operations}.
 \begin{code}
 der mulC (a,b) = scale b ||| scale a
 \end{code}
@@ -808,10 +902,18 @@ instance Category k => Category (GD k) where
   id = linearD id id
   D g . D f = D (\ a -> let { (b,f') = f a ; (c,g') = g b } in (c, g' . f'))
 
+instance MonoidalPCat k => MonoidalPCat (GD k) where
+  D f *** D g = D (\ (a,b) -> let { (c,f') = f a ; (d,g') = g b } in ((c,d), f' *** g'))
+
 instance Cartesian k => Cartesian (GD k) where
-  exl  = linearD exl exl
-  exr  = linearD exr exr
-  D f &&& D g = D (\ a -> let { (b,f') = f a ; (c,g') = g a } in ((b,c), f' &&& g'))
+  exl  = linearD exl  exl
+  exr  = linearD exr  exr
+  dup  = linearD dup  dup
+
+instance Cocartesian k => Cocartesian (GD k) where
+  inl  = linearD inl  inl
+  inr  = linearD inr  inr
+  jam  = linearD jam  jam
 
 instance ScalarCat k s => NumCat GD s where
   negateC = linearD negateC
@@ -995,12 +1097,14 @@ That is, represent |f :: a `k` b| by the function |(\ h -> h . f) :: (b `k` r) -
 The morphism |h| will be a \emph{continuation}, finishing the journey from |f| all the way to the codomain of the overall function being assembled.
 Building a category around this idea results in turning \emph{all} patterns of composition into fully left-associated.
 
-First, package up the continuation representation as a transformation from one category |k| to a new category, |Cont k|:
+%format (rcomp f) = (. SPC f)
+
+First, package up the continuation representation as a transformation from one category |k| to a new category, |Cont k r|:\footnote{Following Haskell's notation for ``sections'', write ``|rcomp f|'' as shorthand for |\ h -> h . f|.}
 \begin{code}
 newtype Cont k r a b = Cont ((b `k` r) -> (a `k` r))
 
 cont :: Category k => (a `k` b) -> Cont k r a b
-cont f = Cont (. NOP f)
+cont f = Cont (rcomp f)
 \end{code}
 As usual, let's derive instances for our new category by homomorphic specification.
 To say that |cont| is a functor (|Category| homomorphism), is equivalent to the following two equations:
@@ -1015,7 +1119,7 @@ Simplify the first homomorphism equation:
 \begin{code}
    cont id
 ==  {- definition of |cont| -}
-   Cont (. NOP id)
+   Cont (rcomp id)
 ==  {- definition of right section -}
    Cont (\ h -> h . id)
 ==  {- category law -}
@@ -1023,67 +1127,224 @@ Simplify the first homomorphism equation:
 ==  {- definition of |id| -}
    Cont id
 \end{code}
-The first homomorphism equation is thus equivalent to `id == Cont id`, which is in solved form.
+The first homomorphism equation is thus equivalent to |id == Cont id|, which is in solved form.
 For the second homomorphism equation, simplify both sides:
 \begin{code}
    cont g . cont f
 ==  {- definition of |cont| -}
-   Cont (. g) . Cont (. f)
+   Cont (rcomp g) . Cont (rcomp f)
    
    cont (g . f)
 ==  {- definition of |cont| -}
-   cont (. (g . f))
+   cont (rcomp (g . f))
 ==  {- definition of right section -}
    cont (\ h -> h . (g . f))
 ==  {- category law -}
    cont (\ h -> (h . g) . f)
 ==  {- definition of right section -}
-   cont (\ h -> (. f) ((. g) h))
+   cont (\ h -> (rcomp f) ((rcomp g) h))
 ==  {- definition of |(.)| -}
-   Cont ((. f) . (. g))
+   Cont (rcomp f . rcomp g)
 \end{code}
-The simplified requirement;
+The simplified requirement:
 \begin{code}
-Cont (. g) . Cont (. f) == Cont ((. f) . (. g))
+Cont (rcomp g) . Cont (rcomp f) == Cont ((rcomp f) . (rcomp g))
 \end{code}
-Generalize to a stronger condition, replacing |(. g)| and |(. f)| with |g| and |f| (appropriately re-typed):
+Generalize to a stronger condition, replacing |(rcomp g)| and |(rcomp f)| with |g| and |f| (appropriately re-typed):
 \begin{code}
 Cont g . Cont f == Cont (f . g)
 \end{code}
 This strengthened condition is also in solved form, so we have a sufficient definition:
 \begin{code}
-instance Category k => Category (Cont k) where
+instance Category k => Category (Cont k r) where
   id = Cont id
   Cont g . Cont f = Cont (f . g)
 \end{code}
 Notice the reversal of composition (and, more subtly, of |id|).
 
-Likewise, we can derive a |ProductCat| instance from the specification that |cont| is a cartesian functor (i.e., a |ProductCat| homomorphism), i.e.,
-\begin{closerCodePars}
+Similarly, we can derive a |MonoidalPCat| instance from the specification that |cont| is a monoidal functor (i.e., a |MonoidalPCat| homomorphism), i.e.,
 \begin{code}
-cont exl == exl
-
-cont exr == exr
-
-cont (f &&& g) == cont f &&& cont g
+cont (f *** g) == cont f *** cont g
 \end{code}
-\end{closerCodePars}
+Simplify both sides of this property:
+%format ha = h"_{"a"}"
+%format hb = h"_{"b"}"
+\begin{code}
+   cont f *** cont g
+==  {- definition of |cont| -}
+   Cont (rcomp f) *** Cont (rcomp g)
 
+   cont (f *** g)
+==  {- definition of |cont| -}
+   Cont (rcomp (f *** g))
+==  {- definition of right section -}
+   Cont (\ h -> h . (f *** g))
+==  {- |join . unjoin == id| -}
+   Cont (\ h -> join (unjoin h) . (f *** g))
+==  {- refactor -}
+   Cont (\ h -> let (ha,hb) = unjoin h in join (ha,hb) . (f *** g))
+==  {- definition of |join| -}
+   Cont (\ h -> let (ha,hb) = unjoin h in (ha ||| hb) . (f *** g))
+==  {- |Cocartesian| identity \needcite{} -}
+   Cont (\ h -> let (ha,hb) = unjoin h in (ha . f ||| hb . g))
+==  {- definition of right section -}
+   Cont (\ h -> let (ha,hb) = unjoin h in ((rcomp f) ha ||| (rcomp g) hb))
+==  {- definition of |join| -}
+   Cont (\ h -> let (ha,hb) = unjoin h in join ((rcomp f) ha , (rcomp g) hb))
+==  {- definition of |(***)| -}
+   Cont (\ h -> let (ha,hb) = unjoin h in join (((rcomp f) *** (rcomp g)) (ha,hb)))
+==  {- eliminate |let| -}
+   Cont (\ h -> join (((rcomp f) *** (rcomp g)) (unjoin h)))
+==  {- definition of |(.)| -}
+   Cont (join . ((rcomp f) *** (rcomp g)) . unjoin)
+\end{code}
+The crucial trick here was to note that the continuation |h :: (a :* b) `k` r| can be split into two continuations |ha :: a `k` r| and |hb :: b `k` r| thanks to |join|/|unjoin| isomorphism from \secref{Derived operations}.\notefoot{In general, this splitting can lose efficiency, since |ha| and |hb| could duplicate work that was shared in |h|. Return to this concern later.}
+Now, strengthen the massaged specification, generalizing from |rcomp f| and |rcomp g| as usual.
+The result is in solved form and so translates directly to a implementation:
+\begin{code}
+instance MonoidalPCat k => MonoidalPCat (Cont k r) where
+  Cont f *** Cont g = Cont (join . (f *** g) . unjoin)
+\end{code}
+
+Next, derive |ProductCat| and |CoproductPCat| instances from the specification that |cont| is a cartesian functor and a cocartesian functor (i.e., |ProductCat| and |CoproductPCat| homomorphisms), i.e.,\\
+{\mathindent2.5em
+\begin{minipage}[b]{0.45\textwidth}
+\begin{code}
+cont exl  == exl
+cont exr  == exr
+cont dup  == dup
+\end{code}
+\end{minipage}
+\begin{minipage}[b]{0ex}{\rule[3ex]{0.5pt}{0.5in}}\end{minipage}
+\begin{minipage}[b]{0.0\textwidth}
+\begin{code}
+cont inl  == inl
+cont inr  == inr
+cont jam  == jam
+\end{code}
+\end{minipage}}\\
+Reversing each of these equations gives simple, correct instances:\\
+\begin{minipage}[b]{0.45\textwidth}
+\begin{code}
+instance  ProductCat k =>
+          ProductCat (Cont k r) where
+  exl  = cont exl
+  exr  = cont exr
+  dup  = cont dup
+\end{code}
+\end{minipage}
+\begin{minipage}[b]{0ex}{\rule[2.5ex]{0.5pt}{1in}}\end{minipage}
+\begin{minipage}[b]{0.0\textwidth}
+\begin{code}
+instance  CoproductCat k =>
+          CoproductCat (Cont k r) where
+  inl  = cont inl
+  inr  = cont inr
+  jam  = cont jam
+\end{code}
+\end{minipage}
+
+While these definitions are correct, they can be made more efficient.
+For instance,
 \begin{code}
    cont exl
 ==  {- definition of |cont| -}
-   Cont (. NOP exl)
+   Cont (\ h -> h . exl)
+==  {- \secref{Abelian categories} -}
+   Cont (\ h -> h ||| zeroC)
+==  {- definition of |join| -}
+   Cont (\ h -> join (h,zeroC))
+==  {- definition of |inl| for functions -}
+   Cont (\ h -> join (inl h))
+==  {- definition of |(.)| for functions -}
+   Cont (join . inl)
 \end{code}
-
+Similarly,
 \begin{code}
-instance (ProductCat k, CoproductPCat k) => ProductCat (Cont k r) where
-  exl  = cont exl
-  exr  = cont exr
-  Cont f &&& Cont g = Cont ((f |||| g) . unjoinP)
+   cont exr == Cont (join . inr)
+\end{code}
+For |dup :: a `k` (a :* a)|, we'll have |h :: (a :* a) ~> r|, so we can split |h| with |unjoin|:
+\begin{code}
+   cont dup
+==  {- definition of |cont| -}
+   Cont (\ h -> h . dup)
+==  {- |join . unjoin == id| -}
+   Cont (\ h -> join (unjoin h) . dup)
+==  {- refactor and definition of |join| -}
+   Cont (\ h -> let (ha,hb) = unjoin h in (ha ||| hb) . dup)
+==  {- \secref{Abelian categories} -}
+   Cont (\ h -> let (ha,hb) = unjoin h in ha `plusC` hb)
+==  {- definition of |uncurry| -}
+   Cont (\ h -> let (ha,hb) = unjoin h in uncurry plusC (ha,hb))
+==  {- eliminate the |let| -}
+   Cont (\ h -> uncurry plusC (unjoin h))
+==  {- definition of |(.)| on functions -}
+   Cont (uncurry plusC . unjoin)
+==  {- definition of |jamP| for functions -}
+   Cont (jamP . unjoin)
 \end{code}
 
+For |CoproductCat|, we reason dually:
+\begin{code}
+   cont inl
+==  {- definition of |inl| -}
+   Cont (\ h -> h . inl)
+==  {- |join . unjoin == id| -}
+   Cont (\ h -> join (unjoin h) . inl)
+==  {- definition of |join| -}
+   Cont (\ h -> let (ha,hb) = unjoin h in (ha ||| hb) . inl)
+==  {- axiom for |(###)|/|inl| -}
+   Cont (\ h -> let (ha,hb) = unjoin h in ha)
+==  {- definition of |exl| for functions -}
+   Cont (\ h -> exl (unjoin h))
+==  {- definition of |(.)| for functions -}
+   Cont (exl . unjoin)
+\end{code}
+Similarly,
+\begin{code}
+   cont inr == Cont (exr . unjoin)
+\end{code}
+Finally,
+\begin{code}
+   cont jam
+==  {- definition of |cont| -}
+   Cont (\ h -> h . jam)
+==  {- A law for |jam| and |(###)| -}
+   Cont (\ h -> h . (id ||| id))
+==  {- A law for |(.)| and |(###)| -}
+   Cont (\ h -> h . id ||| h . id)
+==  {- Law for |(.)| and |id| -}
+   Cont (\ h -> h ||| h)
+==  {- definition of |join| -}
+   Cont (\ h -> join (h,h))
+==  {- definition of |dup| on functions -}
+   Cont (join . dup)
+\end{code}
 
-Cayley's Theorem: that any monoid is equivalent to a monoid of functions under composition.
+Note the pleasant symmetries in these definitions.
+Each |ProductCat| or |CoproductPCat| operation on |Cont k r| is defined via the dual |CoproductPCat| or |ProductCat| operation, together with the |join|/|unjoin| isomorphism.
+
+\mynote{Mention Cayley's Theorem: that any monoid is equivalent to a monoid of functions under composition.
+I think |Cont| is a generalization from |Monoid| to |Category|.}
+
+The instances above for |Cont k r| constitute a simple algorithm for reverse mode automatic differentiation.
+In contrast with other presentations, \mynote{... comparison ...}.
+
+\mynote{Explain better how |Cont k r| performs full left-association. Also, how to use it by applying to |id|.}
+
+\subsectionl{Gradients and duality}
+
+As a special case of reverse mode automatic differentiation, let's consider its use to compute \emph{gradients}, i.e., derivatives of functions with a scalar codomain.
+This case is very important local minimization by means of gradient descent, e.g., as used in deep learning \needcite{}.
+
+Given a vector space |A| over a scalar field |s|, the \emph{dual} of |A| is |A :-* s|, i.e., the space of linear maps to the underlying field.
+This dual space is also a vector space, and when |A| has finite dimension, it is isomorphic to its dual.
+In particular, every linear map in |A :-* s| has the form |dot u| for some |u :: A|, where |dot| is the curried dot product \needcite{}.
+
+The |Cont k r| construction from \secref{Left-associating composition (reverse mode AD)} works for \emph{any} type/object |r|, so let's take |r| to be the scalar field |s|.
+The internal representation of |Cont k s a b| is |(b :-* s) -> (a :-* s)|, which is isomorphic to |b -> a|.\notefoot{Maybe I don't need this isomorphism, and it suffices to consider those linear maps that do correspond to |dot u| for some |u|.}
+
+\workingHere
 
 \sectionl{To do}
 \begin{itemize}
