@@ -42,6 +42,9 @@
 \nc\corRefTwo[2]{Corollaries \ref{cor:#1} and \ref{cor:#2}}
 \nc\corRefs[2]{Corollaries \ref{cor:#1} through \ref{cor:#2}}
 
+\nc\lemLabel[1]{\label{lem:#1}}
+\nc\lemRef[1]{Lemma \ref{lem:#1}}
+
 \setlength{\blanklineskip}{2ex}
 
 %% Needs a "%"after \end{closerCodePars} to avoid a blank space. Fixable?
@@ -1337,13 +1340,11 @@ The |Cont| version:\notefoot{Is there a more general argument to make? I haven't
    Cont (\ h -> h . scale s)
 ==  {- linearity of |h| -}
    Cont (\ h -> scale s . h)
-==  {- Definition of |scale| for functions/maps -}
+==  {- definition of |scale| for functions/maps -}
    Cont (\ h -> scale s h)
 ==  {- $\eta$-reduction -}
    Cont (scale s)
 \end{code}
-
-\workingHere
 
 \mynote{Mention Cayley's Theorem: that any monoid is equivalent to a monoid of functions under composition.
 I think |Cont| is a generalization from |Monoid| to |Category|.}
@@ -1363,7 +1364,213 @@ This dual space is also a vector space, and when |A| has finite dimension, it is
 In particular, every linear map in |A :-* s| has the form |dot u| for some |u :: A|, where |dot| is the curried dot product \needcite{}.
 
 The |Cont k r| construction from \secref{Left-associating composition (reverse mode AD)} works for \emph{any} type/object |r|, so let's take |r| to be the scalar field |s|.
-The internal representation of |Cont k s a b| is |(b :-* s) -> (a :-* s)|, which is isomorphic to |b -> a|.\notefoot{Maybe I don't need this isomorphism, and it suffices to consider those linear maps that do correspond to |dot u| for some |u|.}
+The internal representation of |Cont (:-*) s a b| is |(b :-* s) -> (a :-* s)|, which is isomorphic to |b -> a|.\notefoot{Maybe I don't need this isomorphism, and it suffices to consider those linear maps that do correspond to |dot u| for some |u|.}
+Call this representation the \emph{dual} of |k|:
+\begin{code}
+newtype Dual k a b = Dual (b `k` a)
+\end{code}
+To construct dual representations of (generalized) linear maps, it suffices to convert from |Cont k s| to |Dual k| by a functor we will now derive.
+Composing this new functor with |cont :: (a `k` b) -> Cont k s a b| will give us a functor from |a `k` b| to |Dual k a b|.
+The new to-be-derived functor:
+\begin{code}
+asDual :: Cont k s a b -> Dual k a b
+asDual (Cont f) = Dual (onDot f)
+\end{code}
+where |onDot| uses both halves of the isomorphism between |a :-* s| and |a|:\notefoot{Maybe drop |onDot| in favor of its definition.}
+\begin{code}
+onDot :: ((b :-* s) -> (a :-* s)) -> (b :-* a)
+onDot f = unDot . f . dot
+
+dot    :: u -> (u :-* s)
+unDot  :: (u :-* s) -> u
+\end{code}
+
+For the |Category| instance, we'll need that |id == asDual id|.
+Simplifying the RHS,
+\begin{code}
+   asDual id
+==  {- definition of |id| for |Cont| -}
+   asDual (Cont id)
+==  {- definition of |asDual| -}
+   Dual (unDot . id . dot)
+==  {- |Category| law for |id|/|(.)| -}
+   Dual (unDot . dot)
+==  {- |unDot . dot == id| -}
+   Dual id
+\end{code}
+We also need |asDual (g . f) == asDual g . asDual f|, or (without loss of generality) |asDual (Cont g . Cont f) == asDual (Cont g) . asDual (Cont f)|.
+Simplifying both sides,
+\begin{code}
+   asDual (Cont (f . g))
+==  {- definition of |asDual| -}
+   Dual (unDot . f . g . dot)
+==  {- |dot . unDot == id| -}
+   Dual (unDot . f . dot . unDot . g . dot)
+==  {- definition of |onDot| -}
+   Dual (onDot f . onDot g)
+
+   asDual (Cont g) . asDual (Cont f)
+==  {- definition of |asDual| -}
+   Dual (onDot g) . asDual (onDot f)
+\end{code}
+As usual, strengthen this equality by replacing |onDot g| and |onDot f| by re-typed |g| and |f|, and read off a sufficient definition.
+
+For |MonoidalPCat|, the homomorphism condition is |asDual (Cont f *** Cont g) == asDual (Cont f) *** asDual (Cont g)|.
+\begin{code}
+   asDual (Cont f *** Cont g)
+==  {- definition of |(***)| on |Cont| -}
+   asDual (Cont (f *** g))
+==  {- definition of |asDual| -}
+   Dual (f *** g)
+
+   asDual (Cont f) *** asDual (Cont g)
+==  {- definition of |asDual| -}
+   Dual f *** Dual g
+\end{code}
+
+For |ProductCat|, 
+\begin{code}
+   exl
+==  {- specification -}
+   asDual exl
+==  {- definition of |exl| for |Cont| -}
+   asDual (Cont (join . inl))
+==  {- definition of |asDual| -}
+   Dual (onDot (join . inl))
+==  {- definition of |onDot|, and associativity of |(.)| -}
+   Dual (unDot . join . inl . dot)
+==  {- definition of |(.)| for functions -}
+   Dual (\ u -> unDot (join (inl (dot u))))
+==  {- definition of |inl| for functions -}
+   Dual (\ u -> unDot (join (dot u, zero)))
+==  {- definition of |join| -}
+   Dual (\ u -> unDot (dot u ||| zeroC))
+==  {- \lemRef{dot-properties} -}
+   Dual (\ u -> unDot (dot u ||| dot zeroV))
+==  {- \lemRef{dot-properties} -}
+   Dual (\ u -> unDot (dot (u,zeroV)))
+==  {- |unDot . dot == id| -}
+   Dual (\ u -> (u,zeroV))
+==  {- definition of |inl| for functions -}
+   Dual (\ u -> inl u)
+==  {- $\eta$-reduction -}
+   Dual inl
+\end{code}
+Similarly, the homomorphism property for |exr| becomes |exr == Dual inr|.
+For |dup|,
+\begin{code}
+   dup
+==  {- specification -}
+   asDual dup
+==  {- definition of |dup| for |Cont| -}
+   asDual (Cont (jamP . unjoin))
+==  {- definition of |asDual| -}
+   Dual (onDot (jamP . unjoin))
+==  {- definition of |onDot| -}
+   Dual (unDot . jamP . unjoin . dot)
+==  {- definition of |(.)| for functions -}
+   Dual (\ (u,v) -> unDot (jamP (unjoin (dot (u,v)))))
+==  {- \lemRef{dot-properties} -}
+   Dual (\ (u,v) -> unDot (jamP (dot u, dot v)))
+==  {- definition of |jamP| for functions -}
+   Dual (\ (u,v) -> unDot (dot u + dot v))
+==  {- \lemRef{dot-properties} -}
+   Dual (\ (u,v) -> unDot (dot u) + unDot (dot v))
+==  {- |unDot . dot == id| -}
+   Dual (\ (u,v) -> u + v)
+==  {- definition of |jamP| for functions -}
+   Dual jamP
+\end{code}
+
+The |CoproductPCat| instance comes out similarly:
+\begin{code}
+   inlP
+==  {- specification -}
+   asDual inlP
+==  {- definition of |inlP| for |Cont| -}
+   asDual (Cont (exl . unjoin))
+==  {- definition of |asDual| -}
+   Dual (onDot (exl . unjoin))
+==  {- definition of |onDot| -}
+   Dual (unDot . exl . unjoin . dot)
+==  {- definition of |(.)| for functions -}
+   Dual (\ (u,v) -> unDot (exl (unjoin (dot (u,v)))))
+==  {- \lemRef{dot-properties} -}
+   Dual (\ (u,v) -> unDot (exl (dot u, dot v)))
+==  {- definition of |exl| on functions -}
+   Dual (\ (u,v) -> unDot (dot u))
+==  {- |unDot . dot == id| -}
+   Dual (\ (u,v) -> u)
+==  {- definition of |exl| for functions -}
+   Dual exl
+
+   jam
+==  {- specification -}
+   asDual jam
+==  {- definition of |jam| on |Cont| -}
+   asDual (Cont (join . dup))
+==  {- definition of |asDual| -}
+   Dual (onDot (join . dup))
+==  {- definition of |onDot| -}
+   Dual (unDot . join . dup . dot)
+==  {- definition of |(.)| on functions -}
+   Dual (\ u -> unDot (join (dup (dot u))))
+==  {- \lemRef{dot-properties} -}
+   Dual (\ u -> unDot (join (dot u, dot u)))
+==  {- definition of |join| -}
+   Dual (\ u -> unDot (dot u ||| dot u))
+==  {- \lemRef{dot-properties} -}
+   Dual (\ u -> unDot (dot (u,u)))
+==  {- |unDot . dot == id| -}
+   Dual (\ u -> (u,u))
+==  {- definition of |dup| on functions -}
+   Dual (\ u -> dup u)
+==  {- $\eta$-reduction -}
+   Dual dup
+\end{code}
+
+Finally, scaling:
+\begin{code}
+   scale s
+==  {- specification -}
+   asDual (scale s)
+==  {- definition of |scale| for |Cont| -}
+   asDual (Cont (scale s))
+==  {- definition of |asDual| -}
+   Dual (onDot (scale s))
+==  {- definition of |onDot| -}
+   Dual (unDot . scale s . dot)
+==  {- \lemRef{dot-properties} -}
+   Dual (scale s . unDot . dot)
+==  {- |unDot . dot == id| -}
+   Dual (scale s)
+\end{code}
+
+These calculations lead to the following elegant instances for |Dual k|:
+\begin{code}
+instance Category k => Category (Dual k) where
+   id = Dual id
+   Dual g . Dual f = Dual (f . g)
+
+instance MonoidalPCat k => MonoidalPCat (Dual k) where
+   Dual f *** Dual g = Dual (f *** g)
+
+instance ProductCat k => ProductCat (Dual k) where
+   exl  = Dual inlP
+   exr  = Dual inrP
+   dup  = Dual jamP
+
+instance CoproductCat k => CoproductCat (Dual k) where
+   inlP  = Dual exl
+   inrP  = Dual exr
+   jamP  = Dual dup
+
+instance ScalarCat k => ScalarCat (Dual k) where
+   scale s = Dual (scale s)
+\end{code}
+Note that these instances exactly dualize a computation, reversing compositions and swapping corresponding |ProductCat| and |CoproductCat| operations.
+Recall from \secref{Matrices}, that |scale| forms $1 \times 1$ matrices, while |(###)| and |(&&&)| correspond to horizontal and vertical juxtaposition, respectively.
+Thus, from a matrix perspective, duality is \emph{transposition}, turning an $m \times n$ matrix into an $n \times m$ matrix.
 
 \workingHere
 
