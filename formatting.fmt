@@ -90,6 +90,10 @@
 %format :.: = " \boldsymbol{\circ} "
 %format Comp1
 
+%format -+> = "\to\!\!\!_{+}"
+
+%format -+> = "\to_{\scriptscriptstyle\hspace{-2ex}+\hspace{0.5ex}}"
+
 % Got from Andres L:
 \newcommand{\calculationcomments}{%
   \let\onelinecomment=\onelinecommentchars
