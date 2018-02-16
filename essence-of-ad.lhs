@@ -1571,6 +1571,9 @@ instance ScalarCat k => ScalarCat (Dual k) where
 Note that these instances exactly dualize a computation, reversing compositions and swapping corresponding |ProductCat| and |CoproductCat| operations.
 Recall from \secref{Matrices}, that |scale| forms $1 \times 1$ matrices, while |(###)| and |(&&&)| correspond to horizontal and vertical juxtaposition, respectively.
 Thus, from a matrix perspective, duality is \emph{transposition}, turning an $m \times n$ matrix into an $n \times m$ matrix.
+Note, however, that |Dual k| involves no actual matrix computations unless |k| does.
+In particular, we can simply use the category of linear functions |(-+>)|.%
+\notefoot{I don't think I've defined |a -+> b| yet.}
 
 \workingHere
 
