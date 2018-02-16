@@ -1415,17 +1415,29 @@ Simplifying both sides,
 \end{code}
 As usual, strengthen this equality by replacing |onDot g| and |onDot f| by re-typed |g| and |f|, and read off a sufficient definition.
 
-For |MonoidalPCat|, the homomorphism condition is |asDual (Cont f *** Cont g) == asDual (Cont f) *** asDual (Cont g)|.
+For |MonoidalPCat|, the homomorphism condition is |asDual (f *** g) == asDual f *** asDual g|.
 \begin{code}
-   asDual (Cont f *** Cont g)
-==  {- definition of |(***)| on |Cont| -}
-   asDual (Cont (f *** g))
-==  {- definition of |asDual| -}
-   Dual (f *** g)
-
    asDual (Cont f) *** asDual (Cont g)
 ==  {- definition of |asDual| -}
-   Dual f *** Dual g
+   Dual (onDot f) *** Dual (onDot g)
+
+   asDual (Cont f *** Cont g)
+==  {- definition of |(***)| on |Cont| -}
+   asDual (Cont (join . (f *** g) . unjoin))
+==  {- definition of |asDual| -}
+   Dual (onDot (join . (f *** g) . unjoin))
+==  {- definition of |onDot| -}
+   Dual (unDot . join . (f *** g) . unjoin . dot)
+==  {- \lemRef{dot-properties} -}
+   Dual ((unDot *** unDot) . (f *** g) . (dot *** dot))
+==  {- Law about |(***)|/|(.)| -}
+   Dual (unDot . f . dot *** unDot . g . unDot)
+==  {- definition of |onDot| -}
+   Dual (onDot f *** onDot g)
+\end{code}
+Strengthening from |onDot f| and |onDot g|,
+\begin{code}
+Dual f *** Dual g == Dual (f *** g)
 \end{code}
 
 For |ProductCat|, 
