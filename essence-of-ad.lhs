@@ -1,7 +1,7 @@
 %% -*- latex -*-
 
 %% While editing/previewing, use 12pt and tiny margin.
-\documentclass[12pt]{article}  % fleqn,
+\documentclass[12]{article}  % fleqn,
 \usepackage[margin=0.12in]{geometry}  % 0.9in
 
 \input{macros}
@@ -32,18 +32,23 @@
 
 \nc{\der}{\mathop{\mathcal{D}}}
 
+\newtheorem{theorem}{Theorem}%[section]
 \nc\thmLabel[1]{\label{thm:#1}}
 \nc\thmRef[1]{Theorem \ref{thm:#1}}
 \nc\thmRefTwo[2]{Theorems \ref{thm:#1} and \ref{thm:#2}}
 \nc\thmRefs[2]{Theorems \ref{thm:#1} through \ref{thm:#2}}
 
+\newtheorem{corollary}{Corollary}[theorem]
 \nc\corLabel[1]{\label{cor:#1}}
 \nc\corRef[1]{Corollary \ref{cor:#1}}
 \nc\corRefTwo[2]{Corollaries \ref{cor:#1} and \ref{cor:#2}}
 \nc\corRefs[2]{Corollaries \ref{cor:#1} through \ref{cor:#2}}
 
+\newtheorem{lemma}[theorem]{Lemma}
 \nc\lemLabel[1]{\label{lem:#1}}
 \nc\lemRef[1]{Lemma \ref{lem:#1}}
+\nc\lemRefTwo[2]{Lemma \ref{lem:#1} and \ref{lem:#2}}
+\nc\lemRefs[2]{Lemma \ref{lem:#1} through \ref{lem:#2}}
 
 \setlength{\blanklineskip}{2ex}
 
@@ -70,10 +75,6 @@ This generalization is then easily specialized to forward and reverse modes, wit
 Another instance of generalized AD is automatic incremental evaluation of functional programs, again with no notational impact to the programmer.
 
 \end{abstract}
-
-\newtheorem{theorem}{Theorem}%[section]
-\newtheorem{corollary}{Corollary}[theorem]
-% \newtheorem{lemma}[theorem]{Lemma}
 
 \sectionl{What's a derivative?}
 
@@ -201,7 +202,9 @@ Combining |f| and |der f| into a single function in this way allows us to elimin
    ad (g . f) a
 ==  {- definition of |ad| -}
    ((g . f) a, der (g . f) a)
-==  {- definition of |(.)|; chain rule -}
+==  {- definition of |(.)| -}
+   (g (f a), der (g . f) a)
+==  {- \thmRef{compose} -}
    (g (f a), der g (f a) . der f a)
 ==  {- refactoring to share |f a| -}
    let b = f a in (g b, der g b . der f a)
@@ -431,7 +434,7 @@ adf f = D (ad f)
 \begin{closerCodePars}
 Our goal is to give a |Category| instance for |D| such that |adf| is a functor.
 This goal is essentially an algebra problem, and the desired |Category| instance is the solution to that problem.
-Saying that |adf| is a functor is equivalent to the following two conditions for all (suitably typed) functions |f| and |g|:\footnote{The |id| and |(.)| on the left-hand sides are for |D|, while the ones on the right are for |(->)|.}
+Saying that |adf| is a functor is equivalent to the following two conditions for all suitably typed functions |f| and |g|:\footnote{The |id| and |(.)| on the left-hand sides are for |D|, while the ones on the right are for |(->)|.}
 \begin{code}
 id == adf id
 
@@ -485,7 +488,7 @@ For instance, let's prove that |id . D f == D f| for all |D f :: D a b|:\footnot
    D (\ a -> let { (b,f') = f a ; (c,g') = (b,id) } in (c, g' . f'))
 ==  {- substitute |b| for |c| and |id| for |g'| -}
    D (\ a -> let { (b,f') = f a } in (b, id . f'))
-==  {-  |id . f' == f'| (category law for functions) -}
+==  {-  |id . f' == f'| (category law) -}
    D (\ a -> let { (b,f') = f a } in (b, f'))
 ==  {- Replace |(b,f')| by its definition -}
    D (\ a -> f a)
@@ -506,7 +509,7 @@ The slightly more specialized requirement of our first identity property is that
    adf id . adf f
 ==  {- functor law for |(.)| (specification of |adf|) -}
    adf (id . f)
-==  {- category law for functions -}
+==  {- category law -}
    adf f
 \end{code}
 The other identity law is proved similarly.
@@ -517,7 +520,7 @@ Associativity has a similar flavor as well:
    adf h . adf (g . f)
 ==  {- functor law for |(.)| (specification of |adf|) -}
    adf (h . (g . f))
-==  {- category law for functions -}
+==  {- category law -}
    adf ((h . g) . f)
 ==  {- functor law for |(.)| (specification of |adf|) -}
    adf (h . g) . adf f
@@ -698,11 +701,11 @@ The |(###)| operation is sometimes called ``join'' \citep{Gibbons2002:Calculatin
 
 In their uncurried form, these two operations are invertible:\notefoot{For proofs, cite \cite{Gibbons2002:Calculating}.}
 \begin{code}
-fork    :: Cartesian    k => (a `k` c) :* (a `k` d) -> (a `k` Prod k c d)
-unfork  :: Cartesian    k => (a `k` Prod k c d) -> (a `k` c) :* (a `k` d)
+fork    :: Cartesian    k => (a `k` c) :* (a `k` d) -> (a `k` ((Prod k c d)))
+unfork  :: Cartesian    k => (a `k` ((Prod k c d))) -> (a `k` c) :* (a `k` d)
 
-join    :: Cocartesian  k => (c `k` a) :* (d `k` a) -> (Prod k c d `k` a)
-unjoin  :: Cocartesian  k => (Prod k c d `k` a) -> (c `k` a) :* (d `k` a)
+join    :: Cocartesian  k => (c `k` a) :* (d `k` a) -> (((Prod k c d)) `k` a)
+unjoin  :: Cocartesian  k => (((Prod k c d)) `k` a) -> (c `k` a) :* (d `k` a)
 \end{code}
 where
 \begin{code}
@@ -722,8 +725,7 @@ The zero for |a `k` b| results from the composition of initial and terminal morp
 %format `plusC` = "\boldsymbol{+}"
 %format plusC = (`plusC`)
 \begin{code}
-type AbelianCat k =
-  (ProductCat k, CoproductPCat k, TerminalCat k, CoterminalCat k)
+type AbelianCat k = (ProductCat k, CoproductPCat k, TerminalCat k, CoterminalCat k)
 
 zeroC :: AbelianCat k => a `k` b
 zeroC = ti . it
@@ -1035,7 +1037,7 @@ instance HasV Double Double where
   unV (Par1 x) = x
 \end{code}
 \end{minipage}
-\begin{minipage}[b]{0ex}{\rule[1.3ex]{0.5pt}{1.8in}}\end{minipage}
+\begin{minipage}[b]{0ex}{\rule[2.8ex]{0.5pt}{1.4in}}\end{minipage}
 \begin{minipage}[b]{0.45\textwidth}
 \mathindent1em
 \begin{code}
@@ -1086,7 +1088,7 @@ For instance, gradient-based optimization (including its use in deep learning) u
 Reverse mode (including its specialization, back-propagation) is much more efficient for these problems, but is also typically given much more complicated explanations and implementations, involving mutation, graph construction, and ``tapes'' \needcite.
 One the main purposes of this paper is to demonstrate that RAD can be accounted for quite simply, while retaining or improving its efficiency of implementation.
 
-\sectionl{Left-associating composition (reverse mode AD)}
+\sectionl{Reverse mode AD}
 
 The AD algorithm derived in \secref{Putting the pieces together} and generalized in \figref{GAD} can be thought of as a family of algorithms.
 For fully right-associated compositions, it becomes forward mode AD; for fully left-associated compositions, reverse mode AD; and for all other associations, various mixed modes.
@@ -1165,7 +1167,7 @@ instance Category k => Category (Cont k r) where
 \end{code}
 Notice the reversal of composition (and, more subtly, of |id|).
 
-Similarly, we can derive a |MonoidalPCat| instance from the specification that |cont| is a monoidal functor (i.e., a |MonoidalPCat| homomorphism), i.e.,
+Similarly, we can derive a |MonoidalPCat| instance from the specification that |cont| is a monoidal functor (i.e., a |MonoidalPCat| homomorphism):
 \begin{code}
 cont (f *** g) == cont f *** cont g
 \end{code}
@@ -1218,7 +1220,7 @@ cont exr  == exr
 cont dup  == dup
 \end{code}
 \end{minipage}
-\begin{minipage}[b]{0ex}{\rule[3ex]{0.5pt}{0.5in}}\end{minipage}
+\begin{minipage}[b]{0ex}{\rule[3ex]{0.5pt}{0.43in}}\end{minipage}
 \begin{minipage}[b]{0.0\textwidth}
 \begin{code}
 cont inl  == inl
@@ -1236,7 +1238,7 @@ instance  ProductCat k =>
   dup  = cont dup
 \end{code}
 \end{minipage}
-\begin{minipage}[b]{0ex}{\rule[2.5ex]{0.5pt}{1in}}\end{minipage}
+\begin{minipage}[b]{0ex}{\rule[2.5ex]{0.5pt}{0.8in}}\end{minipage}
 \begin{minipage}[b]{0.0\textwidth}
 \begin{code}
 instance  CoproductCat k =>
@@ -1273,7 +1275,7 @@ For |dup :: a `k` (a :* a)|, we'll have |h :: (a :* a) ~> r|, so we can split |h
    Cont (\ h -> h . dup)
 ==  {- |join . unjoin == id| -}
    Cont (\ h -> join (unjoin h) . dup)
-==  {- refactor and definition of |join| -}
+==  {- refactor; definition of |join| -}
    Cont (\ h -> let (ha,hb) = unjoin h in (ha ||| hb) . dup)
 ==  {- \secref{Abelian categories} -}
    Cont (\ h -> let (ha,hb) = unjoin h in ha `plusC` hb)
@@ -1350,7 +1352,7 @@ The |Cont| version:\notefoot{Is there a more general argument to make? I haven't
 I think |Cont| is a generalization from |Monoid| to |Category|.}
 
 The instances above for |Cont k r| constitute a simple algorithm for reverse mode automatic differentiation.
-In contrast with other presentations, \mynote{... comparison ...}.
+\mynote{Contrast with other presentations.}
 
 \mynote{Explain better how |Cont k r| performs full left-association. Also, how to use it by applying to |id|.}
 
@@ -1363,7 +1365,7 @@ Given a vector space |A| over a scalar field |s|, the \emph{dual} of |A| is |A :
 This dual space is also a vector space, and when |A| has finite dimension, it is isomorphic to its dual.
 In particular, every linear map in |A :-* s| has the form |dot u| for some |u :: A|, where |dot| is the curried dot product \needcite{}.
 
-The |Cont k r| construction from \secref{Left-associating composition (reverse mode AD)} works for \emph{any} type/object |r|, so let's take |r| to be the scalar field |s|.
+The |Cont k r| construction from \secref{Reverse mode AD} works for \emph{any} type/object |r|, so let's take |r| to be the scalar field |s|.
 The internal representation of |Cont (:-*) s a b| is |(b :-* s) -> (a :-* s)|, which is isomorphic to |b -> a|.\notefoot{Maybe I don't need this isomorphism, and it suffices to consider those linear maps that do correspond to |dot u| for some |u|.}
 Call this representation the \emph{dual} of |k|:
 \begin{code}
@@ -1384,6 +1386,20 @@ onDot f = unDot . f . dot
 dot    :: u -> (u :-* s)
 unDot  :: (u :-* s) -> u
 \end{code}
+To derive instances for |Dual k|, we'll need some properties.
+\begin{lemma} \lemLabel{dot-properties}
+The following identities hold:
+\begin{enumerate}
+\item |dot| and |unDot| are linear. \label{dot-linear}
+\item |unjoin . dot = dot *** dot| \label{unjoin-dot}
+\item |unDot . join = unDot *** unDot| \label{unDot-join}
+\item |dot u ### dot v = dot (u,v)| \label{dot-dot-join}
+\item |dot zeroV = zeroC| (zero vector vs zero morphism) \label{dot-zeroV}
+\end{enumerate}
+\mynote{Proofs, perhaps in an appendix.}
+\end{lemma}
+\nc\lemDot[1]{\lemRef{dot-properties}, part \ref{#1}}
+\nc\lemDotTwo[2]{Lemma \ref{lem:dot-properties}, parts \ref{#1} \& \ref{#2}}
 
 For the |Category| instance, we'll need that |id == asDual id|.
 Simplifying the RHS,
@@ -1416,6 +1432,7 @@ Simplifying both sides,
 As usual, strengthen this equality by replacing |onDot g| and |onDot f| by re-typed |g| and |f|, and read off a sufficient definition.
 
 For |MonoidalPCat|, the homomorphism condition is |asDual (f *** g) == asDual f *** asDual g|.
+Simplify both sides:
 \begin{code}
    asDual (Cont f) *** asDual (Cont g)
 ==  {- definition of |asDual| -}
@@ -1428,14 +1445,14 @@ For |MonoidalPCat|, the homomorphism condition is |asDual (f *** g) == asDual f 
    Dual (onDot (join . (f *** g) . unjoin))
 ==  {- definition of |onDot| -}
    Dual (unDot . join . (f *** g) . unjoin . dot)
-==  {- \lemRef{dot-properties} -}
+==  {- \lemDotTwo{unjoin-dot}{unDot-join}  -}
    Dual ((unDot *** unDot) . (f *** g) . (dot *** dot))
 ==  {- Law about |(***)|/|(.)| -}
    Dual (unDot . f . dot *** unDot . g . unDot)
 ==  {- definition of |onDot| -}
    Dual (onDot f *** onDot g)
 \end{code}
-Strengthening from |onDot f| and |onDot g|,
+Strengthening from |onDot f| and |onDot g| gives a simple sufficient condition:
 \begin{code}
 Dual f *** Dual g == Dual (f *** g)
 \end{code}
@@ -1454,12 +1471,12 @@ For |ProductCat|,
 ==  {- definition of |(.)| for functions -}
    Dual (\ u -> unDot (join (inl (dot u))))
 ==  {- definition of |inl| for functions -}
-   Dual (\ u -> unDot (join (dot u, zero)))
+   Dual (\ u -> unDot (join (dot u, zeroC)))
 ==  {- definition of |join| -}
    Dual (\ u -> unDot (dot u ||| zeroC))
-==  {- \lemRef{dot-properties} -}
+==  {- \lemDot{dot-zeroV} -}
    Dual (\ u -> unDot (dot u ||| dot zeroV))
-==  {- \lemRef{dot-properties} -}
+==  {- \lemDot{dot-dot-join} -}
    Dual (\ u -> unDot (dot (u,zeroV)))
 ==  {- |unDot . dot == id| -}
    Dual (\ u -> (u,zeroV))
@@ -1482,11 +1499,11 @@ For |dup|,
    Dual (unDot . jamP . unjoin . dot)
 ==  {- definition of |(.)| for functions -}
    Dual (\ (u,v) -> unDot (jamP (unjoin (dot (u,v)))))
-==  {- \lemRef{dot-properties} -}
+==  {- \lemDot{unjoin-dot} -}
    Dual (\ (u,v) -> unDot (jamP (dot u, dot v)))
 ==  {- definition of |jamP| for functions -}
    Dual (\ (u,v) -> unDot (dot u + dot v))
-==  {- \lemRef{dot-properties} -}
+==  {- \lemDot{dot-linear} -}
    Dual (\ (u,v) -> unDot (dot u) + unDot (dot v))
 ==  {- |unDot . dot == id| -}
    Dual (\ (u,v) -> u + v)
@@ -1507,7 +1524,7 @@ The |CoproductPCat| instance comes out similarly:
    Dual (unDot . exl . unjoin . dot)
 ==  {- definition of |(.)| for functions -}
    Dual (\ (u,v) -> unDot (exl (unjoin (dot (u,v)))))
-==  {- \lemRef{dot-properties} -}
+==  {- \lemDot{unjoin-dot} -}
    Dual (\ (u,v) -> unDot (exl (dot u, dot v)))
 ==  {- definition of |exl| on functions -}
    Dual (\ (u,v) -> unDot (dot u))
@@ -1515,6 +1532,10 @@ The |CoproductPCat| instance comes out similarly:
    Dual (\ (u,v) -> u)
 ==  {- definition of |exl| for functions -}
    Dual exl
+
+   inrP
+==  {- \ldots{} as with |inlP| \ldots -}
+   Dual exr
 
    jam
 ==  {- specification -}
@@ -1527,11 +1548,11 @@ The |CoproductPCat| instance comes out similarly:
    Dual (unDot . join . dup . dot)
 ==  {- definition of |(.)| on functions -}
    Dual (\ u -> unDot (join (dup (dot u))))
-==  {- \lemRef{dot-properties} -}
+==  {- definition of |dup| for functions -}
    Dual (\ u -> unDot (join (dot u, dot u)))
 ==  {- definition of |join| -}
    Dual (\ u -> unDot (dot u ||| dot u))
-==  {- \lemRef{dot-properties} -}
+==  {- \lemDot{dot-dot-join} -}
    Dual (\ u -> unDot (dot (u,u)))
 ==  {- |unDot . dot == id| -}
    Dual (\ u -> (u,u))
@@ -1552,7 +1573,7 @@ Finally, scaling:
    Dual (onDot (scale s))
 ==  {- definition of |onDot| -}
    Dual (unDot . scale s . dot)
-==  {- \lemRef{dot-properties} -}
+==  {- \lemDot{dot-linear} -}
    Dual (scale s . unDot . dot)
 ==  {- |unDot . dot == id| -}
    Dual (scale s)
@@ -1580,29 +1601,25 @@ instance CoproductCat k => CoproductCat (Dual k) where
 instance ScalarCat k => ScalarCat (Dual k) where
    scale s = Dual (scale s)
 \end{code}
-Note that these instances exactly dualize a computation, reversing compositions and swapping corresponding |ProductCat| and |CoproductCat| operations.
+Note that these instances exactly dualize a computation, reversing sequential compositions and swapping corresponding |ProductCat| and |CoproductCat| operations.
 Recall from \secref{Matrices}, that |scale| forms $1 \times 1$ matrices, while |(###)| and |(&&&)| correspond to horizontal and vertical juxtaposition, respectively.
 Thus, from a matrix perspective, duality is \emph{transposition}, turning an $m \times n$ matrix into an $n \times m$ matrix.
 Note, however, that |Dual k| involves no actual matrix computations unless |k| does.
 In particular, we can simply use the category of linear functions |(-+>)|.%
 \notefoot{I don't think I've defined |a -+> b| yet.}
 
-\workingHere
+%% \workingHere
 
 \sectionl{To do}
 \begin{itemize}
 \item The rest of the talk:
   \begin{itemize}
-  \item {Continuation category}
-  \item {Reverse-mode AD without tears}
-  \item {Duality}
-  \item {Backpropagation}
   \item {Reverse AD examples}
   \item {Incremental evaluation}
   \item {Symbolic vs automatic differentiation}
   \item {Conclusions}
   \end{itemize}
-\item More biproduct operations: |(***)|, |dup|, |jam|, |(+)| (arrow addition).
+\item Move many proofs to appendices.
 \item Indexed biproducts.
 \item Relate the methodology of this paper to denotational design \citep{Elliott2009-type-class-morphisms-TR}.
 They're quite similar.
