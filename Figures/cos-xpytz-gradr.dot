@@ -1,0 +1,37 @@
+digraph cos_xpytz_gradr {
+  margin=0
+  compound=true
+  rankdir=LR
+  node [shape=Mrecord]
+  edge [fontsize=8,fontcolor=indigo]
+  bgcolor=transparent
+  nslimit=20
+  c0 [label="{In|{<Out0>|<Out1>|<Out2>}}"]
+  c1736 [label="{{<In0>|<In1>}|\×|{<Out0>}}"]
+  c2442 [label="{{<In0>|<In1>}|+|{<Out0>}}"]
+  c2720 [label="{{<In0>}|cos|{<Out0>}}"]
+  c2721 [label="{{<In0>}|sin|{<Out0>}}"]
+  c2722 [label="{{<In0>}|negate|{<Out0>}}"]
+  c2997 [label="{{<In0>|<In1>}|\×|{<Out0>}}"]
+  c2998 [label="{{<In0>}|negate|{<Out0>}}"]
+  c2999 [label="{{<In0>|<In1>}|\×|{<Out0>}}"]
+  c3000 [label="{{<In0>}|negate|{<Out0>}}"]
+  c3001 [label="{{<In0>|<In1>|<In2>|<In3>}|Out}"]
+  c0:Out1 -> c1736:In0 []
+  c0:Out2 -> c1736:In1 []
+  c0:Out0 -> c2442:In0 []
+  c1736:Out0 -> c2442:In1 []
+  c2442:Out0 -> c2720:In0 []
+  c2442:Out0 -> c2721:In0 []
+  c2721:Out0 -> c2722:In0 []
+  c0:Out2 -> c2997:In0 []
+  c2721:Out0 -> c2997:In1 []
+  c2997:Out0 -> c2998:In0 []
+  c0:Out1 -> c2999:In0 []
+  c2721:Out0 -> c2999:In1 []
+  c2999:Out0 -> c3000:In0 []
+  c2720:Out0 -> c3001:In0 []
+  c2722:Out0 -> c3001:In1 []
+  c2998:Out0 -> c3001:In2 []
+  c3000:Out0 -> c3001:In3 []
+}

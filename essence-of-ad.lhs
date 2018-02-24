@@ -851,9 +851,8 @@ cosSinProd = (cosC &&& sinC) . mulC
 \end{code}
 To visualize computations before differentiation, we can interpret these categorical expressions in a category of graphs \citep[Section 7]{Elliott-2017-compiling-to-categories}, with the results rendered in \figreftwo{magSqr}{cosSinProd}.
 \figp{
-\figoneW{0.375}{magSqr}{|magSqr|}}{
-\hspace{0.75in}
-\figoneW{0.375}{cosSinProd}{|cosSinProd|}}
+\figone{magSqr}{|magSqr|}}{
+\figone{cosSinProd}{|cosSinProd|}}
 To see the differentiable versions, interpret these same expressions in the category of differentiable functions (|D| from \secref{Categories}), remove the |D| constructors to reveal the function representation, convert these functions to categorical form as well, and finally interpret the result in the graph category.
 The results are rendered in \figreftwo{magSqr-adf}{cosSinProd-adf}.
 \figp{
@@ -1359,8 +1358,8 @@ The instances above for |Cont k r| constitute a simple algorithm for reverse mod
 %format adr = adf
 \figreftwo{magSqr-adr}{cosSinProd-adr} show the results of reverse mode AD via |Cont| corresponding to \figreftwo{magSqr}{cosSinProd} and \figreftwo{magSqr-adf}{cosSinProd-adf}
 \figp{
-\figoneW{0.40}{magSqr-adr}{|adr magSqr| via |Cont|}}{
-\figoneW{0.56}{cosSinProd-adr}{|adr cosSinProd| via |Cont|}}
+\figoneW{0.40}{magSqr-adr}{|adr magSqr| via |Cont (-+>) R|}}{
+\figoneW{0.58}{cosSinProd-adr}{|adr cosSinProd| via |Cont (-+>) R|}}
 The derivatives are represented as (linear) functions again, but reversed (mapping from codomain to domain).
 
 \sectionl{Gradients and duality}
@@ -1620,8 +1619,8 @@ In particular, we can simply use the category of linear functions |(-+>)|.%
 \figreftwo{magSqr-gradr}{cos-2xx-gradr} show the results of reverse mode AD via |Dual|.
 Compare \figref{magSqr-gradr} with the same example in \figreftwo{magSqr-adf}{magSqr-adr}.
 \figp{
-\figoneW{0.40}{magSqr-gradr}{|adr magSqr| via |Dual|}}{
-\figoneW{0.56}{cos-2xx-gradr}{|adr (\ x -> cos (2 * x * x))| via |Dual|}}
+\figoneW{0.40}{magSqr-gradr}{|adr magSqr| via |Dual (-+>)|}}{
+\figoneW{0.56}{cos-xpytz-gradr}{|adr (\ ((x,y),z) -> cos (x + y * z)| via |Dual (-+>)|}}
 
 \sectionl{To do}
 \begin{itemize}
@@ -1650,6 +1649,11 @@ Compare \figref{magSqr-gradr} with the same example in \figreftwo{magSqr-adf}{ma
 \item |ConstCat| for |Dual| and for linear arrows in general.
 \item What is ``generalized AD''?
       Is it AD at all or something else?
+\item Misc:
+  \begin{itemize}
+  \item Mention graph optimization
+  \item Examples with generalized matrices
+  \end{itemize}
 \end{itemize}
 
 \bibliography{bib}
