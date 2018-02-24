@@ -1,0 +1,40 @@
+digraph cosSinProd_gradr {
+  margin=0
+  compound=true
+  rankdir=LR
+  node [shape=Mrecord]
+  edge [fontsize=8,fontcolor=indigo]
+  bgcolor=transparent
+  nslimit=20
+  c0 [label="{In|{<Out0>|<Out1>}}"]
+  c1 [label="{{<In0>|<In1>}|\×|{<Out0>}}"]
+  c229 [label="{{<In0>}|sin|{<Out0>}}"]
+  c284 [label="{{<In0>}|cos|{<Out0>}}"]
+  c419 [label="{{<In0>|<In1>}|\×|{<Out0>}}"]
+  c420 [label="{{<In0>}|negate|{<Out0>}}"]
+  c421 [label="{{<In0>|<In1>}|\×|{<Out0>}}"]
+  c422 [label="{{<In0>}|negate|{<Out0>}}"]
+  c423 [label="{{<In0>|<In1>}|\×|{<Out0>}}"]
+  c424 [label="{{<In0>|<In1>}|\×|{<Out0>}}"]
+  c425 [label="{{<In0>|<In1>|<In2>|<In3>|<In4>|<In5>}|Out}"]
+  c0:Out0 -> c1:In0 []
+  c0:Out1 -> c1:In1 []
+  c1:Out0 -> c229:In0 []
+  c1:Out0 -> c284:In0 []
+  c0:Out1 -> c419:In0 []
+  c229:Out0 -> c419:In1 []
+  c419:Out0 -> c420:In0 []
+  c0:Out0 -> c421:In0 []
+  c229:Out0 -> c421:In1 []
+  c421:Out0 -> c422:In0 []
+  c0:Out1 -> c423:In0 []
+  c284:Out0 -> c423:In1 []
+  c0:Out0 -> c424:In0 []
+  c284:Out0 -> c424:In1 []
+  c284:Out0 -> c425:In0 []
+  c229:Out0 -> c425:In1 []
+  c420:Out0 -> c425:In2 []
+  c422:Out0 -> c425:In3 []
+  c423:Out0 -> c425:In4 []
+  c424:Out0 -> c425:In5 []
+}

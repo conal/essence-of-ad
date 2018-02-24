@@ -141,7 +141,7 @@ der2 = der . der :: NOP (a -> b) -> (a -> (a :-* a :-* b))
 
 The type |a :-* a :-* b| is a linear map that yields a linear map, which is the curried form of a \emph{bilinear} map.
 Likewise, differentiating $k$ times yields a $k$-linear map curried $k-1$ times.
-In particular, the \emph{Hessian} matrix $H$ corresponds to the second derivative of a function |f :: Rm -> R|, having $m$ rows and $m$ columns and satisfying the symmetry condition $H_{i,j} == H_{j,i}$.
+In particular, the \emph{Hessian} matrix $H$ corresponds to the second derivative of a function |f :: Rm -> R|, having $m$ rows and $m$ columns and satisfying the symmetry condition $H_{i,j} \equiv H_{j,i}$.
 
 \emph{A comment on type safety:}
 Considering the shape of the matrix |H|, it would be easy to mistakenly treat it as representing the first derivative of some other function |g :: Rm -> Rm|.
@@ -227,7 +227,7 @@ We will sometimes refer to the |(***)| operation as ``cross'' \citep{Gibbons2002
 %% %% Move to the later introduction of |(&&&)|.
 %% Note that it can be used to give a terser specification: |ad f = f &&& der f|.
 
-While the derivative of the sequential composition is a sequential composition of derivatives, the derivative of a parallel composition is the parallel composition of the derivatives \citep[variant of Theorem 2-3 (3)]{Spivak65}:\notefoot{Is there a name for this rule? I've never seen it mentioned.}
+While the derivative of the sequential composition is a sequential composition of derivatives, the derivative of a parallel composition is a parallel composition of the derivatives \citep[variant of Theorem 2-3 (3)]{Spivak65}:\notefoot{Is there a name for this rule? I've never seen it mentioned.}
 \begin{theorem}[cross rule] \thmLabel{cross}
 $$|der (f *** g) (a,b) == der f a *** der g b|$$
 \end{theorem}
@@ -314,18 +314,18 @@ In addition to the derivative rules for |(.)|, |(&&&)|, and |(###)|, there is on
 \begin{theorem}[linear rule] \thmLabel{linear}
 $$|der f a == f|$$
 \end{theorem}
-This statement \citep[Theorem 2-3 (2)]{Spivak65} may sound surprising, but less so when we recall that the |der f a| is a local linear approximation of |f| at |a|, so we're simply saying that linear functions are their own perfect linear approximations.
+This statement \citep[Theorem 2-3 (2)]{Spivak65} may sound surprising at first, but less so when we recall that the |der f a| is a local linear approximation of |f| at |a|, so we're simply saying that linear functions are their own perfect linear approximations.
 
 For example, consider the (linear) function |id = \ a -> a|.
 The linearity rule says that |der id a == id|.
 When expressed in terms of typical \emph{representations} of linear maps, this property may be expressed as saying that |der id a| is the number one or as an identity matrix (with ones on the diagonal and zeros elsewhere).
 
-%format Rmn = R"^{m+n}"
+%% %format Rmn = R"^{m+n}"
 
-As another example, consider the function |fst (a,b) = a|, for which the linearity rule says |der fst (a,b) == fst|.
+As another example, consider the (linear) function |fst (a,b) = a|, for which the linearity rule says |der fst (a,b) == fst|.
 This property, when expressed in terms of typical \emph{representations} of linear maps, would appear as saying that |der fst a| comprises the partial derivatives one and zero if |a, b :: R|.
 More generally, if |a :: Rm| and |b :: Rn|, then the Jacobian matrix representation has shape |m :* (m+n)| (ie |m| rows and |m + n| columns) and is formed by the horizontal abutment of an |m :* m| identity matrix on the left with an |m :* n| zero matrix on the right.
-This |m :* (m+n)| matrix, however, represents |fst :: Rmn :-* Rm|.
+This |m :* (m+n)| matrix, however, represents |fst :: Rm :* Rn :-* Rm|.
 Note how much simpler it is to say |der fst (a,b) == fst|, and with no loss of precision!
 
 Given \thmRef{linear}, we can construct |ad f| for all linear |f|:
@@ -459,7 +459,7 @@ id == D (\ a -> (a,id))
 D (ad g) . D (ad f) == D (\ a -> let { (b,f') = ad f a ; (c,g') = ad g b } in (c, g' . f'))
 \end{code}
 The |id| equation is trivially solvable by \emph{defining} |id = D (\ a -> (a,id))|.
-To solve the |(.)| equation, generalize it to a \emph{stronger} condition:\footnote{The new |f| is the old |ad f| and so has changed from type |a -> b| to type |a -> b :* (a :-* b)|. Likewise for |g|.}
+To solve the |(.)| equation, generalize it to a \emph{stronger} condition:\footnote{The new |f| is the old |ad f| and so has changed type from |a -> b| to |a -> b :* (a :-* b)|. Likewise for |g|.}
 \begin{code}
 D g . D f == D (\ a -> let { (b,f') = f a ; (c,g') = g b } in (c, g' . f'))
 \end{code}
@@ -473,7 +473,7 @@ instance Category D where
   id == linearD id
   D g . D f == D (\ a -> let { (b,f') = f a ; (c,g') = g b } in (c, g' . f'))
 \end{code}
-Factoring out |linearD| will also tidy up treatment of other linear functions as well.
+Factoring out |linearD| will also tidy up treatment of other linear functions.
 
 Before getting too pleased with this definition, let's remember that for |D| to be a category requires more than having definitions for |id| and |(.)|.
 These definitions must also satisfy the identity and composition laws.
@@ -540,13 +540,13 @@ The importance of this observation is that we \emph{never} need to do these proo
 % \nc\scrk[1]{_{\hspace{#1}\scaleto{(\leadsto)\!}{4pt}}}
 \nc\scrk[1]{}
 
-%format (Prod (k) a b) = a "\times\scrk{-0.4ex}" b
+%format Prod (k) a b = a "\times\scrk{-0.4ex}" b
 
 \secref{Parallel composition} introduced parallel composition.
 This operation generalizes to play an important role in category theory as part of the notion of a \emph{monoidal category}:
 \begin{code}
 class Category k => MonoidalPCat k where
-  (***) :: (a `k` c) -> (b `k` d) -> (Prod k a b `k` Prod k c d)
+  (***) :: (a `k` c) -> (b `k` d) -> ((Prod k a b) `k` (Prod k c d))
 
 instance MonoidalPCat (->) where
   f *** g = \ (a,b) -> (f a, g b)
@@ -558,7 +558,7 @@ That is, a monoidal functor |F| from monoidal category |CU| to monoidal category
 \begin{code}
 F (f *** g) == F f *** F g
 \end{code}
-Just as \corRefTwo{compose}{linear} were key to deriving a correct-by-construction |Category| instance from the specification that |adf| is a functor, \corRef{cross} guides correct-by-construction |MonoidalPCat| instance from the specification that |adf| is a cartesian functor.
+Just as \corRefTwo{compose}{linear} were key to deriving a correct-by-construction |Category| instance from the specification that |adf| is a functor, \corRef{cross} guides correct-by-construction |MonoidalPCat| instance from the specification that |adf| is a monoidal functor.
 
 Let |F| be |adf| in the reversed forms of monoidal functor equation above, and expand |adf| to its definition as |D . ad|:
 \begin{code}
@@ -658,7 +658,7 @@ class Category k => CoproductPCat k where
   inr  ::  Additive a => b `k` (Prod k a b)
   jam  ::  Additive c => (Prod k a a) `k` a
 \end{code}
-Unlike |Category| and |ProductCat|, we've had to add an additivity requirement (having a notion of addition and corresponding identity) to the types involved, in order to have an instance for functions:\notefoot{Alternatively, skip the instance for |(->)| and instead begin in a category of functions on additive types.}
+Unlike |Category| and |ProductCat|, we've had to add an additivity requirement (having a notion of addition and corresponding identity) to the types involved, in order to have an instance for functions:\notefoot{Alternatively, skip the instance for |(->)| and instead begin in a category |(-+>)| of functions on additive types. I guess I'll have to change the category used in |Cont k r| from |(->)| to |(-+>)|.}
 %format zero = 0
 %format ^+^ = +
 \begin{code}
@@ -687,25 +687,25 @@ instance CoproductPCat D where
 
 With |dup|, we can define an alternative to |(***)| that takes two morphisms sharing a domain:
 \begin{code}
-(&&&) :: Cartesian k => (a `k` c) -> (a `k` d) -> (a `k` Prod k c d)
+(&&&) :: Cartesian k => (a `k` c) -> (a `k` d) -> (a `k` (Prod k c d))
 f &&& g = (f *** g) . dup
 \end{code}
 The |(&&&)| operation is sometimes called ``fork'' \citep{Gibbons2002:Calculating} and is particularly useful for translating from the $\lambda$-calculus to categorical form \citep[Section 3]{Elliott-2017-compiling-to-categories}.
 
 Dually, |jam| lets us define a second alternative to |(***)| for two morphisms sharing a \emph{codomain}:\notefoot{Do I use |(###)|?}
 \begin{code}
-(|||) :: Cocartesian k => (c `k` a) -> (d `k` a) -> (Prod k c d `k` a)
+(|||) :: Cocartesian k => (c `k` a) -> (d `k` a) -> ((Prod k c d) `k` a)
 f ||| g = jam . (f +++ g)
 \end{code}
 The |(###)| operation is sometimes called ``join'' \citep{Gibbons2002:Calculating}.
 
 In their uncurried form, these two operations are invertible:\notefoot{For proofs, cite \cite{Gibbons2002:Calculating}.}
 \begin{code}
-fork    :: Cartesian    k => (a `k` c) :* (a `k` d) -> (a `k` ((Prod k c d)))
+fork    :: Cartesian    k => (a `k` c) :* (a `k` d) -> (a `k` (Prod k c d))
 unfork  :: Cartesian    k => (a `k` ((Prod k c d))) -> (a `k` c) :* (a `k` d)
 
-join    :: Cocartesian  k => (c `k` a) :* (d `k` a) -> (((Prod k c d)) `k` a)
-unjoin  :: Cocartesian  k => (((Prod k c d)) `k` a) -> (c `k` a) :* (d `k` a)
+join    :: Cocartesian  k => (c `k` a) :* (d `k` a) -> ((Prod k c d) `k` a)
+unjoin  :: Cocartesian  k => ((Prod k c d) `k` a) -> (c `k` a) :* (d `k` a)
 \end{code}
 where
 \begin{code}
@@ -730,7 +730,7 @@ type AbelianCat k = (ProductCat k, CoproductPCat k, TerminalCat k, CoterminalCat
 zeroC :: AbelianCat k => a `k` b
 zeroC = ti . it
 
-plusC :: forall k a b. AbelianCat k => Binop (a `k` b)
+plusC :: AbelianCat k => Binop (a `k` b)
 f `plusC` g = jamP . (f *** g) . dup
 \end{code}
 
@@ -739,7 +739,7 @@ f `plusC` g = jamP . (f *** g) . dup
 \subsectionl{Numeric operations}
 
 So far, the vocabulary we've considered comprises linear functions and combining forms (|(.)|, |(&&&)|, and |(###)|) that preserve linearity.
-To make differentiation at all interesting, we'll need some non-linear primitives as well.
+To make differentiation interesting, we'll need some non-linear primitives as well.
 Let's now add these primitives, while continuing to derive correct implementations from simple, regular specifications in terms of structure preservation.
 We'll define a collection of interfaces for numeric operations, roughly imitating Haskell's numeric type class hierarchy \needcite.
 
@@ -758,7 +758,7 @@ class NumCat k a where
   addC, mulC :: (a :* a) `k` a
   ...
 \end{code}
-Besides generalizing from |(->)| to |k|, we've also uncurried the operations, so as demand less of supporting categories |k|.
+Besides generalizing from |(->)| to |k|, we've also uncurried the operations, so as to demand less of supporting categories |k|.
 There are similar classes for other operations, such as division, powers and roots, and transcendental functions (|sin|, |cos|, |exp| etc).
 Instances for functions use the operations from |Num| etc:
 %format * = "\cdot"
@@ -780,7 +780,7 @@ This conventional form is unnecessarily complex, as each of these rules involves
 This form is also imprecise about the nature of |u| and |v|.
 If they are functions, then one needs to explain arithmetic on functions; and if they are not functions, then differentiation of non-functions needs explanation.
 
-A simpler presentation is to remove the arguments and talk about differentiating the primitive operations \emph{themselves}, without context.
+A simpler presentation is to remove the arguments and talk about differentiating the primitive operations directly.
 We already have the chain rule to account for context, so we do not need to involve it in every numeric operation.
 Since negation and (uncurried) addition are linear, we already know how to differentiate them.
 Multiplication is a little more involved \citep[Theorem 2-3 (2)]{Spivak65}:
@@ -792,7 +792,7 @@ Note the linearity of the right-hand side, so that the derivative of |mulC| at |
 der f (a,b) = \ (da,db) -> f (da,b) + f (a,db)
 \end{code}
 }
-To make the linearity more apparent, and to prepare for variations later in this paper, let's now rephrase `der mulC` without using lambda directly.
+To make the linearity more apparent, and to prepare for variations later in this paper, let's now rephrase |der mulC| without using lambda directly.
 Just as |Category|, |Cartesian|, |Cocartesian|, |NumCat|, etc generalize operations beyond functions, it will also be handy to generalize scaling as well:
 \begin{code}
 class ScalarCat k a where
@@ -801,13 +801,13 @@ class ScalarCat k a where
 instance Num a => ScalarCat (->) a where
   scale a = \ da -> a * da
 \end{code}
-Since uncurried multiplication is bilinear, its partial application as `scale a` (for functions) is linear for all |a|.
+Since uncurried multiplication is bilinear, its partial application as |scale a| (for functions) is linear for all |a|.
 Now we can rephrase the product rule in terms of more general, linear language, using the derived |(###)| operation defined in \secref{Derived operations}.
 \begin{code}
 der mulC (a,b) = scale b ||| scale a
 \end{code}
 
-This product rule, along with the linearity of negation and uncurried addition, enables using the same style of derivation as with operations from |Category|, |Cartesian|, and |Cocartesian| above.
+This product rule, along with the linearity of negation and uncurried addition, enables using the same style of derivation as with operations from |Category|, |MonoidalPCat|, |Cartesian|, and |Cocartesian| above.
 As usual, specify the |NumCat| instance for differentiable functions by saying that |adf| preserves |NumCat| structure, i.e., |adf negateC == negateC|, |adf addC == addC|, and |adf mulC == mulC|.
 Reasoning as before, we get another correct-by-construction instance for differentiable functions:
 \begin{code}
@@ -826,23 +826,6 @@ instance FloatingCat D where
         ...
 \end{code}
 In what follows, the |scale| operation will play a more important role than merely tidying definitions.
-
-\sectionl{Programming as defining and solving algebra problems}
-
-Stepping back to consider what we've done, a general recipe emerges:\notefoot{Go over the wording of this section to make as clear as I can.}
-\begin{itemize}
-\item Start with an expensive or even non-computable specification (here involving differentiation).
-\item Build the desired result into the representation of a new data type (here as the combination of a function and its derivative).
-\item Try to show that conversion from a simpler form (here regular functions) to the new data type---even if not computable---is \emph{compositional} with respect to a well-understood algebraic abstraction (here |Category|).
-\item If compositionality fails (as with |der|, unadorned differentiation, in \secref{Sequential composition}), then examine the failure to find an augmented specification, iterating as needed until converging on a representation and corresponding specification that \emph{is} compositional.
-\item Set up an algebra problem whose solution will be an instance of the well-understood algebraic abstraction for the chosen representation.
-These algebra problems always have a particular stylized form, namely that the operation being solved for is a \emph{homomorphism} for the chosen abstraction (here a category homomorphism, also called a ``functor'').
-\item Solve the algebra problem by using the compositionality properties.
-\item Rest assured that the solution satisfies the required laws, at least when the new data type is kept abstract, thanks to the homomorphic specification.
-\end{itemize}
-The result of this recipe is not quite an implementation of our homomorphic specification, which may after all be non-computable.
-Rather, it gives a computable alternative that is almost as useful: if the input to the specified conversion is expressed in vocabulary of the chosen algebraic abstraction, then a re-interpretation of that vocabulary in the new data type is the result of the (possibly non-computable) specification.
-Furthermore, if we can \emph{automatically} convert conventionally written functional programs into the chosen algebraic vocabulary (as in \citep{Elliott-2017-compiling-to-categories}), then those programs can be re-interpreted to compute the desired specification.
 
 \sectionl{Examples}
 
@@ -878,6 +861,23 @@ The results are rendered in \figreftwo{magSqr-adf}{cosSinProd-adf}.
 \figone{cosSinProd-adf}{|adf cosSinProd|}}
 Note that the derivatives are (linear) functions, as depicted in boxes.
 Also note the sharing of work between the a function's result and its derivative in \figref{cosSinProd-adf}.\notefoot{Introduce the term ``primal'' early on and use it throughout.}
+
+\sectionl{Programming as defining and solving algebra problems}
+
+Stepping back to consider what we've done, a general recipe emerges:\notefoot{Go over the wording of this section to make as clear as I can.}
+\begin{itemize}
+\item Start with an expensive or even non-computable specification (here involving differentiation).
+\item Build the desired result into the representation of a new data type (here as the combination of a function and its derivative).
+\item Try to show that conversion from a simpler form (here regular functions) to the new data type---even if not computable---is \emph{compositional} with respect to a well-understood algebraic abstraction (here |Category|).
+\item If compositionality fails (as with |der|, unadorned differentiation, in \secref{Sequential composition}), then examine the failure to find an augmented specification, iterating as needed until converging on a representation and corresponding specification that \emph{is} compositional.
+\item Set up an algebra problem whose solution will be an instance of the well-understood algebraic abstraction for the chosen representation.
+These algebra problems always have a particular stylized form, namely that the operation being solved for is a \emph{homomorphism} for the chosen abstraction (here a category homomorphism, also called a ``functor'').
+\item Solve the algebra problem by using the compositionality properties.
+\item Rest assured that the solution satisfies the required laws, at least when the new data type is kept abstract, thanks to the homomorphic specification.
+\end{itemize}
+The result of this recipe is not quite an implementation of our homomorphic specification, which may after all be non-computable.
+Rather, it gives a computable alternative that is almost as useful: if the input to the specified conversion is expressed in vocabulary of the chosen algebraic abstraction, then a re-interpretation of that vocabulary in the new data type is the result of the (possibly non-computable) specification.
+Furthermore, if we can \emph{automatically} convert conventionally written functional programs into the chosen algebraic vocabulary (as in \citep{Elliott-2017-compiling-to-categories}), then those programs can be re-interpreted to compute the desired specification.
 
 \sectionl{Generalizing automatic differentiation}
 
@@ -1356,7 +1356,14 @@ The instances above for |Cont k r| constitute a simple algorithm for reverse mod
 
 \mynote{Explain better how |Cont k r| performs full left-association. Also, how to use it by applying to |id|.}
 
-\subsectionl{Gradients and duality}
+%format adr = adf
+\figreftwo{magSqr-adr}{cosSinProd-adr} show the results of reverse mode AD via |Cont| corresponding to \figreftwo{magSqr}{cosSinProd} and \figreftwo{magSqr-adf}{cosSinProd-adf}
+\figp{
+\figoneW{0.40}{magSqr-adr}{|adr magSqr| via |Cont|}}{
+\figoneW{0.56}{cosSinProd-adr}{|adr cosSinProd| via |Cont|}}
+The derivatives are represented as (linear) functions again, but reversed (mapping from codomain to domain).
+
+\sectionl{Gradients and duality}
 
 As a special case of reverse mode automatic differentiation, let's consider its use to compute \emph{gradients}, i.e., derivatives of functions with a scalar codomain.
 This case is very important local minimization by means of gradient descent, e.g., as used in deep learning \needcite{}.
@@ -1610,8 +1617,16 @@ In particular, we can simply use the category of linear functions |(-+>)|.%
 
 %% \workingHere
 
+\figreftwo{magSqr-gradr}{cos-2xx-gradr} show the results of reverse mode AD via |Dual|.
+Compare \figref{magSqr-gradr} with the same example in \figreftwo{magSqr-adf}{magSqr-adr}.
+\figp{
+\figoneW{0.40}{magSqr-gradr}{|adr magSqr| via |Dual|}}{
+\figoneW{0.56}{cos-2xx-gradr}{|adr (\ x -> cos (2 * x * x))| via |Dual|}}
+
 \sectionl{To do}
 \begin{itemize}
+\item Move the current examples to a new \emph{Examples} section after gradients and duality.
+      For each example, show the function, |andDerivF|, |andDerivR|, and |andGradR|.
 \item The rest of the talk:
   \begin{itemize}
   \item {Reverse AD examples}
@@ -1620,12 +1635,21 @@ In particular, we can simply use the category of linear functions |(-+>)|.%
   \item {Conclusions}
   \end{itemize}
 \item Move many proofs to appendices.
+\item Maybe remove the |Additive| constraints in |Cocartesian|, along with the |Cocartesian (->)| instance.
 \item Indexed biproducts.
-\item Relate the methodology of this paper to denotational design \citep{Elliott2009-type-class-morphisms-TR}.
-They're quite similar.
-\item Relate also to algebra of programming \citep{BirddeMoor96:Algebra}.
-\item Relate this work to backprop-as-functor \citep{Fong2017BackpropAF}.
+\item Relate to
+  \begin{itemize}
+  \item Cayley's theorem
+  \item Categorical pullbacks
+  \item \emph{Kan Extensions for Program Optimisation} \citep{Hinze2012KanEF}
+  \item Denotational design \citep{Elliott2009-type-class-morphisms-TR}.
+        The methodologies are quite similar.
+  \item Algebra of programming \citep{BirddeMoor96:Algebra}.
+  \item Backprop as functor \citep{Fong2017BackpropAF}.
+  \end{itemize}
 \item |ConstCat| for |Dual| and for linear arrows in general.
+\item What is ``generalized AD''?
+      Is it AD at all or something else?
 \end{itemize}
 
 \bibliography{bib}
