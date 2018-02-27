@@ -464,7 +464,7 @@ To solve the |(.)| equation, generalize it to a \emph{stronger} condition:\footn
 D g . D f == D (\ a -> let { (b,f') = f a ; (c,g') = g b } in (c, g' . f'))
 \end{code}
 The solution of this stronger condition is immediate, leading to the following instance as a sufficient condition for |adf| being a functor:
-\end{closerCodePars}
+\end{closerCodePars}%
 \begin{code}
 linearD :: (a -> b) -> D a b
 linearD f = D (\ a -> (f a,f))
@@ -674,7 +674,7 @@ F inl  == inl
 F inr  == inr
 F jam  == jam
 \end{code}
-\end{closerCodePars}
+\end{closerCodePars}%
 From the specification that |adf| is a cocartesian functor and the linearity of |inl|, |inr|, and |jam|, we can derive a correct-by-construction |CoproductPCat| instance for differentiable functions:
 \begin{code}
 instance CoproductPCat D where
@@ -1065,7 +1065,7 @@ instance CoproductPCat  (L s)    where ...
 
 instance ScalarCat      (L s) s  where ...
 \end{code}
-\end{closerCodePars}
+\end{closerCodePars}%
 
 \mynote{Mention upcoming categorical generalizations, which rely on \emph{indexed} biproducts.}
 
@@ -1111,14 +1111,14 @@ cont :: Category k => (a `k` b) -> Cont k r a b
 cont f = Cont (rcomp f)
 \end{code}
 As usual, let's derive instances for our new category by homomorphic specification.
-To say that |cont| is a functor (|Category| homomorphism), is equivalent to the following two equations:
+To say that |cont| is a functor (|Category| homomorphism) is equivalent to the following two equalities:
 \begin{closerCodePars}
 \begin{code}
 cont id == id
 
 cont (g . f) == cont g . cont f
 \end{code}
-\end{closerCodePars}
+\end{closerCodePars}%
 Simplify the first homomorphism equation:
 \begin{code}
    cont id
@@ -1128,7 +1128,7 @@ Simplify the first homomorphism equation:
    Cont (\ h -> h . id)
 ==  {- category law -}
    Cont (\ h -> h)
-==  {- definition of |id| -}
+==  {- definition of |id| for functions -}
    Cont id
 \end{code}
 The first homomorphism equation is thus equivalent to |id == Cont id|, which is in solved form.
@@ -1395,6 +1395,8 @@ unDot  :: (u :-* s) -> u
 To derive instances for |Dual k|, we'll need some properties.
 \begin{lemma} \lemLabel{dot-properties}
 The following identities hold:
+% https://tex.stackexchange.com/questions/38260/non-italic-text-in-theorems-definitions-examples
+\normalfont
 \begin{enumerate}
 \item |dot| and |unDot| are linear. \label{dot-linear}
 \item |unjoin . dot = dot *** dot| \label{unjoin-dot}
@@ -1423,6 +1425,8 @@ Simplifying the RHS,
 We also need |asDual (g . f) == asDual g . asDual f|, or (without loss of generality) |asDual (Cont g . Cont f) == asDual (Cont g) . asDual (Cont f)|.
 Simplifying both sides,
 \begin{code}
+   asDual (Cont g . Cont f)
+==  {- definition of |(.)| for |Cont| -}
    asDual (Cont (f . g))
 ==  {- definition of |asDual| -}
    Dual (unDot . f . g . dot)
@@ -1628,7 +1632,6 @@ Compare \figref{magSqr-gradr} with the same example in \figreftwo{magSqr-adf}{ma
       For each example, show the function, |andDerivF|, |andDerivR|, and |andGradR|.
 \item The rest of the talk:
   \begin{itemize}
-  \item {Reverse AD examples}
   \item {Incremental evaluation}
   \item {Symbolic vs automatic differentiation}
   \item {Conclusions}
@@ -1651,8 +1654,12 @@ Compare \figref{magSqr-gradr} with the same example in \figreftwo{magSqr-adf}{ma
       Is it AD at all or something else?
 \item Misc:
   \begin{itemize}
-  \item Mention graph optimization
-  \item Examples with generalized matrices
+  \item Switch to the required ICFP format to get a sense of length.
+        Hm! Do appendices count against the page limit?
+        Remember that the journal version must have substantial content absent in the conference version.
+  \item Mention graph optimization.
+  \item Examples with generalized matrices.
+  \item Mention flaw in the compose/cross and cross rules: the decomposed pieces may not be differentiable.
   \end{itemize}
 \end{itemize}
 
