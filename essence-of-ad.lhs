@@ -108,7 +108,7 @@ Since once can think of scalars as a special case of vectors, and scalar multipl
 When we turn our attention to higher derivatives (which are derivatives of derivatives), however, the situation get more complicated, and we need yet higher-dimensional representations, with correspondingly more complex chain rules.
 
 Fortunately, there is a single, elegant generalization of differentiation with a correspondingly simple chain rule. 
-First, change Definition \ref{eq:scalar-deriv} above to say that |f' x| is the unique |v :: Rn| such that\footnote{For clarity, throughout this paper we will use ``|A = B|'' to mean ``|A| is defined as |B|'' and ``|==|'' to mean (more broadly) that ``|A| is equal to |B|'', using the former to introduce |A|, and the latter to claim that an well-defined statement equality is in fact true.}
+First, change Definition \ref{eq:scalar-deriv} above to say that |f' x| is the unique |v :: Rn| such that\footnote{For clarity, throughout this paper we will use ``|A = B|'' to mean ``|A| is defined as |B|'' and ``|==|'' to mean (more broadly) that ``|A| is equal to |B|'', using the former to introduce |A|, and the latter to assert that a well-defined statement of equality is in fact true.}
 $$ |lim(eps -> 0)(frac(f (x+eps) - f x) eps) - v == 0| $$
 or (equivalently)
 $$ |lim(eps -> 0)(frac(f (x+eps) - (f x + eps *^ v)) eps) == 0|. $$
@@ -119,7 +119,7 @@ In other words, |T| is a \emph{local linear approximation} of |f| at |x|.
 This definition comes from \citet[chapter 2]{Spivak65}, along with a proof that |T| is indeed unique when it exists.
 
 The derivative of a function |f :: a -> b| at some value in |a| is thus not a number, vector, matrix, or higher-dimensional variant, but rather a \emph{linear map} (also called ``linear transformations'') from |a| to |b|, which we will write as ``|a :-* b|''.
-The numbers, vectors, matrices, etc mentioned above are all different \emph{representations} of linear maps; and the various forms of ``multiplication'' appearing in their associated chain rules are all implementations of linear map composition for those representations.
+The numbers, vectors, matrices, etc mentioned above are all different \emph{representations} of linear maps; and the various forms of ``multiplication'' appearing in their associated chain rules are all implementations of linear map \emph{composition} for those representations.
 Here, |a| and |b| must be vector spaces that share a common underlying field.
 Written as a Haskell-style type signature,
 
@@ -133,7 +133,7 @@ der :: (a -> b) -> (a -> (a :-* b))
 
 %format der2 = der "^2"
 
-From the type of |der|, it follows that differentiating twice has the following type\footnote{As with ``|->|'', we will take ``|:-*|'' to associate rightward, so |u :-* v :-* w| is equivalent to |u :-* (v :-* w)|}:
+From the type of |der|, it follows that differentiating twice has the following type\footnote{As with ``|->|'', we will take ``|:-*|'' to associate rightward, so |u :-* v :-* w| is equivalent to |u :-* (v :-* w)|.}:
 
 \begin{code}
 der2 = der . der :: NOP (a -> b) -> (a -> (a :-* a :-* b))
@@ -190,7 +190,7 @@ Moreover, the chain rule itself requires applying a function and its derivative 
 Since the chain gets applied recursively to nested compositions, the redundant work multiplies greatly, resulting in an impractically expensive algorithm.
 
 This efficiency problem is also easily fixed.
-Instead of pairing |f| and |der f|, let's instead \emph{combine} them into a single function\footnote{The precedence of ``|:*|'' is tighter than that of ``|->|'' and ``|:-*|'', so |a -> b :* (a :-* b)| is equivalent to |a -> (b :* (a :-* b))|}:
+Instead of pairing |f| and |der f|, let's instead \emph{combine} them into a single function\footnote{The precedence of ``|:*|'' is tighter than that of ``|->|'' and ``|:-*|'', so |a -> b :* (a :-* b)| is equivalent to |a -> (b :* (a :-* b))|.}:
 \begin{code}
 ad :: (a -> b) -> (a -> b :* (a :-* b))   -- better!
 ad f a = (f a, der f a)
@@ -1589,7 +1589,9 @@ Finally, scaling:
    Dual (scale s)
 \end{code}
 
-These calculations lead to the following elegant instances for |Dual k|:
+These calculations lead to elegant instances for |Dual k|, shown in \figref{dual instances}.
+\begin{figure}
+\begin{center}
 \begin{code}
 instance Category k => Category (Dual k) where
    id = Dual id
@@ -1611,6 +1613,10 @@ instance CoproductCat k => CoproductCat (Dual k) where
 instance ScalarCat k => ScalarCat (Dual k) where
    scale s = Dual (scale s)
 \end{code}
+\caption{Generalized automatic differentiation}
+\figlabel{dual instances}
+\end{center}
+\end{figure}
 Note that these instances exactly dualize a computation, reversing sequential compositions and swapping corresponding |ProductCat| and |CoproductCat| operations.
 Recall from \secref{Matrices}, that |scale| forms $1 \times 1$ matrices, while |(###)| and |(&&&)| correspond to horizontal and vertical juxtaposition, respectively.
 Thus, from a matrix perspective, duality is \emph{transposition}, turning an $m \times n$ matrix into an $n \times m$ matrix.
@@ -1620,7 +1626,7 @@ In particular, we can simply use the category of linear functions |(-+>)|.%
 
 %% \workingHere
 
-\figreftwo{magSqr-gradr}{cos-2xx-gradr} show the results of reverse mode AD via |Dual|.
+\figreftwo{magSqr-gradr}{cos-xpytz-gradr} show the results of reverse mode AD via |Dual|.
 Compare \figref{magSqr-gradr} with the same example in \figreftwo{magSqr-adf}{magSqr-adr}.
 \figp{
 \figoneW{0.40}{magSqr-gradr}{|adr magSqr| via |Dual (-+>)|}}{
@@ -1638,8 +1644,9 @@ Compare \figref{magSqr-gradr} with the same example in \figreftwo{magSqr-adf}{ma
   \end{itemize}
 \item Move many proofs to appendices.
 \item Maybe remove the |Additive| constraints in |Cocartesian|, along with the |Cocartesian (->)| instance.
+      Otherwise, mention that the implementation does so.
 \item Indexed biproducts.
-\item Relate to
+\item Relate to:
   \begin{itemize}
   \item Cayley's theorem
   \item Categorical pullbacks
@@ -1648,6 +1655,7 @@ Compare \figref{magSqr-gradr} with the same example in \figreftwo{magSqr-adf}{ma
         The methodologies are quite similar.
   \item Algebra of programming \citep{BirddeMoor96:Algebra}.
   \item Backprop as functor \citep{Fong2017BackpropAF}.
+  \item AD work by Barak et al.
   \end{itemize}
 \item |ConstCat| for |Dual| and for linear arrows in general.
 \item What is ``generalized AD''?
@@ -1655,9 +1663,9 @@ Compare \figref{magSqr-gradr} with the same example in \figreftwo{magSqr-adf}{ma
 \item Misc:
   \begin{itemize}
   \item Switch to the required ICFP format to get a sense of length.
-        Hm! Do appendices count against the page limit?
-        Remember that the journal version must have substantial content absent in the conference version.
-  \item Mention graph optimization.
+        The \href{https://icfp18.sigplan.org/track/icfp-2018-papers}{call for papers} says 27 pages \emph{plus bibliography}.
+        Remember that the journal version must have substantial content absent in the conference version, which could probably include proofs as well as the functor-level operations.
+  \item Mention graph optimization and maybe show one or more un-optimized graphs.
   \item Examples with generalized matrices.
   \item Mention flaw in the compose/cross and cross rules: the decomposed pieces may not be differentiable.
   \end{itemize}
