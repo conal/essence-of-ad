@@ -2,7 +2,7 @@
 
 \newif\ifacm
 
-\acmtrue
+%% \acmtrue
 
 \ifacm
 
@@ -790,6 +790,8 @@ f `plusC` g = jamP . (f *** g) . dup
 
 \mynote{Relate |zeroC| and |plusC| to existing vocabulary in other ways as well.}
 
+\mynote{Perhaps replace this section with a remark and reference to \citet{MacedoOliveira2013Typing}.}
+
 \subsectionl{Numeric operations}
 
 So far, the vocabulary we've considered comprises linear functions and combining forms (|(.)|, |(&&&)|, and |(###)|) that preserve linearity.
@@ -848,6 +850,7 @@ der f (a,b) = \ (da,db) -> f (da,b) + f (a,db)
 }
 To make the linearity more apparent, and to prepare for variations later in this paper, let's now rephrase |der mulC| without using lambda directly.
 Just as |Category|, |Cartesian|, |Cocartesian|, |NumCat|, etc generalize operations beyond functions, it will also be handy to generalize scaling as well:
+%format ScalarCat = Scalable
 \begin{code}
 class ScalarCat k a where
   scale :: a -> (a `k` a)
@@ -935,7 +938,7 @@ Furthermore, if we can \emph{automatically} convert conventionally written funct
 \sectionl{Generalizing automatic differentiation}
 
 \corRefs{compose}{linear} all have the same form: an operation on |D| (differentiable functions) is defined entirely via the same operation on |(:-*)| (linear maps).
-Specifically, the composition of differentiable functions relies on the composition of linear maps, and likewise for |(&&&)|, |(###)|, and linear functions.
+Specifically, the composition of differentiable functions relies on the composition of linear maps, and likewise for |(***)| and linear functions.
 These corollaries follow closely from \thmRefs{compose}{linear}, which relate derivatives for these operations to the corresponding operations on linear maps.
 These properties make for a pleasantly poetic theory, but they also have a powerful, tangible benefit, which is that we can replace linear maps by any of a much broader variety of underlying categories to arrive at a greatly generalized notion of AD.
 
@@ -1690,11 +1693,18 @@ Compare \figref{magSqr-gradr} with the same example in \figreftwo{magSqr-adf}{ma
 
 \sectionl{Incremental evaluation}
 
+\mynote{If I drop this section, remove also from the abstract.}
+
+\sectionl{Future work}
+
 \sectionl{Related work}
 
 \mynote{
 \begin{itemize}
 \item \emph{Typing linear algebra} \citep{MacedoOliveira2013Typing}.
+\item Other work on linear algebra and static typing.
+      Mention that we're not just using \emph{sizes}.
+      For instance, \emph{Statically Typed Linear Algebra in Haskell}.
 \item Cayley's theorem and the Yoneda lemma.
 \item Categorical pullbacks.
 \item \emph{Kan Extensions for Program Optimisation} \citep{Hinze2012KanEF}.
@@ -1702,6 +1712,7 @@ Compare \figref{magSqr-gradr} with the same example in \figreftwo{magSqr-adf}{ma
 \item \emph{Algebra of programming} \citep{BirddeMoor96:Algebra}.
 \item \emph{Backprop as Functor} \citep{Fong2017BackpropAF}.
 \item AD work by Barak Pearlmutter and coauthors.
+\item \emph{Beautiful differentiation} \citep{Elliott2009-beautiful-differentiation}
 \end{itemize}
 }
 
@@ -1715,6 +1726,7 @@ Compare \figref{magSqr-gradr} with the same example in \figreftwo{magSqr-adf}{ma
 \item Move many proofs to appendices.
 \item Probably remove the |Additive| constraints in |Cocartesian|, along with the |Cocartesian (->)| instance.
       Otherwise, mention that the implementation does so.
+      |CoterminalCat (->)| isn't what we need.
 \item |dot| and |unDot|.
 \item |ConstCat| for |Dual| and for linear arrows in general.
 \item What is ``generalized AD''?
