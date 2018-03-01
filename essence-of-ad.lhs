@@ -1,8 +1,60 @@
 %% -*- latex -*-
 
+\newif\ifacm
+
+\acmtrue
+
+\ifacm
+
+%% \documentclass[acmsmall,screen]{acmart} % ,authorversion=true,
+
+\documentclass[acmsmall=true,review]{acmart}
+%% ,anonymous,authorversion
+%% \settopmatter{printfolios=true,printccs=false,printacmref=false}
+
+\author{Conal Elliott}
+\email{conal@@conal.net}
+\affiliation{%
+  \institution{Target}
+  % \city{Sunnyvale}
+  % \state{California}
+  \country{USA}
+}
+
+\acmJournal{PACMPL}
+\acmVolume{1}
+\acmNumber{ICFP}
+\acmArticle{1}
+\acmYear{2018}
+\acmMonth{1}
+\acmDOI{} % \acmDOI{10.1145/nnnnnnn.nnnnnnn}
+\startPage{1}
+
+\bibliographystyle{ACM-Reference-Format}
+
+%% Copyright information
+%% Supplied to authors (based on authors' rights management selection;
+%% see authors.acm.org) by publisher for camera-ready submission;
+%% use 'none' for review submission.
+\setcopyright{none}
+%\setcopyright{acmcopyright}
+%\setcopyright{acmlicensed}
+%\setcopyright{rightsretained}
+%\copyrightyear{2018}           %% If different from \acmYear
+
+\else
+
+%% \zoink
+
 %% While editing/previewing, use 12pt and tiny margin.
 \documentclass[12]{article}  % fleqn,
 \usepackage[margin=0.12in]{geometry}  % 0.9in
+
+\usepackage{natbib}
+\bibliographystyle{plainnat}
+\author{Conal Elliott\\[1ex]Target}
+
+\fi
 
 \input{macros}
 
@@ -19,8 +71,7 @@
 %% \markboth{...}{...}
 
 \title{The simple essence of automatic differentiation}
-\author{Conal Elliott\\[1ex]Target}
-\date{Draft of \today}
+\date{Draft\footnote{In this draft, \mynote{red bracketed text} indicates notes to be addressed and eliminated as writing progresses.}~\ of \today}
 %% \institute[]{Target}
 
 %% \setlength{\itemsep}{2ex}
@@ -60,7 +111,7 @@
 
 \begin{document}
 
-\maketitle
+\ifacm \else \maketitle \fi
 
 \begin{abstract}
 
@@ -75,6 +126,8 @@ This generalization is then easily specialized to forward and reverse modes, wit
 Another instance of generalized AD is automatic incremental evaluation of functional programs, again with no notational impact to the programmer.
 
 \end{abstract}
+
+\ifacm \maketitle \else \fi
 
 \sectionl{What's a derivative?}
 
@@ -107,8 +160,8 @@ $$ (\mathbf{A} \cdot \mathbf{B})_{ij} = \sum_{k=1}^m A_{ik} \cdot B_{kj} $$
 Since once can think of scalars as a special case of vectors, and scalar multiplication as a special case of matrix multiplication, perhaps we've reached the needed generality.
 When we turn our attention to higher derivatives (which are derivatives of derivatives), however, the situation get more complicated, and we need yet higher-dimensional representations, with correspondingly more complex chain rules.
 
-Fortunately, there is a single, elegant generalization of differentiation with a correspondingly simple chain rule. 
-First, change Definition \ref{eq:scalar-deriv} above to say that |f' x| is the unique |v :: Rn| such that\footnote{For clarity, throughout this paper we will use ``|A = B|'' to mean ``|A| is defined as |B|'' and ``|==|'' to mean (more broadly) that ``|A| is equal to |B|'', using the former to introduce |A|, and the latter to assert that a well-defined statement of equality is in fact true.}
+Fortunately, there is a single, elegant generalization of differentiation with a correspondingly simple chain rule.
+First, reword Definition \ref{eq:scalar-deriv} above to say that |f' x| is the unique |v :: Rn| such that\footnote{For clarity, throughout this paper we will use ``|A = B|'' to mean ``|A| is defined as |B|'' and ``|==|'' to mean (more broadly) that ``|A| is equal to |B|'', using the former to introduce |A|, and the latter to assert that a well-defined statement of equality is in fact true.}
 $$ |lim(eps -> 0)(frac(f (x+eps) - f x) eps) - v == 0| $$
 or (equivalently)
 $$ |lim(eps -> 0)(frac(f (x+eps) - (f x + eps *^ v)) eps) == 0|. $$
@@ -187,15 +240,15 @@ Note that |ad0 (g . f)| is assembled entirely out of the parts of |ad0 g| and |a
 Writing out |g . f| as |\ a -> g (f a)| underscores that the two parts of |ad0 (g . f)| when applied to |a| both involve |f a|.
 Computing these parts independently thus requires redundant work.
 Moreover, the chain rule itself requires applying a function and its derivative (namely |f| and |der f|) to the same |a|.
-Since the chain gets applied recursively to nested compositions, the redundant work multiplies greatly, resulting in an impractically expensive algorithm.
+Since the chain rule gets applied recursively to nested compositions, this redundant work multiplies greatly, resulting in an impractically expensive algorithm.
 
-This efficiency problem is also easily fixed.
-Instead of pairing |f| and |der f|, let's instead \emph{combine} them into a single function\footnote{The precedence of ``|:*|'' is tighter than that of ``|->|'' and ``|:-*|'', so |a -> b :* (a :-* b)| is equivalent to |a -> (b :* (a :-* b))|.}:
+Fortunately, this efficiency problem is easily fixed.
+Instead of pairing |f| and |der f|, \emph{combine} them into a single function\footnote{The precedence of ``|:*|'' is tighter than that of ``|->|'' and ``|:-*|'', so |a -> b :* (a :-* b)| is equivalent to |a -> (b :* (a :-* b))|.}:
 \begin{code}
 ad :: (a -> b) -> (a -> b :* (a :-* b))   -- better!
 ad f a = (f a, der f a)
 \end{code}
-Combining |f| and |der f| into a single function in this way allows us to eliminate the redundant composition of |f a| in |ad (g . f) a|:
+Combining |f| and |der f| into a single function in this way enables us to eliminate the redundant composition of |f a| in |ad (g . f) a|:
 \begin{corollary} \corLabel{compose}
 |ad| is (efficiently) compositional with respect to |(.)|. Specifically,
 \begin{code}
@@ -245,9 +298,9 @@ If |f :: a -> c| and |g :: b -> d|, then |der f a :: a :-* c| and |der g b :: b 
 ==  {- \thmRef{cross} -}
    ((f a, g b), der f a *** der g b)
 ==  {- refactoring -}
-   let { (c,f') = (f a, der f a) ; (d,g') = (g b, der g b) } in ((c,d), (f' *** g'))
+   let { (c,f') = (f a, der f a) ; (d,g') = (g b, der g b) } in ((c,d), f' *** g')
 ==  {- definition of |ad| -}
-   let { (c,f') = ad f a ; (d,g') = ad g b } in ((c,d), (f' *** g'))
+   let { (c,f') = ad f a ; (d,g') = ad g b } in ((c,d), f' *** g')
 \end{code}
 \end{corollary}
 
@@ -310,8 +363,9 @@ f (s *^ a)  == s *^ f a
 \end{code}
 for all |a,a' :: v| and |s| taken from the scalar field underlying |u| and |v|.
 
-In addition to the derivative rules for |(.)|, |(&&&)|, and |(###)|, there is one more broadly useful tool to be added to our collection: \emph{the derivative of every linear function is itself, everywhere}, i.e., for all linear functions |f|,
+In addition to the derivative rules for |(.)| and |(***)|, there is one more broadly useful tool to be added to our collection: \emph{the derivative of every linear function is itself, everywhere}:
 \begin{theorem}[linear rule] \thmLabel{linear}
+For all linear functions |f|,
 $$|der f a == f|$$
 \end{theorem}
 This statement \citep[Theorem 2-3 (2)]{Spivak65} may sound surprising at first, but less so when we recall that the |der f a| is a local linear approximation of |f| at |a|, so we're simply saying that linear functions are their own perfect linear approximations.
@@ -330,7 +384,7 @@ Note how much simpler it is to say |der fst (a,b) == fst|, and with no loss of p
 
 Given \thmRef{linear}, we can construct |ad f| for all linear |f|:
 \begin{corollary} \corLabel{linear}
-|ad| is compositional with respect to linear functions. Specifically, if |f| is linear, then
+For all linear functions |f|,
 \begin{code}
    ad f
 ==  {- definition of |ad| -}
@@ -344,10 +398,10 @@ Given \thmRef{linear}, we can construct |ad f| for all linear |f|:
 
 \sectionl{Putting the pieces together}
 
-The definition of |ad| is a well-defined specification, but it is not an implementation, since |D| itself is not computable.
+The definition of |ad| is a well-defined specification, but it is not an implementation, since |der| itself is not computable.
 \corRefs{compose}{linear} provide insight into the compositional nature of |ad|, in exactly the form we can now assemble into an efficient, correct-by-construction implementation.
 
-Although differentiation is not computable when given just an arbitrary computable function, we can instead build up differentiable functions compositionally, using exactly the combining forms introduced above, namely |(.)|, |(***)|, and linear functions, together with various non-linear primitives.
+Although differentiation is not computable when given just an arbitrary computable function, we can instead build up differentiable functions compositionally, using exactly the combining forms introduced above, namely |(.)|, |(***)|, and linear functions, together with various non-linear primitives having known derivatives.
 Computations constructed using that vocabulary are differentiable by construction thanks to \corRefs{compose}{linear}.
 The building blocks above are not just a random assortment, but rather a fundamental language of mathematics, logic, and computation, known as \emph{category theory} \needcite.
 Although it would be unpleasant to program directly in this language, its foundational nature enables instead an automatic conversion from conventionally written functional programs \citep{Lambek:1980:LambdaToCCC,Lambek:1985:CCC,Elliott-2017-compiling-to-categories}.
@@ -383,7 +437,7 @@ class Category k where
 
 You are probably already familiar with at least one example of a category, namely functions, in which |id| and |(.)| are the identity function and function composition.
 Another example is the restriction to \emph{computable} functions.
-Another are \emph{linear} functions, which we've written ``|a :-* b|'' above.
+Another is \emph{linear} functions, which we've written ``|a :-* b|'' above.
 Still another example is \emph{differentiable} functions, which we can see by noting two facts:
 \begin{itemize}
 \item The identity function is differentiable, as witnessed by \thmRef{linear} and the linearity if |id|; and
@@ -413,7 +467,7 @@ They also point us to a new, easily implemented category, for which |ad| is in f
 This new category is simply the representation that |ad| produces: |a -> b :* (a :-* b)|, considered as having domain |a| and codomain |b|.
 The functor nature of |ad| will be exactly what we need to in order to program in a familiar and direct way in a pleasant functional language such as Haskell and have a compiler convert to differentiable functions automatically.
 
-To make the new category more explicit, package the result type of |ad| in a new data type:\notefoot{Maybe format |D a b| as |a ~> b| or some other infix form.}
+To make the new category more explicit, package the result type of |ad| in a new data type:\notefoot{Maybe format |D a b| using an infix operator. Remember that I'll need another for generalized AD (|GD|).}
 \begin{code}
 newtype D a b = D (a -> b :* (a :-* b))
 \end{code}
@@ -875,7 +929,7 @@ These algebra problems always have a particular stylized form, namely that the o
 \item Rest assured that the solution satisfies the required laws, at least when the new data type is kept abstract, thanks to the homomorphic specification.
 \end{itemize}
 The result of this recipe is not quite an implementation of our homomorphic specification, which may after all be non-computable.
-Rather, it gives a computable alternative that is almost as useful: if the input to the specified conversion is expressed in vocabulary of the chosen algebraic abstraction, then a re-interpretation of that vocabulary in the new data type is the result of the (possibly non-computable) specification.
+Rather, it gives a computable alternative that is nearly as useful: if the input to the specified conversion is expressed in vocabulary of the chosen algebraic abstraction, then a re-interpretation of that vocabulary in the new data type is the result of the (possibly non-computable) specification.
 Furthermore, if we can \emph{automatically} convert conventionally written functional programs into the chosen algebraic vocabulary (as in \citep{Elliott-2017-compiling-to-categories}), then those programs can be re-interpreted to compute the desired specification.
 
 \sectionl{Generalizing automatic differentiation}
@@ -885,12 +939,12 @@ Specifically, the composition of differentiable functions relies on the composit
 These corollaries follow closely from \thmRefs{compose}{linear}, which relate derivatives for these operations to the corresponding operations on linear maps.
 These properties make for a pleasantly poetic theory, but they also have a powerful, tangible benefit, which is that we can replace linear maps by any of a much broader variety of underlying categories to arrive at a greatly generalized notion of AD.
 
-%format GD = GAD
-The generalized AD definitions, shown in \figref{GAD} result from making a few small changes to the non-generalized definitions derived in \secref{Putting the pieces together}:
+The generalized AD definitions shown in \figref{GAD} result from making a few small changes to the non-generalized definitions derived in \secref{Putting the pieces together}:
 \begin{itemize}
 \item The new category |GD| takes as parameter a category |k| that replaces |(:-*)| in |D|.
-\item The |linearD| function to take two arrows, previously identified.\notefoot{Alternatively, posit an embedding function |lin :: (a :-* b) -> (a -> b)|, write \thmRef{linear} as |der (lin f) a = f|, and change to |linearD :: (a :-* b) -> D a b|.
-Then retroactively make |linearD| a method of a new class.}
+\item The |linearD| function takes two arrows, previously identified.\notefoot{Alternatively, posit an embedding function |lin :: (a :-* b) -> (a -> b)|, write \thmRef{linear} as |der (lin f) a = f|, and change to |linearD :: (a :-* b) -> D a b|.
+Then retroactively make |lin| a method of a new class.
+Could incremental computation implement |lin|?}
 \item The functionality needed of the underlying category becomes explicit.
 \end{itemize}
 
@@ -899,7 +953,7 @@ Then retroactively make |linearD| a method of a new class.}
 \begin{code}
 newtype GD k a b = D (a -> b :* (a `k` b))
 
-linearD :: (a -> b) -> (a `k` b) -> D a b
+linearD :: (a -> b) -> (a `k` b) -> GD k a b
 linearD f f' = D (\ a -> (f a,f'))
 
 instance Category k => Category (GD k) where
@@ -919,7 +973,7 @@ instance Cocartesian k => Cocartesian (GD k) where
   inr  = linearD inr  inr
   jam  = linearD jam  jam
 
-instance ScalarCat k s => NumCat GD s where
+instance ScalarCat k s => NumCat (GD k) s where
   negateC = linearD negateC
   addC  = linearD addC
   mulC  = D (\ (a,b) -> (a * b, scale b ||| scale a))
@@ -954,8 +1008,7 @@ Let's now extract just three operation from this vocabulary:
 These three operations exactly correspond to the three possibilities above for a nonempty matrix |W|, with the width and height constraints captured neatly by types.
 When matrices are used to represent linear maps, the domain and codomain types for the corresponding linear map are determined by the width and height of the matrix, respectively (assuming the convention of matrix on the left multiplied by a column vector on the right), together with the type of the matrix elements.
 
-\mynote{Say something about block matrices and their use in efficient matrix computations.}
-
+\mynote{Maybe say something about block matrices and their use in efficient matrix computations, citing \citet{MacedoOliveira2013Typing}.}
 
 \sectionl{Extracting a data representation}
 
@@ -1010,8 +1063,8 @@ A ``generalized matrix'' for the linear map type |a :-* b| is the composition of
 newtype L s a b = L (V s b (V s a s))
 \end{code}
 For a given type |t|, in addition to the choice of functor |V s t|, there must be functions to convert from |t| to |V s t s| and back:
-%format toV = to"_"V
-%format unV = un"_"V
+%format toV = to"\!_"V
+%format unV = un"\!_"V
 %format Type = "\ast"
 \begin{code}
 class HasV s t where
@@ -1054,10 +1107,13 @@ instance (HasV s b, KnownNat n) => HasV s (Vector n b) where
 \caption{Some ``vector'' representations}
 \figlabel{HasV instances}
 \end{figure}
-Finally, one must define the standard functionality for linear maps in the form of instances of the following form, whose details are left as an exercise for the reader:\footnote{In particular, the operations of matrix/vector multiplication (representing linear map application) and matrix/matrix multiplication (representing linear map composition) are easily implemented in terms of standard functional programming maps, zips, and folds.}
+Finally, one must define the standard functionality for linear maps in the form of instances of the following form, whose details are left as an exercise for the reader:\footnote{Hint: begin by defining |lfun :: L s a b -> (a -+> b)| (using |toV| and |unV|), and a specification that |lfun| is a functor, monoidal functor, etc.
+The operations of matrix/vector multiplication (representing linear map application) and matrix/matrix multiplication (representing linear map composition) are easily implemented in terms of standard functional programming maps, zips, and folds.}
 \begin{closerCodePars}
 \begin{code}
 instance Category       (L s)    where ...
+
+instance MonoidalPCat   (L s)    where ...
 
 instance ProductCat     (L s)    where ...
 
@@ -1103,7 +1159,7 @@ Building a category around this idea results in turning \emph{all} patterns of c
 
 %format (rcomp f) = (. SPC f)
 
-First, package up the continuation representation as a transformation from one category |k| to a new category, |Cont k r|:\footnote{Following Haskell's notation for ``sections'', write ``|rcomp f|'' as shorthand for |\ h -> h . f|.}
+First, package up the continuation representation as a transformation from one category |k| to a new category, |Cont k r|:\footnote{Following Haskell notation, for \emph{right sections}, ``|rcomp f|'' is shorthand for |\ h -> h . f|.}
 \begin{code}
 newtype Cont k r a b = Cont ((b `k` r) -> (a `k` r))
 
@@ -1358,8 +1414,8 @@ The instances above for |Cont k r| constitute a simple algorithm for reverse mod
 %format adr = adf
 \figreftwo{magSqr-adr}{cosSinProd-adr} show the results of reverse mode AD via |Cont| corresponding to \figreftwo{magSqr}{cosSinProd} and \figreftwo{magSqr-adf}{cosSinProd-adf}
 \figp{
-\figoneW{0.40}{magSqr-adr}{|adr magSqr| via |Cont (-+>) R|}}{
-\figoneW{0.58}{cosSinProd-adr}{|adr cosSinProd| via |Cont (-+>) R|}}
+\figoneW{0.40}{magSqr-adr}{|magSqr| in |GD (Cont (-+>) R)|}}{
+\figoneW{0.58}{cosSinProd-adr}{|cosSinProd| in |GD (Cont (-+>) R)|}}
 The derivatives are represented as (linear) functions again, but reversed (mapping from codomain to domain).
 
 \sectionl{Gradients and duality}
@@ -1624,50 +1680,57 @@ Note, however, that |Dual k| involves no actual matrix computations unless |k| d
 In particular, we can simply use the category of linear functions |(-+>)|.%
 \notefoot{I don't think I've defined |a -+> b| yet.}
 
-%% \workingHere
-
-\figreftwo{magSqr-gradr}{cos-xpytz-gradr} show the results of reverse mode AD via |Dual|.
+\figreftwo{magSqr-gradr}{cos-xpytz-gradr} show the results of reverse mode AD via |GD (Dual (-+>))|.
 Compare \figref{magSqr-gradr} with the same example in \figreftwo{magSqr-adf}{magSqr-adr}.
 \figp{
-\figoneW{0.40}{magSqr-gradr}{|adr magSqr| via |Dual (-+>)|}}{
-\figoneW{0.56}{cos-xpytz-gradr}{|adr (\ ((x,y),z) -> cos (x + y * z)| via |Dual (-+>)|}}
+\figoneW{0.40}{magSqr-gradr}{|magSqr| in |GD (Dual (-+>))|}}{
+\figoneW{0.56}{cos-xpytz-gradr}{|\ ((x,y),z) -> cos (x + y * z)| in |GD (Dual (-+>))|}}
+
+\sectionl{Indexed biproducts}
+
+\sectionl{Incremental evaluation}
+
+\sectionl{Related work}
+
+\mynote{
+\begin{itemize}
+\item \emph{Typing linear algebra} \citep{MacedoOliveira2013Typing}.
+\item Cayley's theorem and the Yoneda lemma.
+\item Categorical pullbacks.
+\item \emph{Kan Extensions for Program Optimisation} \citep{Hinze2012KanEF}.
+\item Denotational design \citep{Elliott2009-type-class-morphisms-TR} (similar methodologies).
+\item \emph{Algebra of programming} \citep{BirddeMoor96:Algebra}.
+\item \emph{Backprop as Functor} \citep{Fong2017BackpropAF}.
+\item AD work by Barak Pearlmutter and coauthors.
+\end{itemize}
+}
+
+\sectionl{Conclusions}
+
+\mynote{Include remarks on symbolic vs automatic differentiation.}
 
 \sectionl{To do}
+
 \begin{itemize}
-\item Move the current examples to a new \emph{Examples} section after gradients and duality.
-      For each example, show the function, |andDerivF|, |andDerivR|, and |andGradR|.
-\item The rest of the talk:
-  \begin{itemize}
-  \item {Incremental evaluation}
-  \item {Symbolic vs automatic differentiation}
-  \item {Conclusions}
-  \end{itemize}
 \item Move many proofs to appendices.
-\item Maybe remove the |Additive| constraints in |Cocartesian|, along with the |Cocartesian (->)| instance.
+\item Probably remove the |Additive| constraints in |Cocartesian|, along with the |Cocartesian (->)| instance.
       Otherwise, mention that the implementation does so.
-\item Indexed biproducts.
-\item Relate to:
-  \begin{itemize}
-  \item Cayley's theorem
-  \item Categorical pullbacks
-  \item \emph{Kan Extensions for Program Optimisation} \citep{Hinze2012KanEF}
-  \item Denotational design \citep{Elliott2009-type-class-morphisms-TR}.
-        The methodologies are quite similar.
-  \item Algebra of programming \citep{BirddeMoor96:Algebra}.
-  \item Backprop as functor \citep{Fong2017BackpropAF}.
-  \item AD work by Barak et al.
-  \end{itemize}
+\item |dot| and |unDot|.
 \item |ConstCat| for |Dual| and for linear arrows in general.
 \item What is ``generalized AD''?
       Is it AD at all or something else?
 \item Misc:
   \begin{itemize}
+  \item Consider moving the current examples into a single section after gradients and duality.
+        For each example, show the function, |andDerivF|, |andDerivR|, and |andGradR|.
   \item Switch to the required ICFP format to get a sense of length.
         The \href{https://icfp18.sigplan.org/track/icfp-2018-papers}{call for papers} says 27 pages \emph{plus bibliography}.
         Remember that the journal version must have substantial content absent in the conference version, which could probably include proofs as well as the functor-level operations.
+        Ready to go; just uncomment ``\verb|\acmtrue|''.
   \item Mention graph optimization and maybe show one or more un-optimized graphs.
   \item Examples with generalized matrices.
-  \item Mention flaw in the compose/cross and cross rules: the decomposed pieces may not be differentiable.
+  \item Mention flaw in the compose/chain and cross rules: the decomposed pieces may not be differentiable.
+  \item Sub-differentiation.
   \end{itemize}
 \end{itemize}
 
