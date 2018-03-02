@@ -84,22 +84,26 @@
 \nc{\der}{\mathop{\mathcal{D}}}
 
 \newtheorem{theorem}{Theorem}%[section]
-\nc\thmLabel[1]{\label{thm:#1}}
-\nc\thmRef[1]{Theorem \ref{thm:#1}}
-\nc\thmRefTwo[2]{Theorems \ref{thm:#1} and \ref{thm:#2}}
-\nc\thmRefs[2]{Theorems \ref{thm:#1} through \ref{thm:#2}}
+\nc\thmLabel[1]{\label{theorem:#1}}
+\nc\thmRef[1]{Theorem \ref{theorem:#1}}
+\nc\thmRefTwo[2]{Theorems \ref{theorem:#1} and \ref{theorem:#2}}
+\nc\thmRefs[2]{Theorems \ref{theorem:#1} through \ref{theorem:#2}}
 
 \newtheorem{corollary}{Corollary}[theorem]
-\nc\corLabel[1]{\label{cor:#1}}
-\nc\corRef[1]{Corollary \ref{cor:#1}}
-\nc\corRefTwo[2]{Corollaries \ref{cor:#1} and \ref{cor:#2}}
-\nc\corRefs[2]{Corollaries \ref{cor:#1} through \ref{cor:#2}}
+\nc\corLabel[1]{\label{corollary:#1}}
+\nc\corRef[1]{Corollary \ref{corollary:#1}}
+\nc\corRefTwo[2]{Corollaries \ref{corollary:#1} and \ref{corollary:#2}}
+\nc\corRefs[2]{Corollaries \ref{corollary:#1} through \ref{corollary:#2}}
 
 \newtheorem{lemma}[theorem]{Lemma}
-\nc\lemLabel[1]{\label{lem:#1}}
-\nc\lemRef[1]{Lemma \ref{lem:#1}}
-\nc\lemRefTwo[2]{Lemma \ref{lem:#1} and \ref{lem:#2}}
-\nc\lemRefs[2]{Lemma \ref{lem:#1} through \ref{lem:#2}}
+\nc\lemLabel[1]{\label{lemma:#1}}
+\nc\lemRef[1]{Lemma \ref{lemma:#1}}
+\nc\lemRefTwo[2]{Lemma \ref{lemma:#1} and \ref{lemma:#2}}
+\nc\lemRefs[2]{Lemma \ref{lemma:#1} through \ref{lemma:#2}}
+
+\nc\proofLabel[1]{\label{proof:#1}}
+\nc\proofRef[1]{Appendix \ref{proof:#1}}
+\nc\seeProof[1]{See the proof in \proofRef{#1}.}
 
 \setlength{\blanklineskip}{2ex}
 
@@ -252,18 +256,10 @@ Combining |f| and |der f| into a single function in this way enables us to elimi
 \begin{corollary} \corLabel{compose}
 |ad| is (efficiently) compositional with respect to |(.)|. Specifically,
 \begin{code}
-   ad (g . f) a
-==  {- definition of |ad| -}
-   ((g . f) a, der (g . f) a)
-==  {- definition of |(.)| -}
-   (g (f a), der (g . f) a)
-==  {- \thmRef{compose} -}
-   (g (f a), der g (f a) . der f a)
-==  {- refactoring to share |f a| -}
-   let b = f a in (g b, der g b . der f a)
-==  {- refactoring to show compositionality -}
-   let { (b,f') = ad f a ; (c,g') = ad g b } in (c, g' . f')
+ad (g . f) a == let { (b,f') = ad f a ; (c,g') = ad g b } in (c, g' . f')
 \end{code}
+%% See the proof in Appendix \ref{proof:corollary:compose}.
+\seeProof{corollary:compose}
 \end{corollary}
 
 \subsectionl{Parallel composition}
@@ -289,19 +285,8 @@ If |f :: a -> c| and |g :: b -> d|, then |der f a :: a :-* c| and |der g b :: b 
 \thmRef{cross} gives us what we need to construct |ad (f *** g)| compositionally:
 \begin{corollary} \corLabel{cross}
 |ad| is compositional with respect to |(***)|. Specifically,
-\begin{code}
-   ad (f *** g) (a,b)
-==  {- definition of |ad| -}
-   ((f *** g) (a,b), der (f *** g) (a,b))
-==  {- definition of |(***)| -}
-   ((f a, g b), der (f *** g) (a,b))
-==  {- \thmRef{cross} -}
-   ((f a, g b), der f a *** der g b)
-==  {- refactoring -}
-   let { (c,f') = (f a, der f a) ; (d,g') = (g b, der g b) } in ((c,d), f' *** g')
-==  {- definition of |ad| -}
-   let { (c,f') = ad f a ; (d,g') = ad g b } in ((c,d), f' *** g')
-\end{code}
+$$|ad (f *** g) (a,b) == let { (c,f') = ad f a ; (d,g') = ad g b } in ((c,d), f' *** g')|$$
+\seeProof{corollary:cross}
 \end{corollary}
 
 %if False
@@ -550,7 +535,7 @@ For instance, let's prove that |id . D f == D f| for all |D f :: D a b|:\footnot
    D f
 \end{code}
 
-We can prove the other required properties similarly.
+We can prove the other required properties similarly.\mynote{Maybe omit this proof.}
 Fortunately, there is a way to bypass the need for these painstaking proofs, and instead rely \emph{only} on our original specification for this |Category| instance, namely that |ad| is a functor.
 To buy this proof convenience, we have to make one concession, namely that we consider only morphisms in |D| that arise from |adf|, i.e., only |hat f :: D a b| such that |hat f = adf f| for some |f :: a -> b|.
 We can ensure that indeed only such |hat f| do arise by making |D a b| an \emph{abstract} type, i.e., hiding its data |constructor|.\notefoot{%
@@ -1169,7 +1154,235 @@ newtype Cont k r a b = Cont ((b `k` r) -> (a `k` r))
 cont :: Category k => (a `k` b) -> Cont k r a b
 cont f = Cont (rcomp f)
 \end{code}
-As usual, let's derive instances for our new category by homomorphic specification.
+As usual, we can derive instances for our new category by homomorphic specification.
+\seeProof{theorem:cont}
+\begin{theorem} \thmLabel{cont}
+Given the definitions in \figref{cont}, |cont| is a homomorphism with respect to the instantiated classes.\notefoot{Missing numeric operations?}
+\end{theorem}
+Note the pleasant symmetries in these definitions.
+Each |ProductCat| or |CoproductPCat| operation on |Cont k r| is defined via the dual |CoproductPCat| or |ProductCat| operation, together with the |join|/|unjoin| isomorphism.
+
+\begin{figure}
+\begin{center}
+\begin{code}
+newtype Cont k r a b = Cont ((b `k` r) -> (a `k` r))
+
+instance Category k => Category (Cont k r) where
+  id = Cont id
+  Cont g . Cont f = Cont (f . g)
+
+instance MonoidalPCat k => MonoidalPCat (Cont k r) where
+  Cont f *** Cont g = Cont (join . (f *** g) . unjoin)
+
+instance ProductCat k => ProductCat (Cont k r) where
+  exl  = Cont (join . inl)
+  exr  = Cont (join . inr)
+  dup  = Cont (jamP . unjoin)
+
+instance CoproductCat k => CoproductCat (Cont k r) where
+  inl  = Cont (exl . unjoin)
+  inr  = Cont (exr . unjoin)
+  jam  = Cont (join . dup)
+
+instance ScalarCat k a => ScalarCat (Cont k r) a where
+   scale s = Cont (scale s)
+\end{code}
+\caption{Reverse mode AD}
+\figlabel{cont}
+\end{center}
+\end{figure}
+
+\mynote{Mention Cayley's Theorem: that any monoid is equivalent to a monoid of functions under composition.
+I think |Cont| is a generalization from |Monoid| to |Category|.}
+
+The instances for |Cont k r| constitute a simple algorithm for reverse mode automatic differentiation.
+\mynote{Contrast with other presentations.}
+
+\mynote{Explain better how |Cont k r| performs full left-association. Also, how to use it by applying to |id|.}
+
+%format adr = adf
+\figreftwo{magSqr-adr}{cosSinProd-adr} show the results of reverse mode AD via |Cont| corresponding to \figreftwo{magSqr}{cosSinProd} and \figreftwo{magSqr-adf}{cosSinProd-adf}
+\figp{
+\figoneW{0.40}{magSqr-adr}{|magSqr| in |GD (Cont (-+>) R)|}}{
+\figoneW{0.58}{cosSinProd-adr}{|cosSinProd| in |GD (Cont (-+>) R)|}}
+The derivatives are represented as (linear) functions again, but reversed (mapping from codomain to domain).
+
+\sectionl{Gradients and duality}
+
+As a special case of reverse mode automatic differentiation, let's consider its use to compute \emph{gradients}, i.e., derivatives of functions with a scalar codomain.
+This case is very important local minimization by means of gradient descent, e.g., as used in deep learning \needcite{}.
+
+Given a vector space |A| over a scalar field |s|, the \emph{dual} of |A| is |A :-* s|, i.e., the linear maps to the underlying field.
+This dual space is also a vector space, and when |A| has finite dimension, it is isomorphic to its dual.
+In particular, every linear map in |A :-* s| has the form |dot u| for some |u :: A|, where |dot| is the curried dot product \needcite{}.
+
+The |Cont k r| construction from \secref{Reverse mode AD} works for \emph{any} type/object |r|, so let's take |r| to be the scalar field |s|.
+The internal representation of |Cont (:-*) s a b| is |(b :-* s) -> (a :-* s)|, which is isomorphic to |b -> a|.\notefoot{Maybe I don't need this isomorphism, and it suffices to consider those linear maps that do correspond to |dot u| for some |u|.}
+Call this representation the \emph{dual} of |k|:
+\begin{code}
+newtype Dual k a b = Dual (b `k` a)
+\end{code}
+To construct dual representations of (generalized) linear maps, it suffices to convert from |Cont k s| to |Dual k| by a functor we will now derive.
+Composing this new functor with |cont :: (a `k` b) -> Cont k s a b| will give us a functor from |a `k` b| to |Dual k a b|.
+The new to-be-derived functor:
+\begin{code}
+asDual :: Cont k s a b -> Dual k a b
+asDual (Cont f) = Dual (onDot f)
+\end{code}
+where |onDot| uses both halves of the isomorphism between |a :-* s| and |a|:\notefoot{Maybe drop |onDot| in favor of its definition.}
+\begin{code}
+onDot :: ((b :-* s) -> (a :-* s)) -> (b :-* a)
+onDot f = unDot . f . dot
+
+dot    :: u -> (u :-* s)
+unDot  :: (u :-* s) -> u
+\end{code}
+
+As usual, we can derive instances for our new category by homomorphic specification.
+\seeProof{theorem:asDual}
+\begin{theorem} \thmLabel{asDual}
+Given the definitions in \figref{asDual}, |asDual| is a homomorphism with respect to the instantiated classes.
+\end{theorem}
+\begin{figure}
+\begin{center}
+\begin{code}
+instance Category k => Category (Dual k) where
+   id = Dual id
+   Dual g . Dual f = Dual (f . g)
+
+instance MonoidalPCat k => MonoidalPCat (Dual k) where
+   Dual f *** Dual g = Dual (f *** g)
+
+instance ProductCat k => ProductCat (Dual k) where
+   exl  = Dual inlP
+   exr  = Dual inrP
+   dup  = Dual jamP
+
+instance CoproductCat k => CoproductCat (Dual k) where
+   inlP  = Dual exl
+   inrP  = Dual exr
+   jamP  = Dual dup
+
+instance ScalarCat k => ScalarCat (Dual k) where
+   scale s = Dual (scale s)
+\end{code}
+\caption{Dual category}
+\figlabel{asDual}
+\end{center}
+\end{figure}
+
+Note that the instances in \figref{asDual} exactly dualize a computation, reversing sequential compositions and swapping corresponding |ProductCat| and |CoproductCat| operations.
+The derived operations are also dualized, i.e.,
+\begin{corollary}\corLabel{dual-derived}
+$$|Dual f &&& Dual g == Dual (f ### g)|$$
+$$|Dual f ### Dual g == Dual (f &&& g)|$$
+\seeProof{corollary:dual-derived}
+\end{corollary}
+Recall from \secref{Matrices}, that |scale| forms $1 \times 1$ matrices, while |(###)| and |(&&&)| correspond to horizontal and vertical juxtaposition, respectively.
+Thus, from a matrix perspective, duality is \emph{transposition}, turning an $m \times n$ matrix into an $n \times m$ matrix.
+Note, however, that |Dual k| involves no actual matrix computations unless |k| does.
+In particular, we can simply use the category of linear functions |(-+>)|.%
+\notefoot{I don't think I've defined |a -+> b| yet.}
+
+\figreftwo{magSqr-gradr}{cos-xpytz-gradr} show the results of reverse mode AD via |GD (Dual (-+>))|.
+Compare \figref{magSqr-gradr} with the same example in \figreftwo{magSqr-adf}{magSqr-adr}.
+\figp{
+\figoneW{0.40}{magSqr-gradr}{|magSqr| in |GD (Dual (-+>))|}}{
+\figoneW{0.56}{cos-xpytz-gradr}{|\ ((x,y),z) -> cos (x + y * z)| in |GD (Dual (-+>))|}}
+
+\sectionl{Indexed biproducts}
+
+\sectionl{Incremental evaluation}
+
+\mynote{If I drop this section, remove also from the abstract.}
+
+\sectionl{Future work}
+
+\sectionl{Related work}
+
+\mynote{
+\begin{itemize}
+\item \emph{Typing linear algebra} \citep{MacedoOliveira2013Typing}.
+\item Other work on linear algebra and static typing.
+      Mention that we're not just using \emph{sizes}.
+      For instance, \emph{Statically Typed Linear Algebra in Haskell}.
+\item Cayley's theorem and the Yoneda lemma.
+\item Categorical pullbacks.
+\item \emph{Kan Extensions for Program Optimisation} \citep{Hinze2012KanEF}.
+\item Denotational design \citep{Elliott2009-type-class-morphisms-TR} (similar methodologies).
+\item \emph{Algebra of programming} \citep{BirddeMoor96:Algebra}.
+\item \emph{Backprop as Functor} \citep{Fong2017BackpropAF}.
+\item AD work by Barak Pearlmutter and coauthors.
+\item \emph{Beautiful differentiation} \citep{Elliott2009-beautiful-differentiation}
+\end{itemize}
+}
+
+\sectionl{Conclusions}
+
+\mynote{Include remarks on symbolic vs automatic differentiation.}
+
+\sectionl{To do}
+
+\begin{itemize}
+\item Move many proofs to appendices.
+\item Probably remove the |Additive| constraints in |Cocartesian|, along with the |Cocartesian (->)| instance.
+      Otherwise, mention that the implementation does so.
+      |CoterminalCat (->)| isn't what we need.
+\item |dot| and |unDot|.
+\item |ConstCat| for |Dual| and for linear arrows in general.
+\item What is ``generalized AD''?
+      Is it AD at all or something else?
+\item Misc:
+  \begin{itemize}
+  \item Consider moving the current examples into a single section after gradients and duality.
+        For each example, show the function, |andDerivF|, |andDerivR|, and |andGradR|.
+  \item Switch to the required ICFP format to get a sense of length.
+        The \href{https://icfp18.sigplan.org/track/icfp-2018-papers}{call for papers} says 27 pages \emph{plus bibliography}.
+        Remember that the journal version must have substantial content absent in the conference version, which could probably include proofs as well as the functor-level operations.
+        Ready to go; just uncomment ``\verb|\acmtrue|''.
+  \item Mention graph optimization and maybe show one or more un-optimized graphs.
+  \item Examples with generalized matrices.
+  \item Mention flaw in the compose/chain and cross rules: the decomposed pieces may not be differentiable.
+  \item Sub-differentiation.
+  \end{itemize}
+\end{itemize}
+
+\appendix
+
+\sectionl{Calculational proofs}
+
+\subsection{\corRef{compose}}\proofLabel{corollary:compose}
+\begin{code}
+   ad (g . f) a
+==  {- definition of |ad| -}
+   ((g . f) a, der (g . f) a)
+==  {- definition of |(.)| -}
+   (g (f a), der (g . f) a)
+==  {- \thmRef{compose} -}
+   (g (f a), der g (f a) . der f a)
+==  {- refactoring to share |f a| -}
+   let b = f a in (g b, der g b . der f a)
+==  {- refactoring to show compositionality -}
+   let { (b,f') = ad f a ; (c,g') = ad g b } in (c, g' . f')
+\end{code}
+
+\subsection{\corRef{cross}}\proofLabel{corollary:cross}
+\begin{code}
+   ad (f *** g) (a,b)
+==  {- definition of |ad| -}
+   ((f *** g) (a,b), der (f *** g) (a,b))
+==  {- definition of |(***)| -}
+   ((f a, g b), der (f *** g) (a,b))
+==  {- \thmRef{cross} -}
+   ((f a, g b), der f a *** der g b)
+==  {- refactoring -}
+   let { (c,f') = (f a, der f a) ; (d,g') = (g b, der g b) } in ((c,d), f' *** g')
+==  {- definition of |ad| -}
+   let { (c,f') = ad f a ; (d,g') = ad g b } in ((c,d), f' *** g')
+\end{code}
+
+\subsection{\thmRef{cont}}\proofLabel{theorem:cont}
+
 To say that |cont| is a functor (|Category| homomorphism) is equivalent to the following two equalities:
 \begin{closerCodePars}
 \begin{code}
@@ -1384,9 +1597,6 @@ Then
    Cont (join . dup)
 \end{code}
 
-Note the pleasant symmetries in these definitions.
-Each |ProductCat| or |CoproductPCat| operation on |Cont k r| is defined via the dual |CoproductPCat| or |ProductCat| operation, together with the |join|/|unjoin| isomorphism.
-
 The final element of our linear vocabulary is scalar multiplication.
 From \secref{Numeric operations},
 \begin{code}
@@ -1406,51 +1616,8 @@ The |Cont| version:\notefoot{Is there a more general argument to make? I haven't
    Cont (scale s)
 \end{code}
 
-\mynote{Mention Cayley's Theorem: that any monoid is equivalent to a monoid of functions under composition.
-I think |Cont| is a generalization from |Monoid| to |Category|.}
+\subsection{\thmRef{asDual}}\proofLabel{theorem:asDual}
 
-The instances above for |Cont k r| constitute a simple algorithm for reverse mode automatic differentiation.
-\mynote{Contrast with other presentations.}
-
-\mynote{Explain better how |Cont k r| performs full left-association. Also, how to use it by applying to |id|.}
-
-%format adr = adf
-\figreftwo{magSqr-adr}{cosSinProd-adr} show the results of reverse mode AD via |Cont| corresponding to \figreftwo{magSqr}{cosSinProd} and \figreftwo{magSqr-adf}{cosSinProd-adf}
-\figp{
-\figoneW{0.40}{magSqr-adr}{|magSqr| in |GD (Cont (-+>) R)|}}{
-\figoneW{0.58}{cosSinProd-adr}{|cosSinProd| in |GD (Cont (-+>) R)|}}
-The derivatives are represented as (linear) functions again, but reversed (mapping from codomain to domain).
-
-\sectionl{Gradients and duality}
-
-As a special case of reverse mode automatic differentiation, let's consider its use to compute \emph{gradients}, i.e., derivatives of functions with a scalar codomain.
-This case is very important local minimization by means of gradient descent, e.g., as used in deep learning \needcite{}.
-
-Given a vector space |A| over a scalar field |s|, the \emph{dual} of |A| is |A :-* s|, i.e., the space of linear maps to the underlying field.
-This dual space is also a vector space, and when |A| has finite dimension, it is isomorphic to its dual.
-In particular, every linear map in |A :-* s| has the form |dot u| for some |u :: A|, where |dot| is the curried dot product \needcite{}.
-
-The |Cont k r| construction from \secref{Reverse mode AD} works for \emph{any} type/object |r|, so let's take |r| to be the scalar field |s|.
-The internal representation of |Cont (:-*) s a b| is |(b :-* s) -> (a :-* s)|, which is isomorphic to |b -> a|.\notefoot{Maybe I don't need this isomorphism, and it suffices to consider those linear maps that do correspond to |dot u| for some |u|.}
-Call this representation the \emph{dual} of |k|:
-\begin{code}
-newtype Dual k a b = Dual (b `k` a)
-\end{code}
-To construct dual representations of (generalized) linear maps, it suffices to convert from |Cont k s| to |Dual k| by a functor we will now derive.
-Composing this new functor with |cont :: (a `k` b) -> Cont k s a b| will give us a functor from |a `k` b| to |Dual k a b|.
-The new to-be-derived functor:
-\begin{code}
-asDual :: Cont k s a b -> Dual k a b
-asDual (Cont f) = Dual (onDot f)
-\end{code}
-where |onDot| uses both halves of the isomorphism between |a :-* s| and |a|:\notefoot{Maybe drop |onDot| in favor of its definition.}
-\begin{code}
-onDot :: ((b :-* s) -> (a :-* s)) -> (b :-* a)
-onDot f = unDot . f . dot
-
-dot    :: u -> (u :-* s)
-unDot  :: (u :-* s) -> u
-\end{code}
 To derive instances for |Dual k|, we'll need some properties.
 \begin{lemma} \lemLabel{dot-properties}
 The following identities hold:
@@ -1463,10 +1630,10 @@ The following identities hold:
 \item |dot u ### dot v = dot (u,v)| \label{dot-dot-join}
 \item |dot zeroV = zeroC| (zero vector vs zero morphism) \label{dot-zeroV}
 \end{enumerate}
-\mynote{Proofs, perhaps in an appendix.}
 \end{lemma}
+\mynote{Proofs.}
 \nc\lemDot[1]{\lemRef{dot-properties}, part \ref{#1}}
-\nc\lemDotTwo[2]{Lemma \ref{lem:dot-properties}, parts \ref{#1} \& \ref{#2}}
+\nc\lemDotTwo[2]{Lemma \ref{lemma:dot-properties}, parts \ref{#1} \& \ref{#2}}
 
 For the |Category| instance, we'll need that |id == asDual id|.
 Simplifying the RHS,
@@ -1648,103 +1815,37 @@ Finally, scaling:
    Dual (scale s)
 \end{code}
 
-These calculations lead to elegant instances for |Dual k|, shown in \figref{dual instances}.
-\begin{figure}
-\begin{center}
+
+\subsection{\corRef{dual-derived}}\proofLabel{corollary:dual-derived}
+
+Given the definitions in \figref{asDual},
 \begin{code}
-instance Category k => Category (Dual k) where
-   id = Dual id
-   Dual g . Dual f = Dual (f . g)
-
-instance MonoidalPCat k => MonoidalPCat (Dual k) where
-   Dual f *** Dual g = Dual (f *** g)
-
-instance ProductCat k => ProductCat (Dual k) where
-   exl  = Dual inlP
-   exr  = Dual inrP
-   dup  = Dual jamP
-
-instance CoproductCat k => CoproductCat (Dual k) where
-   inlP  = Dual exl
-   inrP  = Dual exr
-   jamP  = Dual dup
-
-instance ScalarCat k => ScalarCat (Dual k) where
-   scale s = Dual (scale s)
+   Dual f &&& Dual g
+==  {- definition of |(&&&)| -}
+   (Dual f *** Dual g) . dup
+==  {- definition of |(***)| for |Dual k| -}
+   Dual (f *** g) . dup
+==  {- definition of |dup| for |Dual k| -}
+   Dual (f *** g) . Dual jamP
+==  {- definition of |(.)| for |Dual k| -}
+   Dual (jamP . (f *** g))
+==  {- definition of |(###)| -}
+   Dual (f ||| g)
 \end{code}
-\caption{Generalized automatic differentiation}
-\figlabel{dual instances}
-\end{center}
-\end{figure}
-Note that these instances exactly dualize a computation, reversing sequential compositions and swapping corresponding |ProductCat| and |CoproductCat| operations.
-Recall from \secref{Matrices}, that |scale| forms $1 \times 1$ matrices, while |(###)| and |(&&&)| correspond to horizontal and vertical juxtaposition, respectively.
-Thus, from a matrix perspective, duality is \emph{transposition}, turning an $m \times n$ matrix into an $n \times m$ matrix.
-Note, however, that |Dual k| involves no actual matrix computations unless |k| does.
-In particular, we can simply use the category of linear functions |(-+>)|.%
-\notefoot{I don't think I've defined |a -+> b| yet.}
-
-\figreftwo{magSqr-gradr}{cos-xpytz-gradr} show the results of reverse mode AD via |GD (Dual (-+>))|.
-Compare \figref{magSqr-gradr} with the same example in \figreftwo{magSqr-adf}{magSqr-adr}.
-\figp{
-\figoneW{0.40}{magSqr-gradr}{|magSqr| in |GD (Dual (-+>))|}}{
-\figoneW{0.56}{cos-xpytz-gradr}{|\ ((x,y),z) -> cos (x + y * z)| in |GD (Dual (-+>))|}}
-
-\sectionl{Indexed biproducts}
-
-\sectionl{Incremental evaluation}
-
-\mynote{If I drop this section, remove also from the abstract.}
-
-\sectionl{Future work}
-
-\sectionl{Related work}
-
-\mynote{
-\begin{itemize}
-\item \emph{Typing linear algebra} \citep{MacedoOliveira2013Typing}.
-\item Other work on linear algebra and static typing.
-      Mention that we're not just using \emph{sizes}.
-      For instance, \emph{Statically Typed Linear Algebra in Haskell}.
-\item Cayley's theorem and the Yoneda lemma.
-\item Categorical pullbacks.
-\item \emph{Kan Extensions for Program Optimisation} \citep{Hinze2012KanEF}.
-\item Denotational design \citep{Elliott2009-type-class-morphisms-TR} (similar methodologies).
-\item \emph{Algebra of programming} \citep{BirddeMoor96:Algebra}.
-\item \emph{Backprop as Functor} \citep{Fong2017BackpropAF}.
-\item AD work by Barak Pearlmutter and coauthors.
-\item \emph{Beautiful differentiation} \citep{Elliott2009-beautiful-differentiation}
-\end{itemize}
-}
-
-\sectionl{Conclusions}
-
-\mynote{Include remarks on symbolic vs automatic differentiation.}
-
-\sectionl{To do}
-
-\begin{itemize}
-\item Move many proofs to appendices.
-\item Probably remove the |Additive| constraints in |Cocartesian|, along with the |Cocartesian (->)| instance.
-      Otherwise, mention that the implementation does so.
-      |CoterminalCat (->)| isn't what we need.
-\item |dot| and |unDot|.
-\item |ConstCat| for |Dual| and for linear arrows in general.
-\item What is ``generalized AD''?
-      Is it AD at all or something else?
-\item Misc:
-  \begin{itemize}
-  \item Consider moving the current examples into a single section after gradients and duality.
-        For each example, show the function, |andDerivF|, |andDerivR|, and |andGradR|.
-  \item Switch to the required ICFP format to get a sense of length.
-        The \href{https://icfp18.sigplan.org/track/icfp-2018-papers}{call for papers} says 27 pages \emph{plus bibliography}.
-        Remember that the journal version must have substantial content absent in the conference version, which could probably include proofs as well as the functor-level operations.
-        Ready to go; just uncomment ``\verb|\acmtrue|''.
-  \item Mention graph optimization and maybe show one or more un-optimized graphs.
-  \item Examples with generalized matrices.
-  \item Mention flaw in the compose/chain and cross rules: the decomposed pieces may not be differentiable.
-  \item Sub-differentiation.
-  \end{itemize}
-\end{itemize}
+Similarly,
+\begin{code}
+   Dual f ||| Dual g
+==  {- definition of |(###)| -}
+   jamP . (Dual f *** Dual g)
+==  {- definition of |(***)| for |Dual k| -}
+   jamP . Dual (f *** g)
+==  {- definition of |jamP| for |Dual k| -}
+   Dual dup . Dual (f *** g)
+==  {- definition of |(.)| for |Dual k| -}
+   Dual ((f *** g) . dup)
+==  {- definition of |(&&&)| -}
+   Dual (f &&& g)
+\end{code}
 
 \bibliography{bib}
 
