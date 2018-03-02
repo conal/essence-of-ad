@@ -8,8 +8,8 @@
 
 %% \documentclass[acmsmall,screen]{acmart} % ,authorversion=true,
 
-\documentclass[acmsmall=true,review]{acmart}
-%% ,anonymous,authorversion
+\documentclass[acmsmall=true]{acmart}
+%% ,anonymous,authorversion,review
 %% \settopmatter{printfolios=true,printccs=false,printacmref=false}
 
 \author{Conal Elliott}
@@ -1174,7 +1174,10 @@ This case is very important local minimization by means of gradient descent, e.g
 
 Given a vector space |A| over a scalar field |s|, the \emph{dual} of |A| is |A :-* s|, i.e., the linear maps to the underlying field.
 This dual space is also a vector space, and when |A| has finite dimension, it is isomorphic to its dual.
-In particular, every linear map in |A :-* s| has the form |dot u| for some |u :: A|, where |dot| is the curried dot product \needcite{}.
+In particular, every linear map in |A :-* s| has the form |dot u| for some |u :: A|, where |dot| is the curried dot product \needcite{}:
+\begin{code}
+dot :: u -> (u :-* s)
+\end{code}
 
 The |Cont k r| construction from \secref{Reverse mode AD} works for \emph{any} type/object |r|, so let's take |r| to be the scalar field |s|.
 The internal representation of |Cont (:-*) s a b| is |(b :-* s) -> (a :-* s)|, which is isomorphic to |b -> a|.\notefoot{Maybe I don't need this isomorphism, and it suffices to consider those linear maps that do correspond to |dot u| for some |u|.}
@@ -1194,9 +1197,6 @@ where |onDot| uses both halves of the isomorphism between |a :-* s| and |a|:\not
 \begin{code}
 onDot :: ((b :-* s) -> (a :-* s)) -> (b :-* a)
 onDot f = unDot . f . dot
-
-dot    :: u -> (u :-* s)
-unDot  :: (u :-* s) -> u
 \end{code}
 
 As usual, we can derive instances for our new category by homomorphic specification.
@@ -1467,9 +1467,9 @@ Then
 \begin{code}
     cont jam
 ==  Cont (\ h -> h . jam)            -- definition of |cont|
-==  Cont (\ h -> h . (id ||| id))    -- A law for |jam| and |(###)|
-==  Cont (\ h -> h . id ||| h . id)  -- A law for |(.)| and |(###)|
-==  Cont (\ h -> h ||| h)            -- Law for |(.)| and |id|
+==  Cont (\ h -> h . (id ||| id))    -- a law for |jam| and |(###)|
+==  Cont (\ h -> h . id ||| h . id)  -- a law for |(.)| and |(###)|
+==  Cont (\ h -> h ||| h)            -- law for |(.)| and |id|
 ==  Cont (\ h -> join (h,h))         -- definition of |join|
 ==  Cont (join . dup)                -- definition of |dup| on functions
 \end{code}
@@ -1538,7 +1538,7 @@ The following properties hold:
 ==  \ (u,v) -> (\ x -> dot (u,v) (x,0), \ y -> dot (u,v) (0,y))        -- definition of |inlP| for linear functions
 ==  \ (u,v) -> (\ x -> dot u x + dot v 0, \ y -> dot u 0 + dot v y)    -- definition of |dot|
 ==  \ (u,v) -> (\ x -> dot u x, \ y -> dot v y)                        -- linearity of |dot|
-==  \ (u,v) -> (dot u, dot v)                                          -- $\eta$|-reduction|
+==  \ (u,v) -> (dot u, dot v)                                          -- $\eta$-reduction
 ==  dot *** dot                                                        -- definition of |(***)| for functions
 \end{code}
 \item Follows from inverting each side of part \ref{unjoin-dot}.
@@ -1589,7 +1589,7 @@ Simplify both sides:
 ==  Dual (onDot (join . (f *** g) . unjoin))              -- definition of |asDual|
 ==  Dual (unDot . join . (f *** g) . unjoin . dot)        -- definition of |onDot|
 ==  Dual ((unDot *** unDot) . (f *** g) . (dot *** dot))  -- \lemDotTwo{unjoin-dot}{unDot-join} 
-==  Dual (unDot . f . dot *** unDot . g . unDot)          -- Law about |(***)|/|(.)|
+==  Dual (unDot . f . dot *** unDot . g . unDot)          -- law about |(***)|/|(.)|
 ==  Dual (onDot f *** onDot g)                            -- definition of |onDot|
 \end{code}
 Strengthening from |onDot f| and |onDot g| gives a simple sufficient condition:
@@ -1707,6 +1707,7 @@ Given the definitions in \figref{asDual},
 \item Mention flaw in the compose/chain and cross rules: the decomposed pieces may not be differentiable.
 \item Sub-differentiation. 
 \item Fix two-column (minipage) spacing and separation bars for ACM style.
+\item Code indentation for ACM style.
 \end{itemize}
 
 \end{document}
