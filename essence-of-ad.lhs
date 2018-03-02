@@ -340,8 +340,7 @@ for all |a,a' :: v| and |s| taken from the scalar field underlying |u| and |v|.
 
 In addition to the derivative rules for |(.)| and |(***)|, there is one more broadly useful tool to be added to our collection: \emph{the derivative of every linear function is itself, everywhere}:
 \begin{theorem}[linear rule] \thmLabel{linear}
-For all linear functions |f|,
-$$|der f a == f|$$
+For all linear functions |f|, |der f a == f|.
 \end{theorem}
 This statement \citep[Theorem 2-3 (2)]{Spivak65} may sound surprising at first, but less so when we recall that the |der f a| is a local linear approximation of |f| at |a|, so we're simply saying that linear functions are their own perfect linear approximations.
 
@@ -359,12 +358,8 @@ Note how much simpler it is to say |der fst (a,b) == fst|, and with no loss of p
 
 Given \thmRef{linear}, we can construct |ad f| for all linear |f|:
 \begin{corollary} \corLabel{linear}
-For all linear functions |f|,
-\begin{code}
-    ad f
-==  \ a -> (f a, der f a)  -- definition of |ad|
-==  \ a -> (f a, f)        -- \thmRef{linear}
-\end{code}
+For all linear functions |f|, |ad f == \ a -> (f a, f)|.
+(Proof: immediate from the |ad| definition and \thmRef{linear}.)
 \end{corollary}
 
 \sectionl{Putting the pieces together}
@@ -374,7 +369,7 @@ The definition of |ad| is a well-defined specification, but it is not an impleme
 
 Although differentiation is not computable when given just an arbitrary computable function, we can instead build up differentiable functions compositionally, using exactly the combining forms introduced above, namely |(.)|, |(***)|, and linear functions, together with various non-linear primitives having known derivatives.
 Computations constructed using that vocabulary are differentiable by construction thanks to \corRefs{compose}{linear}.
-The building blocks above are not just a random assortment, but rather a fundamental language of mathematics, logic, and computation, known as \emph{category theory} \needcite.
+The building blocks above are not just a random assortment, but rather a fundamental language of mathematics, logic, and computation, known as \emph{category theory} \citep{MacLane1998categories,Lawvere:2009:Conceptual,Awodey2006CT}.
 Although it would be unpleasant to program directly in this language, its foundational nature enables instead an automatic conversion from conventionally written functional programs \citep{Lambek:1980:LambdaToCCC,Lambek:1985:CCC,Elliott-2017-compiling-to-categories}.
 
 %format (arr c) = "\mathbin{\to_{"c"}}"
@@ -1195,6 +1190,7 @@ asDual :: Cont k s a b -> Dual k a b
 asDual (Cont f) = Dual (onDot f)
 \end{code}
 where |onDot| uses both halves of the isomorphism between |a :-* s| and |a|:\notefoot{Maybe drop |onDot| in favor of its definition.}
+%format unDot = dot"^{-1}"
 \begin{code}
 onDot :: ((b :-* s) -> (a :-* s)) -> (b :-* a)
 onDot f = unDot . f . dot
@@ -1284,32 +1280,6 @@ Compare \figref{magSqr-gradr} with the same example in \figreftwo{magSqr-adf}{ma
 \sectionl{Conclusions}
 
 \mynote{Include remarks on symbolic vs automatic differentiation.}
-
-\sectionl{To do}
-
-\begin{itemize}
-\item Move many proofs to appendices.
-\item Probably remove the |Additive| constraints in |Cocartesian|, along with the |Cocartesian (->)| instance.
-      Otherwise, mention that the implementation does so.
-      |CoterminalCat (->)| isn't what we need.
-\item |dot| and |unDot|.
-\item |ConstCat| for |Dual| and for linear arrows in general.
-\item What is ``generalized AD''?
-      Is it AD at all or something else?
-\item Misc:
-  \begin{itemize}
-  \item Consider moving the current examples into a single section after gradients and duality.
-        For each example, show the function, |andDerivF|, |andDerivR|, and |andGradR|.
-  \item Switch to the required ICFP format to get a sense of length.
-        The \href{https://icfp18.sigplan.org/track/icfp-2018-papers}{call for papers} says 27 pages \emph{plus bibliography}.
-        Remember that the journal version must have substantial content absent in the conference version, which could probably include proofs as well as the functor-level operations.
-        Ready to go; just uncomment ``\verb|\acmtrue|''.
-  \item Mention graph optimization and maybe show one or more un-optimized graphs.
-  \item Examples with generalized matrices.
-  \item Mention flaw in the compose/chain and cross rules: the decomposed pieces may not be differentiable.
-  \item Sub-differentiation.
-  \end{itemize}
-\end{itemize}
 
 \appendix
 
@@ -1521,22 +1491,69 @@ The |Cont| version:\notefoot{Is there a more general argument to make? I haven't
 
 \subsection{\thmRef{asDual}}\proofLabel{theorem:asDual}
 
+\nc\lemDot[1]{\lemRef{dot-properties}, part \ref{#1}}
+\nc\lemDotTwo[2]{Lemma \ref{lemma:dot-properties}, parts \ref{#1} \& \ref{#2}}
+
 To derive instances for |Dual k|, we'll need some properties.
 \begin{lemma} \lemLabel{dot-properties}
-The following identities hold:
+The following properties hold:
 % https://tex.stackexchange.com/questions/38260/non-italic-text-in-theorems-definitions-examples
 \normalfont
 \begin{enumerate}
-\item |dot| and |unDot| are linear. \label{dot-linear}
-\item |unjoin . dot = dot *** dot| \label{unjoin-dot}
-\item |unDot . join = unDot *** unDot| \label{unDot-join}
-\item |dot u ### dot v = dot (u,v)| \label{dot-dot-join}
-\item |dot zeroV = zeroC| (zero vector vs zero morphism) \label{dot-zeroV}
+\item |dot| is linear. \label{dot-linear}
+\item |unDot| is linear. \label{unDot-linear}
+\item |unjoin . dot == dot *** dot| \label{unjoin-dot}
+\item |unDot . join == unDot *** unDot| \label{unDot-join}
+\item |dot u ### dot v == dot (u,v)| \label{dot-dot-join}
+\item |dot zeroV == zeroC| (zero vector vs zero morphism) \label{dot-zeroV}
 \end{enumerate}
 \end{lemma}
-\mynote{Proofs.}
-\nc\lemDot[1]{\lemRef{dot-properties}, part \ref{#1}}
-\nc\lemDotTwo[2]{Lemma \ref{lemma:dot-properties}, parts \ref{#1} \& \ref{#2}}
+\emph{Proofs:}
+\begin{enumerate}
+\item Follows from the bilinearity of uncurried dot product:
+\begin{code}
+    dot (u + v)
+==  \ w -> dot (u + v) w      -- $\eta$-expansion
+==  \ w -> dot u w + dot v w  -- bilinearity
+==  dot u + dot v             -- definition of |(+)| of functions
+
+    dot (s *^ u)
+==  \ w -> dot (s *^ u) w     -- $\eta$-expansion
+==  \ w -> s *^ dot u w       -- bilinearity
+==  s *^ dot u                -- definition of |(*^)| on functions
+\end{code}
+\item Invertible linear functions have linear inverses:
+\begin{code}
+    unDot (u + v)
+==  unDot (dot (unDot u) + dot (unDot v))  -- |dot . unDot == id|
+==  unDot (dot (unDot u + unDot v))        -- linearity of |dot|
+==  unDot u + unDot v                      -- |unDot . dot == id|
+\end{code}
+\item Noting that the argument of both sides is a pair,
+\begin{code}
+    unjoin . dot
+==  \ (u,v) -> unjoin (dot (u,v))                                      -- $\eta$-expansion
+==  \ (u,v) -> (dot (u,v) . inlP, dot (u,v) . inrP)                    -- definition of |unjoin|
+==  \ (u,v) -> (\ x -> dot (u,v) (inlP x), \ y -> dot (u,v) (inrP y))  -- definition of |(.)| for functions
+==  \ (u,v) -> (\ x -> dot (u,v) (x,0), \ y -> dot (u,v) (0,y))        -- definition of |inlP| for linear functions
+==  \ (u,v) -> (\ x -> dot u x + dot v 0, \ y -> dot u 0 + dot v y)    -- definition of |dot|
+==  \ (u,v) -> (\ x -> dot u x, \ y -> dot v y)                        -- linearity of |dot|
+==  \ (u,v) -> (dot u, dot v)                                          -- $\eta$|-reduction|
+==  dot *** dot                                                        -- definition of |(***)| for functions
+\end{code}
+\item Follows from inverting each side of part \ref{unjoin-dot}.
+\item Noting again that the argument of both sides is a pair,
+\begin{code}
+    dot u ||| dot v
+==  jamP . (dot u *** dot v)                   -- definition of |(###)|
+==  \ (x,y) -> jamP ((dot u *** dot v) (x,y))  -- definition of |(.)| for functions
+==  \ (x,y) -> jamP (dot u x, dot v y)         -- definition of |(***)| for functions
+==  \ (x,y) -> dot u x + dot v y               -- definition of |jamP| for functions
+==  \ (x,y) -> dot (u,v) (x,y)                 -- definition of |dot| for pairs
+==  dot (u,v)                                  -- $\eta$-reduction
+\end{code}
+\item Immediate from linearity and the definition of |zeroC| for functions.
+\end{enumerate}
 
 For the |Category| instance, we'll need that |id == asDual id|.
 Simplifying the RHS,
@@ -1597,7 +1614,7 @@ For |ProductCat|,
 ==  Dual inl                                             -- $\eta$-reduction
     
     exrP
-==  Dual inr                                             -- \ldots{} as with |exlP| \ldots
+==  Dual inr                                             -- as with |exlP|
     
     dup
 ==  asDual dup                                           -- specification
@@ -1607,7 +1624,7 @@ For |ProductCat|,
 ==  Dual (\ (u,v) -> unDot (jamP (unjoin (dot (u,v)))))  -- definition of |(.)| for functions
 ==  Dual (\ (u,v) -> unDot (jamP (dot u, dot v)))        -- \lemDot{unjoin-dot}
 ==  Dual (\ (u,v) -> unDot (dot u + dot v))              -- definition of |jamP| for functions
-==  Dual (\ (u,v) -> unDot (dot u) + unDot (dot v))      -- \lemDot{dot-linear}
+==  Dual (\ (u,v) -> unDot (dot u) + unDot (dot v))      -- \lemDot{unDot-linear}
 ==  Dual (\ (u,v) -> u + v)                              -- |unDot . dot == id|
 ==  Dual jamP                                            -- definition of |jamP| for functions
 \end{code}
@@ -1648,13 +1665,13 @@ Finally, scaling:
 ==  asDual (Cont (scale s))       -- definition of |scale| for |Cont|
 ==  Dual (onDot (scale s))        -- definition of |asDual|
 ==  Dual (unDot . scale s . dot)  -- definition of |onDot|
-==  Dual (scale s . unDot . dot)  -- \lemDot{dot-linear}
+==  Dual (scale s . unDot . dot)  -- \lemDot{unDot-linear}
 ==  Dual (scale s)                -- |unDot . dot == id|
 \end{code}
 
 
 \subsection{\corRef{dual-derived}}\proofLabel{corollary:dual-derived}
-Given the definitions in \figref{asDual},\\
+Given the definitions in \figref{asDual},
 \begin{code}
     Dual f &&& Dual g
 ==  (Dual f *** Dual g) . dup   -- definition of |(&&&)|
@@ -1672,5 +1689,24 @@ Given the definitions in \figref{asDual},\\
 \end{code}
 
 \bibliography{bib}
+
+\sectionl{To do}
+
+\begin{itemize}
+\item Probably remove the |Additive| constraints in |Cocartesian|, along with the |Cocartesian (->)| instance.
+      Otherwise, mention that the implementation does so.
+      |CoterminalCat (->)| isn't what we need.
+\item |dot| and |unDot|.
+\item |ConstCat| for |Dual| and for linear arrows in general.
+\item What is ``generalized AD''?
+      Is it AD at all or something else?
+\item Consider moving the current examples into a single section after gradients and duality.
+      For each example, show the function, |andDerivF|, |andDerivR|, and |andGradR|.
+\item Mention graph optimization and maybe show one or more un-optimized graphs.
+\item Examples with generalized matrices.
+\item Mention flaw in the compose/chain and cross rules: the decomposed pieces may not be differentiable.
+\item Sub-differentiation. 
+\item Fix two-column (minipage) spacing and separation bars for ACM style.
+\end{itemize}
 
 \end{document}
