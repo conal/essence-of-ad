@@ -103,7 +103,7 @@
 
 \nc\proofLabel[1]{\label{proof:#1}}
 \nc\proofRef[1]{Appendix \ref{proof:#1}}
-\nc\seeProof[1]{See the proof in \proofRef{#1}.}
+\nc\provedIn[1]{\textnormal{Proved in \proofRef{#1}}}
 
 \setlength{\blanklineskip}{2ex}
 
@@ -253,13 +253,11 @@ ad :: (a -> b) -> (a -> b :* (a :-* b))   -- better!
 ad f a = (f a, der f a)
 \end{code}
 Combining |f| and |der f| into a single function in this way enables us to eliminate the redundant composition of |f a| in |ad (g . f) a|:
-\begin{corollary} \corLabel{compose}
+\begin{corollary}[\provedIn{corollary:compose}]\corLabel{compose}
 |ad| is (efficiently) compositional with respect to |(.)|. Specifically,
 \begin{code}
 ad (g . f) a == let { (b,f') = ad f a ; (c,g') = ad g b } in (c, g' . f')
 \end{code}
-%% See the proof in Appendix \ref{proof:corollary:compose}.
-\seeProof{corollary:compose}
 \end{corollary}
 
 \subsectionl{Parallel composition}
@@ -283,10 +281,9 @@ $$|der (f *** g) (a,b) == der f a *** der g b|$$
 If |f :: a -> c| and |g :: b -> d|, then |der f a :: a :-* c| and |der g b :: b :-* d|, so |der f a *** der g b :: a :* b :-* c :* d|, as needed.
 
 \thmRef{cross} gives us what we need to construct |ad (f *** g)| compositionally:
-\begin{corollary} \corLabel{cross}
+\begin{corollary}[\provedIn{corollary:cross}] \corLabel{cross}
 |ad| is compositional with respect to |(***)|. Specifically,
 $$|ad (f *** g) (a,b) == let { (c,f') = ad f a ; (d,g') = ad g b } in ((c,d), f' *** g')|$$
-\seeProof{corollary:cross}
 \end{corollary}
 
 %if False
@@ -518,7 +515,7 @@ Before getting too pleased with this definition, let's remember that for |D| to 
 These definitions must also satisfy the identity and composition laws.
 How might we go about proving that they do?
 Perhaps the most obvious route is take those laws, substitute our definitions of |id| and |(.)|, and reason equationally toward the desired conclusion.
-For instance, let's prove that |id . D f == D f| for all |D f :: D a b|:\footnote{Note that \emph{every} morphism in |D| has the form |D f| for some |f|, so it suffices to consider this form.}
+For instance, let's prove that |id . D f == D f| for all |D f :: D a b|:\footnote{Note that \emph{every} morphism in |D| has the form |D f| for some |f|, so it suffices to consider this form.} \notefoot{Maybe drop this proof.}
 \begin{code}
    id . D f
 ==  {- definition of |id| for |D| -}
@@ -535,7 +532,7 @@ For instance, let's prove that |id . D f == D f| for all |D f :: D a b|:\footnot
    D f
 \end{code}
 
-We can prove the other required properties similarly.\mynote{Maybe omit this proof.}
+We can prove the other required properties similarly.
 Fortunately, there is a way to bypass the need for these painstaking proofs, and instead rely \emph{only} on our original specification for this |Category| instance, namely that |ad| is a functor.
 To buy this proof convenience, we have to make one concession, namely that we consider only morphisms in |D| that arise from |adf|, i.e., only |hat f :: D a b| such that |hat f = adf f| for some |f :: a -> b|.
 We can ensure that indeed only such |hat f| do arise by making |D a b| an \emph{abstract} type, i.e., hiding its data |constructor|.\notefoot{%
@@ -1097,19 +1094,13 @@ instance (HasV s b, KnownNat n) => HasV s (Vector n b) where
 \end{figure}
 Finally, one must define the standard functionality for linear maps in the form of instances of the following form, whose details are left as an exercise for the reader:\footnote{Hint: begin by defining |lfun :: L s a b -> (a -+> b)| (using |toV| and |unV|), and a specification that |lfun| is a functor, monoidal functor, etc.
 The operations of matrix/vector multiplication (representing linear map application) and matrix/matrix multiplication (representing linear map composition) are easily implemented in terms of standard functional programming maps, zips, and folds.}
-\begin{closerCodePars}
 \begin{code}
 instance Category       (L s)    where ...
-
 instance MonoidalPCat   (L s)    where ...
-
 instance ProductCat     (L s)    where ...
-
 instance CoproductPCat  (L s)    where ...
-
 instance ScalarCat      (L s) s  where ...
 \end{code}
-\end{closerCodePars}%
 
 \mynote{Mention upcoming categorical generalizations, which rely on \emph{indexed} biproducts.}
 
@@ -1155,8 +1146,7 @@ cont :: Category k => (a `k` b) -> Cont k r a b
 cont f = Cont (rcomp f)
 \end{code}
 As usual, we can derive instances for our new category by homomorphic specification.
-\seeProof{theorem:cont}
-\begin{theorem} \thmLabel{cont}
+\begin{theorem}[\provedIn{theorem:cont}]\thmLabel{cont}
 Given the definitions in \figref{cont}, |cont| is a homomorphism with respect to the instantiated classes.\notefoot{Missing numeric operations?}
 \end{theorem}
 Note the pleasant symmetries in these definitions.
@@ -1239,8 +1229,7 @@ unDot  :: (u :-* s) -> u
 \end{code}
 
 As usual, we can derive instances for our new category by homomorphic specification.
-\seeProof{theorem:asDual}
-\begin{theorem} \thmLabel{asDual}
+\begin{theorem}[\provedIn{theorem:asDual}]\thmLabel{asDual}
 Given the definitions in \figref{asDual}, |asDual| is a homomorphism with respect to the instantiated classes.
 \end{theorem}
 \begin{figure}
@@ -1272,11 +1261,11 @@ instance ScalarCat k => ScalarCat (Dual k) where
 \end{figure}
 
 Note that the instances in \figref{asDual} exactly dualize a computation, reversing sequential compositions and swapping corresponding |ProductCat| and |CoproductCat| operations.
-The derived operations are also dualized, i.e.,
-\begin{corollary}\corLabel{dual-derived}
-$$|Dual f &&& Dual g == Dual (f ### g)|$$
-$$|Dual f ### Dual g == Dual (f &&& g)|$$
-\seeProof{corollary:dual-derived}
+The derived operations are also dualized:
+\begin{corollary}[\provedIn{corollary:dual-derived}]\corLabel{dual-derived}
+|Dual f &&& Dual g == Dual (f ### g)|, and |Dual f ### Dual g == Dual (f &&& g)|.
+%% $$|Dual f &&& Dual g == Dual (f ### g)|$$
+%% $$|Dual f ### Dual g == Dual (f &&& g)|$$
 \end{corollary}
 Recall from \secref{Matrices}, that |scale| forms $1 \times 1$ matrices, while |(###)| and |(&&&)| correspond to horizontal and vertical juxtaposition, respectively.
 Thus, from a matrix perspective, duality is \emph{transposition}, turning an $m \times n$ matrix into an $n \times m$ matrix.
@@ -1720,10 +1709,11 @@ For |ProductCat|,
    Dual (\ u -> inl u)
 ==  {- $\eta$-reduction -}
    Dual inl
-\end{code}
-Similarly, the homomorphism property for |exr| becomes |exr == Dual inr|.
-For |dup|,
-\begin{code}
+
+   exrP
+==  {- \ldots{} as with |exlP| \ldots -}
+   Dual inr
+
    dup
 ==  {- specification -}
    asDual dup
