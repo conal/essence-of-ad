@@ -234,10 +234,8 @@ ad0 f = (f, der f)
 As desired, this altered specification is compositional:
 \begin{code}
    ad0 (g . f)
-==  {- definition of |ad0| -}
-   (g . f, der (g . f))
-==  {- chain rule -}
-   (g . f, \ a -> der g (f a) . der f a)
+== (g . f, der (g . f))                   -- definition of |ad0|
+== (g . f, \ a -> der g (f a) . der f a)  -- chain rule
 \end{code}
 
 Note that |ad0 (g . f)| is assembled entirely out of the parts of |ad0 g| and |ad0 f|, which is to say from |g|, |der g|, |f|, and |der f|.
@@ -307,7 +305,7 @@ More generally, |(&&&)| and |(###)| work with categorical products and coproduct
 The categories involved in this paper (functions on additive types, linear maps, and differentiable functions) are all \emph{biproduct} categories, where categorical products and coproducts coincide \needcite{}.
 }
 
-Happily, there is differentiation rule for |(###)| as well, having the same poetry as the rules for |(.)| and |(&&&)|, namely that the derivative of a join is a join of the derivatives:\notefoot{Prove, or cite \citep{Spivak65}.}
+Happily, there is a differentiation rule for |(###)| as well, having the same poetry as the rules for |(.)| and |(&&&)|, namely that the derivative of a join is a join of the derivatives:\notefoot{Prove, or cite \citep{Spivak65}.}
 \begin{theorem}[join rule] \thmLabel{join}
 $$|der (f ### g) (a,b) = der f a ### der g b|$$
 \end{theorem}
@@ -317,17 +315,12 @@ If |f :: a -> c| and |g :: b -> c|, then |der f a :: a :-* c| and |der g b :: b 
 \begin{corollary} \corLabel{join}
 |ad| is compositional with respect to |(###)|. Specifically,
 \begin{code}
-   ad (f ||| g) (a,b)
-==  {- definition of |ad| -}
-   ((f ||| g) (a,b), der (f ||| g) (a,b))
-==  {- definition of |(###)| -}
-   ((f a + g b), der (f ||| g) (a,b))
-==  {- \thmRef{join} -}
-   ((f a + g b), der f a ||| der g b)
-==  {- refactoring -}
-   let { (c,f') = (f a, der f a) ; (d,g') = (g b, der g b) } in ((c + d), (f' ||| g'))
-==  {- definition of |ad| -}
-   let { (c,f') = ad f a ; (d,g') = ad g b } in (c + d, (f' ||| g'))
+    ad (f ||| g) (a,b)
+==  ((f ||| g) (a,b), der (f ||| g) (a,b))                                               -- definition of |ad|
+==  ((f a + g b), der (f ||| g) (a,b))                                                   -- definition of |(###)|
+==  ((f a + g b), der f a ||| der g b)                                                   -- \thmRef{join}
+==  let { (c,f') = (f a, der f a) ; (d,g') = (g b, der g b) } in ((c + d), (f' ||| g'))  -- refactoring
+==  let { (c,f') = ad f a ; (d,g') = ad g b } in (c + d, (f' ||| g'))                    -- definition of |ad|
 \end{code}
 \end{corollary}
 
@@ -368,14 +361,10 @@ Given \thmRef{linear}, we can construct |ad f| for all linear |f|:
 \begin{corollary} \corLabel{linear}
 For all linear functions |f|,
 \begin{code}
-   ad f
-==  {- definition of |ad| -}
-   \ a -> (f a, der f a)
-==  {- \thmRef{linear} -}
-   \ a -> (f a, f)
+    ad f
+==  \ a -> (f a, der f a)  -- definition of |ad|
+==  \ a -> (f a, f)        -- \thmRef{linear}
 \end{code}
-%% ==  {- definition of |(&&&)| -}
-%%    f &&& const f
 \end{corollary}
 
 \sectionl{Putting the pieces together}
@@ -517,19 +506,13 @@ How might we go about proving that they do?
 Perhaps the most obvious route is take those laws, substitute our definitions of |id| and |(.)|, and reason equationally toward the desired conclusion.
 For instance, let's prove that |id . D f == D f| for all |D f :: D a b|:\footnote{Note that \emph{every} morphism in |D| has the form |D f| for some |f|, so it suffices to consider this form.} \notefoot{Maybe drop this proof.}
 \begin{code}
-   id . D f
-==  {- definition of |id| for |D| -}
-   D (\ b -> (b,id)) . D f
-==  {- definition of |(.)| for |D| -}
-   D (\ a -> let { (b,f') = f a ; (c,g') = (b,id) } in (c, g' . f'))
-==  {- substitute |b| for |c| and |id| for |g'| -}
-   D (\ a -> let { (b,f') = f a } in (b, id . f'))
-==  {-  |id . f' == f'| (category law) -}
-   D (\ a -> let { (b,f') = f a } in (b, f'))
-==  {- Replace |(b,f')| by its definition -}
-   D (\ a -> f a)
-==  {- $\eta$-reduction -}
-   D f
+    id . D f
+==  D (\ b -> (b,id)) . D f                                            -- definition of |id| for |D|
+==  D (\ a -> let { (b,f') = f a ; (c,g') = (b,id) } in (c, g' . f'))  -- definition of |(.)| for |D|
+==  D (\ a -> let { (b,f') = f a } in (b, id . f'))                    -- substitute |b| for |c| and |id| for |g'|
+==  D (\ a -> let { (b,f') = f a } in (b, f'))                         --  |id . f' == f'| (category law)
+==  D (\ a -> f a)                                                     -- Replace |(b,f')| by its definition
+==  D f                                                                -- $\eta$-reduction
 \end{code}
 
 We can prove the other required properties similarly.
@@ -540,28 +523,20 @@ For the |Category D| instance given above, the painstaking proofs appear to succ
 Am I missing something?}
 The slightly more specialized requirement of our first identity property is that |id . adf f == adf f| for any |f :: a -> b|, which we prove as follows:
 \begin{code}
-   id . adf f
-==  {- functor law for |id| (specification of |adf|) -}
-   adf id . adf f
-==  {- functor law for |(.)| (specification of |adf|) -}
-   adf (id . f)
-==  {- category law -}
-   adf f
+    id . adf f
+==  adf id . adf f  -- functor law for |id| (specification of |adf|)
+==  adf (id . f)    -- functor law for |(.)| (specification of |adf|)
+==  adf f           -- category law
 \end{code}
 The other identity law is proved similarly.
 Associativity has a similar flavor as well:
 \begin{code}
-   adf h . (adf g . adf f)
-==  {- functor law for |(.)| (specification of |adf|) -}
-   adf h . adf (g . f)
-==  {- functor law for |(.)| (specification of |adf|) -}
-   adf (h . (g . f))
-==  {- category law -}
-   adf ((h . g) . f)
-==  {- functor law for |(.)| (specification of |adf|) -}
-   adf (h . g) . adf f
-==  {- functor law for |(.)| (specification of |adf|) -}
-   (adf h . adf g) . adf f
+    adf h . (adf g . adf f)
+==  adf h . adf (g . f)      -- functor law for |(.)| (specification of |adf|)
+==  adf (h . (g . f))        -- functor law for |(.)| (specification of |adf|)
+==  adf ((h . g) . f)        -- category law
+==  adf (h . g) . adf f      -- functor law for |(.)| (specification of |adf|)
+==  (adf h . adf g) . adf f  -- functor law for |(.)| (specification of |adf|)
 \end{code}
 
 Note how mechanical these proofs are.
@@ -1342,32 +1317,22 @@ Compare \figref{magSqr-gradr} with the same example in \figreftwo{magSqr-adf}{ma
 
 \subsection{\corRef{compose}}\proofLabel{corollary:compose}
 \begin{code}
-   ad (g . f) a
-==  {- definition of |ad| -}
-   ((g . f) a, der (g . f) a)
-==  {- definition of |(.)| -}
-   (g (f a), der (g . f) a)
-==  {- \thmRef{compose} -}
-   (g (f a), der g (f a) . der f a)
-==  {- refactoring to share |f a| -}
-   let b = f a in (g b, der g b . der f a)
-==  {- refactoring to show compositionality -}
-   let { (b,f') = ad f a ; (c,g') = ad g b } in (c, g' . f')
+    ad (g . f) a
+==  ((g . f) a, der (g . f) a)                                 -- definition of |ad|
+==  (g (f a), der (g . f) a)                                   -- definition of |(.)|
+==  (g (f a), der g (f a) . der f a)                           -- \thmRef{compose}
+==  let b = f a in (g b, der g b . der f a)                    -- refactoring to share |f a|
+==  let { (b,f') = ad f a ; (c,g') = ad g b } in (c, g' . f')  -- refactoring to show compositionality
 \end{code}
 
 \subsection{\corRef{cross}}\proofLabel{corollary:cross}
 \begin{code}
-   ad (f *** g) (a,b)
-==  {- definition of |ad| -}
-   ((f *** g) (a,b), der (f *** g) (a,b))
-==  {- definition of |(***)| -}
-   ((f a, g b), der (f *** g) (a,b))
-==  {- \thmRef{cross} -}
-   ((f a, g b), der f a *** der g b)
-==  {- refactoring -}
-   let { (c,f') = (f a, der f a) ; (d,g') = (g b, der g b) } in ((c,d), f' *** g')
-==  {- definition of |ad| -}
-   let { (c,f') = ad f a ; (d,g') = ad g b } in ((c,d), f' *** g')
+    ad (f *** g) (a,b)
+==  ((f *** g) (a,b), der (f *** g) (a,b))                                           -- definition of |ad|
+==  ((f a, g b), der (f *** g) (a,b))                                                -- definition of |(***)|
+==  ((f a, g b), der f a *** der g b)                                                -- \thmRef{cross}
+==  let { (c,f') = (f a, der f a) ; (d,g') = (g b, der g b) } in ((c,d), f' *** g')  -- refactoring
+==  let { (c,f') = ad f a ; (d,g') = ad g b } in ((c,d), f' *** g')                  -- definition of |ad|
 \end{code}
 
 \subsection{\thmRef{cont}}\proofLabel{theorem:cont}
@@ -1382,34 +1347,24 @@ cont (g . f) == cont g . cont f
 \end{closerCodePars}%
 Simplify the first homomorphism equation:
 \begin{code}
-   cont id
-==  {- definition of |cont| -}
-   Cont (rcomp id)
-==  {- definition of right section -}
-   Cont (\ h -> h . id)
-==  {- category law -}
-   Cont (\ h -> h)
-==  {- definition of |id| for functions -}
-   Cont id
+    cont id
+==  Cont (rcomp id)       -- definition of |cont|
+==  Cont (\ h -> h . id)  -- definition of right section
+==  Cont (\ h -> h)       -- category law
+==  Cont id               -- definition of |id| for functions
 \end{code}
 The first homomorphism equation is thus equivalent to |id == Cont id|, which is in solved form.
 For the second homomorphism equation, simplify both sides:
 \begin{code}
-   cont g . cont f
-==  {- definition of |cont| -}
-   Cont (rcomp g) . Cont (rcomp f)
-   
-   cont (g . f)
-==  {- definition of |cont| -}
-   cont (rcomp (g . f))
-==  {- definition of right section -}
-   cont (\ h -> h . (g . f))
-==  {- category law -}
-   cont (\ h -> (h . g) . f)
-==  {- definition of right section -}
-   cont (\ h -> (rcomp f) ((rcomp g) h))
-==  {- definition of |(.)| -}
-   Cont (rcomp f . rcomp g)
+    cont g . cont f
+==  Cont (rcomp g) . Cont (rcomp f)        -- definition of |cont|
+    
+    cont (g . f)
+==  cont (rcomp (g . f))                   -- definition of |cont|
+==  cont (\ h -> h . (g . f))              -- definition of right section
+==  cont (\ h -> (h . g) . f)              -- category law
+==  cont (\ h -> (rcomp f) ((rcomp g) h))  -- definition of right section
+==  Cont (rcomp f . rcomp g)               -- definition of |(.)|
 \end{code}
 The simplified requirement:
 \begin{code}
@@ -1435,33 +1390,21 @@ Simplify both sides of this property:
 %format ha = h"_{"a"}"
 %format hb = h"_{"b"}"
 \begin{code}
-   cont f *** cont g
-==  {- definition of |cont| -}
-   Cont (rcomp f) *** Cont (rcomp g)
-
-   cont (f *** g)
-==  {- definition of |cont| -}
-   Cont (rcomp (f *** g))
-==  {- definition of right section -}
-   Cont (\ h -> h . (f *** g))
-==  {- |join . unjoin == id| -}
-   Cont (\ h -> join (unjoin h) . (f *** g))
-==  {- refactor -}
-   Cont (\ h -> let (ha,hb) = unjoin h in join (ha,hb) . (f *** g))
-==  {- definition of |join| -}
-   Cont (\ h -> let (ha,hb) = unjoin h in (ha ||| hb) . (f *** g))
-==  {- |Cocartesian| identity \needcite{} -}
-   Cont (\ h -> let (ha,hb) = unjoin h in (ha . f ||| hb . g))
-==  {- definition of right section -}
-   Cont (\ h -> let (ha,hb) = unjoin h in ((rcomp f) ha ||| (rcomp g) hb))
-==  {- definition of |join| -}
-   Cont (\ h -> let (ha,hb) = unjoin h in join ((rcomp f) ha , (rcomp g) hb))
-==  {- definition of |(***)| -}
-   Cont (\ h -> let (ha,hb) = unjoin h in join (((rcomp f) *** (rcomp g)) (ha,hb)))
-==  {- eliminate |let| -}
-   Cont (\ h -> join (((rcomp f) *** (rcomp g)) (unjoin h)))
-==  {- definition of |(.)| -}
-   Cont (join . ((rcomp f) *** (rcomp g)) . unjoin)
+    cont f *** cont g
+==  Cont (rcomp f) *** Cont (rcomp g)                                                 -- definition of |cont|
+    
+    cont (f *** g)
+==  Cont (rcomp (f *** g))                                                            -- definition of |cont|
+==  Cont (\ h -> h . (f *** g))                                                       -- definition of right section
+==  Cont (\ h -> join (unjoin h) . (f *** g))                                         -- |join . unjoin == id|
+==  Cont (\ h -> let (ha,hb) = unjoin h in join (ha,hb) . (f *** g))                  -- refactor
+==  Cont (\ h -> let (ha,hb) = unjoin h in (ha ||| hb) . (f *** g))                   -- definition of |join|
+==  Cont (\ h -> let (ha,hb) = unjoin h in (ha . f ||| hb . g))                       -- |Cocartesian| identity \needcite{}
+==  Cont (\ h -> let (ha,hb) = unjoin h in ((rcomp f) ha ||| (rcomp g) hb))           -- definition of right section
+==  Cont (\ h -> let (ha,hb) = unjoin h in join ((rcomp f) ha , (rcomp g) hb))        -- definition of |join|
+==  Cont (\ h -> let (ha,hb) = unjoin h in join (((rcomp f) *** (rcomp g)) (ha,hb)))  -- definition of |(***)|
+==  Cont (\ h -> join (((rcomp f) *** (rcomp g)) (unjoin h)))                         -- eliminate |let|
+==  Cont (join . ((rcomp f) *** (rcomp g)) . unjoin)                                  -- definition of |(.)|
 \end{code}
 The crucial trick here was to note that the continuation |h :: (a :* b) `k` r| can be split into two continuations |ha :: a `k` r| and |hb :: b `k` r| thanks to |join|/|unjoin| isomorphism from \secref{Derived operations}.\notefoot{In general, this splitting can lose efficiency, since |ha| and |hb| could duplicate work that was shared in |h|. Return to this concern later.}
 Now, strengthen the massaged specification, generalizing from |rcomp f| and |rcomp g| as usual.
@@ -1512,17 +1455,12 @@ instance  CoproductCat k =>
 While these definitions are correct, they can be made more efficient.
 For instance,
 \begin{code}
-   cont exl
-==  {- definition of |cont| -}
-   Cont (\ h -> h . exl)
-==  {- \secref{Abelian categories} -}
-   Cont (\ h -> h ||| zeroC)
-==  {- definition of |join| -}
-   Cont (\ h -> join (h,zeroC))
-==  {- definition of |inl| for functions -}
-   Cont (\ h -> join (inl h))
-==  {- definition of |(.)| for functions -}
-   Cont (join . inl)
+    cont exl
+==  Cont (\ h -> h . exl)         -- definition of |cont|
+==  Cont (\ h -> h ||| zeroC)     -- \secref{Abelian categories}
+==  Cont (\ h -> join (h,zeroC))  -- definition of |join|
+==  Cont (\ h -> join (inl h))    -- definition of |inl| for functions
+==  Cont (join . inl)             -- definition of |(.)| for functions
 \end{code}
 Similarly,
 \begin{code}
@@ -1530,40 +1468,26 @@ Similarly,
 \end{code}
 For |dup :: a `k` (a :* a)|, we'll have |h :: (a :* a) ~> r|, so we can split |h| with |unjoin|:
 \begin{code}
-   cont dup
-==  {- definition of |cont| -}
-   Cont (\ h -> h . dup)
-==  {- |join . unjoin == id| -}
-   Cont (\ h -> join (unjoin h) . dup)
-==  {- refactor; definition of |join| -}
-   Cont (\ h -> let (ha,hb) = unjoin h in (ha ||| hb) . dup)
-==  {- \secref{Abelian categories} -}
-   Cont (\ h -> let (ha,hb) = unjoin h in ha `plusC` hb)
-==  {- definition of |uncurry| -}
-   Cont (\ h -> let (ha,hb) = unjoin h in uncurry plusC (ha,hb))
-==  {- eliminate the |let| -}
-   Cont (\ h -> uncurry plusC (unjoin h))
-==  {- definition of |(.)| on functions -}
-   Cont (uncurry plusC . unjoin)
-==  {- definition of |jamP| for functions -}
-   Cont (jamP . unjoin)
+    cont dup
+==  Cont (\ h -> h . dup)                                          -- definition of |cont|
+==  Cont (\ h -> join (unjoin h) . dup)                            -- |join . unjoin == id|
+==  Cont (\ h -> let (ha,hb) = unjoin h in (ha ||| hb) . dup)      -- refactor; definition of |join|
+==  Cont (\ h -> let (ha,hb) = unjoin h in ha `plusC` hb)          -- \secref{Abelian categories}
+==  Cont (\ h -> let (ha,hb) = unjoin h in uncurry plusC (ha,hb))  -- definition of |uncurry|
+==  Cont (\ h -> uncurry plusC (unjoin h))                         -- eliminate the |let|
+==  Cont (uncurry plusC . unjoin)                                  -- definition of |(.)| on functions
+==  Cont (jamP . unjoin)                                           -- definition of |jamP| for functions
 \end{code}
 
 For |CoproductCat|, we reason dually:
 \begin{code}
-   cont inl
-==  {- definition of |inl| -}
-   Cont (\ h -> h . inl)
-==  {- |join . unjoin == id| -}
-   Cont (\ h -> join (unjoin h) . inl)
-==  {- definition of |join| -}
-   Cont (\ h -> let (ha,hb) = unjoin h in (ha ||| hb) . inl)
-==  {- axiom for |(###)|/|inl| -}
-   Cont (\ h -> let (ha,hb) = unjoin h in ha)
-==  {- definition of |exl| for functions -}
-   Cont (\ h -> exl (unjoin h))
-==  {- definition of |(.)| for functions -}
-   Cont (exl . unjoin)
+    cont inl
+==  Cont (\ h -> h . inl)                                      -- definition of |inl|
+==  Cont (\ h -> join (unjoin h) . inl)                        -- |join . unjoin == id|
+==  Cont (\ h -> let (ha,hb) = unjoin h in (ha ||| hb) . inl)  -- definition of |join|
+==  Cont (\ h -> let (ha,hb) = unjoin h in ha)                 -- axiom for |(###)|/|inl|
+==  Cont (\ h -> exl (unjoin h))                               -- definition of |exl| for functions
+==  Cont (exl . unjoin)                                        -- definition of |(.)| for functions
 \end{code}
 Similarly,
 \begin{code}
@@ -1571,19 +1495,13 @@ Similarly,
 \end{code}
 Then
 \begin{code}
-   cont jam
-==  {- definition of |cont| -}
-   Cont (\ h -> h . jam)
-==  {- A law for |jam| and |(###)| -}
-   Cont (\ h -> h . (id ||| id))
-==  {- A law for |(.)| and |(###)| -}
-   Cont (\ h -> h . id ||| h . id)
-==  {- Law for |(.)| and |id| -}
-   Cont (\ h -> h ||| h)
-==  {- definition of |join| -}
-   Cont (\ h -> join (h,h))
-==  {- definition of |dup| on functions -}
-   Cont (join . dup)
+    cont jam
+==  Cont (\ h -> h . jam)            -- definition of |cont|
+==  Cont (\ h -> h . (id ||| id))    -- A law for |jam| and |(###)|
+==  Cont (\ h -> h . id ||| h . id)  -- A law for |(.)| and |(###)|
+==  Cont (\ h -> h ||| h)            -- Law for |(.)| and |id|
+==  Cont (\ h -> join (h,h))         -- definition of |join|
+==  Cont (join . dup)                -- definition of |dup| on functions
 \end{code}
 
 The final element of our linear vocabulary is scalar multiplication.
@@ -1594,15 +1512,11 @@ class ScalarCat k a where
 \end{code}
 The |Cont| version:\notefoot{Is there a more general argument to make? I haven't wanted to say that |h| is linear.}
 \begin{code}
-   cont (scale s)
-==  {- definition of |cont| -}
-   Cont (\ h -> h . scale s)
-==  {- linearity of |h| -}
-   Cont (\ h -> scale s . h)
-==  {- definition of |scale| for functions/maps -}
-   Cont (\ h -> scale s h)
-==  {- $\eta$-reduction -}
-   Cont (scale s)
+    cont (scale s)
+==  Cont (\ h -> h . scale s)  -- definition of |cont|
+==  Cont (\ h -> scale s . h)  -- linearity of |h|
+==  Cont (\ h -> scale s h)    -- definition of |scale| for functions/maps
+==  Cont (scale s)             -- $\eta$-reduction
 \end{code}
 
 \subsection{\thmRef{asDual}}\proofLabel{theorem:asDual}
@@ -1627,218 +1541,135 @@ The following identities hold:
 For the |Category| instance, we'll need that |id == asDual id|.
 Simplifying the RHS,
 \begin{code}
-   asDual id
-==  {- definition of |id| for |Cont| -}
-   asDual (Cont id)
-==  {- definition of |asDual| -}
-   Dual (unDot . id . dot)
-==  {- |Category| law for |id|/|(.)| -}
-   Dual (unDot . dot)
-==  {- |unDot . dot == id| -}
-   Dual id
+    asDual id
+==  asDual (Cont id)         -- definition of |id| for |Cont|
+==  Dual (unDot . id . dot)  -- definition of |asDual|
+==  Dual (unDot . dot)       -- |Category| law for |id|/|(.)|
+==  Dual id                  -- |unDot . dot == id|
 \end{code}
 We also need |asDual (g . f) == asDual g . asDual f|, or (without loss of generality) |asDual (Cont g . Cont f) == asDual (Cont g) . asDual (Cont f)|.
 Simplifying both sides,
 \begin{code}
-   asDual (Cont g . Cont f)
-==  {- definition of |(.)| for |Cont| -}
-   asDual (Cont (f . g))
-==  {- definition of |asDual| -}
-   Dual (unDot . f . g . dot)
-==  {- |dot . unDot == id| -}
-   Dual (unDot . f . dot . unDot . g . dot)
-==  {- definition of |onDot| -}
-   Dual (onDot f . onDot g)
-
-   asDual (Cont g) . asDual (Cont f)
-==  {- definition of |asDual| -}
-   Dual (onDot g) . asDual (onDot f)
+    asDual (Cont g . Cont f)
+==  asDual (Cont (f . g))                     -- definition of |(.)| for |Cont|
+==  Dual (unDot . f . g . dot)                -- definition of |asDual|
+==  Dual (unDot . f . dot . unDot . g . dot)  -- |dot . unDot == id|
+==  Dual (onDot f . onDot g)                  -- definition of |onDot|
+    
+    asDual (Cont g) . asDual (Cont f)
+==  Dual (onDot g) . asDual (onDot f)         -- definition of |asDual|
 \end{code}
 As usual, strengthen this equality by replacing |onDot g| and |onDot f| by re-typed |g| and |f|, and read off a sufficient definition.
 
 For |MonoidalPCat|, the homomorphism condition is |asDual (f *** g) == asDual f *** asDual g|.
 Simplify both sides:
 \begin{code}
-   asDual (Cont f) *** asDual (Cont g)
-==  {- definition of |asDual| -}
-   Dual (onDot f) *** Dual (onDot g)
-
-   asDual (Cont f *** Cont g)
-==  {- definition of |(***)| on |Cont| -}
-   asDual (Cont (join . (f *** g) . unjoin))
-==  {- definition of |asDual| -}
-   Dual (onDot (join . (f *** g) . unjoin))
-==  {- definition of |onDot| -}
-   Dual (unDot . join . (f *** g) . unjoin . dot)
-==  {- \lemDotTwo{unjoin-dot}{unDot-join}  -}
-   Dual ((unDot *** unDot) . (f *** g) . (dot *** dot))
-==  {- Law about |(***)|/|(.)| -}
-   Dual (unDot . f . dot *** unDot . g . unDot)
-==  {- definition of |onDot| -}
-   Dual (onDot f *** onDot g)
+    asDual (Cont f) *** asDual (Cont g)
+==  Dual (onDot f) *** Dual (onDot g)                     -- definition of |asDual|
+    
+    asDual (Cont f *** Cont g)
+==  asDual (Cont (join . (f *** g) . unjoin))             -- definition of |(***)| on |Cont|
+==  Dual (onDot (join . (f *** g) . unjoin))              -- definition of |asDual|
+==  Dual (unDot . join . (f *** g) . unjoin . dot)        -- definition of |onDot|
+==  Dual ((unDot *** unDot) . (f *** g) . (dot *** dot))  -- \lemDotTwo{unjoin-dot}{unDot-join} 
+==  Dual (unDot . f . dot *** unDot . g . unDot)          -- Law about |(***)|/|(.)|
+==  Dual (onDot f *** onDot g)                            -- definition of |onDot|
 \end{code}
 Strengthening from |onDot f| and |onDot g| gives a simple sufficient condition:
 \begin{code}
 Dual f *** Dual g == Dual (f *** g)
 \end{code}
 
-For |ProductCat|, 
+For |ProductCat|,
 \begin{code}
-   exl
-==  {- specification -}
-   asDual exl
-==  {- definition of |exl| for |Cont| -}
-   asDual (Cont (join . inl))
-==  {- definition of |asDual| -}
-   Dual (onDot (join . inl))
-==  {- definition of |onDot|, and associativity of |(.)| -}
-   Dual (unDot . join . inl . dot)
-==  {- definition of |(.)| for functions -}
-   Dual (\ u -> unDot (join (inl (dot u))))
-==  {- definition of |inl| for functions -}
-   Dual (\ u -> unDot (join (dot u, zeroC)))
-==  {- definition of |join| -}
-   Dual (\ u -> unDot (dot u ||| zeroC))
-==  {- \lemDot{dot-zeroV} -}
-   Dual (\ u -> unDot (dot u ||| dot zeroV))
-==  {- \lemDot{dot-dot-join} -}
-   Dual (\ u -> unDot (dot (u,zeroV)))
-==  {- |unDot . dot == id| -}
-   Dual (\ u -> (u,zeroV))
-==  {- definition of |inl| for functions -}
-   Dual (\ u -> inl u)
-==  {- $\eta$-reduction -}
-   Dual inl
-
-   exrP
-==  {- \ldots{} as with |exlP| \ldots -}
-   Dual inr
-
-   dup
-==  {- specification -}
-   asDual dup
-==  {- definition of |dup| for |Cont| -}
-   asDual (Cont (jamP . unjoin))
-==  {- definition of |asDual| -}
-   Dual (onDot (jamP . unjoin))
-==  {- definition of |onDot| -}
-   Dual (unDot . jamP . unjoin . dot)
-==  {- definition of |(.)| for functions -}
-   Dual (\ (u,v) -> unDot (jamP (unjoin (dot (u,v)))))
-==  {- \lemDot{unjoin-dot} -}
-   Dual (\ (u,v) -> unDot (jamP (dot u, dot v)))
-==  {- definition of |jamP| for functions -}
-   Dual (\ (u,v) -> unDot (dot u + dot v))
-==  {- \lemDot{dot-linear} -}
-   Dual (\ (u,v) -> unDot (dot u) + unDot (dot v))
-==  {- |unDot . dot == id| -}
-   Dual (\ (u,v) -> u + v)
-==  {- definition of |jamP| for functions -}
-   Dual jamP
+    exl
+==  asDual exl                                           -- specification
+==  asDual (Cont (join . inl))                           -- definition of |exl| for |Cont|
+==  Dual (onDot (join . inl))                            -- definition of |asDual|
+==  Dual (unDot . join . inl . dot)                      -- definition of |onDot|, and associativity of |(.)|
+==  Dual (\ u -> unDot (join (inl (dot u))))             -- definition of |(.)| for functions
+==  Dual (\ u -> unDot (join (dot u, zeroC)))            -- definition of |inl| for functions
+==  Dual (\ u -> unDot (dot u ||| zeroC))                -- definition of |join|
+==  Dual (\ u -> unDot (dot u ||| dot zeroV))            -- \lemDot{dot-zeroV}
+==  Dual (\ u -> unDot (dot (u,zeroV)))                  -- \lemDot{dot-dot-join}
+==  Dual (\ u -> (u,zeroV))                              -- |unDot . dot == id|
+==  Dual (\ u -> inl u)                                  -- definition of |inl| for functions
+==  Dual inl                                             -- $\eta$-reduction
+    
+    exrP
+==  Dual inr                                             -- \ldots{} as with |exlP| \ldots
+    
+    dup
+==  asDual dup                                           -- specification
+==  asDual (Cont (jamP . unjoin))                        -- definition of |dup| for |Cont|
+==  Dual (onDot (jamP . unjoin))                         -- definition of |asDual|
+==  Dual (unDot . jamP . unjoin . dot)                   -- definition of |onDot|
+==  Dual (\ (u,v) -> unDot (jamP (unjoin (dot (u,v)))))  -- definition of |(.)| for functions
+==  Dual (\ (u,v) -> unDot (jamP (dot u, dot v)))        -- \lemDot{unjoin-dot}
+==  Dual (\ (u,v) -> unDot (dot u + dot v))              -- definition of |jamP| for functions
+==  Dual (\ (u,v) -> unDot (dot u) + unDot (dot v))      -- \lemDot{dot-linear}
+==  Dual (\ (u,v) -> u + v)                              -- |unDot . dot == id|
+==  Dual jamP                                            -- definition of |jamP| for functions
 \end{code}
-
 The |CoproductPCat| instance comes out similarly:
 \begin{code}
-   inlP
-==  {- specification -}
-   asDual inlP
-==  {- definition of |inlP| for |Cont| -}
-   asDual (Cont (exl . unjoin))
-==  {- definition of |asDual| -}
-   Dual (onDot (exl . unjoin))
-==  {- definition of |onDot| -}
-   Dual (unDot . exl . unjoin . dot)
-==  {- definition of |(.)| for functions -}
-   Dual (\ (u,v) -> unDot (exl (unjoin (dot (u,v)))))
-==  {- \lemDot{unjoin-dot} -}
-   Dual (\ (u,v) -> unDot (exl (dot u, dot v)))
-==  {- definition of |exl| on functions -}
-   Dual (\ (u,v) -> unDot (dot u))
-==  {- |unDot . dot == id| -}
-   Dual (\ (u,v) -> u)
-==  {- definition of |exl| for functions -}
-   Dual exl
-
-   inrP
-==  {- \ldots{} as with |inlP| \ldots -}
-   Dual exr
-
-   jam
-==  {- specification -}
-   asDual jam
-==  {- definition of |jam| on |Cont| -}
-   asDual (Cont (join . dup))
-==  {- definition of |asDual| -}
-   Dual (onDot (join . dup))
-==  {- definition of |onDot| -}
-   Dual (unDot . join . dup . dot)
-==  {- definition of |(.)| on functions -}
-   Dual (\ u -> unDot (join (dup (dot u))))
-==  {- definition of |dup| for functions -}
-   Dual (\ u -> unDot (join (dot u, dot u)))
-==  {- definition of |join| -}
-   Dual (\ u -> unDot (dot u ||| dot u))
-==  {- \lemDot{dot-dot-join} -}
-   Dual (\ u -> unDot (dot (u,u)))
-==  {- |unDot . dot == id| -}
-   Dual (\ u -> (u,u))
-==  {- definition of |dup| on functions -}
-   Dual (\ u -> dup u)
-==  {- $\eta$-reduction -}
-   Dual dup
+    inlP
+==  asDual inlP                                         -- specification
+==  asDual (Cont (exl . unjoin))                        -- definition of |inlP| for |Cont|
+==  Dual (onDot (exl . unjoin))                         -- definition of |asDual|
+==  Dual (unDot . exl . unjoin . dot)                   -- definition of |onDot|
+==  Dual (\ (u,v) -> unDot (exl (unjoin (dot (u,v)))))  -- definition of |(.)| for functions
+==  Dual (\ (u,v) -> unDot (exl (dot u, dot v)))        -- \lemDot{unjoin-dot}
+==  Dual (\ (u,v) -> unDot (dot u))                     -- definition of |exl| on functions
+==  Dual (\ (u,v) -> u)                                 -- |unDot . dot == id|
+==  Dual exl                                            -- definition of |exl| for functions
+    
+    inrP
+==  Dual exr                                            -- \ldots{} as with |inlP| \ldots
+    
+    jam
+==  asDual jam                                          -- specification
+==  asDual (Cont (join . dup))                          -- definition of |jam| on |Cont|
+==  Dual (onDot (join . dup))                           -- definition of |asDual|
+==  Dual (unDot . join . dup . dot)                     -- definition of |onDot|
+==  Dual (\ u -> unDot (join (dup (dot u))))            -- definition of |(.)| on functions
+==  Dual (\ u -> unDot (join (dot u, dot u)))           -- definition of |dup| for functions
+==  Dual (\ u -> unDot (dot u ||| dot u))               -- definition of |join|
+==  Dual (\ u -> unDot (dot (u,u)))                     -- \lemDot{dot-dot-join}
+==  Dual (\ u -> (u,u))                                 -- |unDot . dot == id|
+==  Dual (\ u -> dup u)                                 -- definition of |dup| on functions
+==  Dual dup                                            -- $\eta$-reduction
 \end{code}
 
 Finally, scaling:
 \begin{code}
-   scale s
-==  {- specification -}
-   asDual (scale s)
-==  {- definition of |scale| for |Cont| -}
-   asDual (Cont (scale s))
-==  {- definition of |asDual| -}
-   Dual (onDot (scale s))
-==  {- definition of |onDot| -}
-   Dual (unDot . scale s . dot)
-==  {- \lemDot{dot-linear} -}
-   Dual (scale s . unDot . dot)
-==  {- |unDot . dot == id| -}
-   Dual (scale s)
+    scale s
+==  asDual (scale s)              -- specification
+==  asDual (Cont (scale s))       -- definition of |scale| for |Cont|
+==  Dual (onDot (scale s))        -- definition of |asDual|
+==  Dual (unDot . scale s . dot)  -- definition of |onDot|
+==  Dual (scale s . unDot . dot)  -- \lemDot{dot-linear}
+==  Dual (scale s)                -- |unDot . dot == id|
 \end{code}
 
 
 \subsection{\corRef{dual-derived}}\proofLabel{corollary:dual-derived}
 Given the definitions in \figref{asDual},\\
-\begin{minipage}[b]{0.4\textwidth}
 \begin{code}
-   Dual f &&& Dual g
-==  {- definition of |(&&&)| -}
-   (Dual f *** Dual g) . dup
-==  {- definition of |(***)| for |Dual k| -}
-   Dual (f *** g) . dup
-==  {- definition of |dup| for |Dual k| -}
-   Dual (f *** g) . Dual jamP
-==  {- definition of |(.)| for |Dual k| -}
-   Dual (jamP . (f *** g))
-==  {- definition of |(###)| -}
-   Dual (f ||| g)
+    Dual f &&& Dual g
+==  (Dual f *** Dual g) . dup   -- definition of |(&&&)|
+==  Dual (f *** g) . dup        -- definition of |(***)| for |Dual k|
+==  Dual (f *** g) . Dual jamP  -- definition of |dup| for |Dual k|
+==  Dual (jamP . (f *** g))     -- definition of |(.)| for |Dual k|
+==  Dual (f ||| g)              -- definition of |(###)|
+    
+    Dual f ||| Dual g
+==  jamP . (Dual f *** Dual g)  -- definition of |(###)|
+==  jamP . Dual (f *** g)       -- definition of |(***)| for |Dual k|
+==  Dual dup . Dual (f *** g)   -- definition of |jamP| for |Dual k|
+==  Dual ((f *** g) . dup)      -- definition of |(.)| for |Dual k|
+==  Dual (f &&& g)              -- definition of |(&&&)|
 \end{code}
-\end{minipage}
-\begin{minipage}[b]{3ex}{\rule[2.8ex]{0.5pt}{1.8in}}\end{minipage}
-\begin{minipage}[b]{0.4\textwidth}
-\begin{code}
-   Dual f ||| Dual g
-==  {- definition of |(###)| -}
-   jamP . (Dual f *** Dual g)
-==  {- definition of |(***)| for |Dual k| -}
-   jamP . Dual (f *** g)
-==  {- definition of |jamP| for |Dual k| -}
-   Dual dup . Dual (f *** g)
-==  {- definition of |(.)| for |Dual k| -}
-   Dual ((f *** g) . dup)
-==  {- definition of |(&&&)| -}
-   Dual (f &&& g)
-\end{code}
-\end{minipage}
 
 \bibliography{bib}
 
