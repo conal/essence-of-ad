@@ -1817,8 +1817,8 @@ Finally, scaling:
 
 
 \subsection{\corRef{dual-derived}}\proofLabel{corollary:dual-derived}
-
-Given the definitions in \figref{asDual},
+Given the definitions in \figref{asDual},\\
+\begin{minipage}[b]{0.4\textwidth}
 \begin{code}
    Dual f &&& Dual g
 ==  {- definition of |(&&&)| -}
@@ -1832,7 +1832,9 @@ Given the definitions in \figref{asDual},
 ==  {- definition of |(###)| -}
    Dual (f ||| g)
 \end{code}
-Similarly,
+\end{minipage}
+\begin{minipage}[b]{3ex}{\rule[2.8ex]{0.5pt}{1.8in}}\end{minipage}
+\begin{minipage}[b]{0.4\textwidth}
 \begin{code}
    Dual f ||| Dual g
 ==  {- definition of |(###)| -}
@@ -1846,6 +1848,7 @@ Similarly,
 ==  {- definition of |(&&&)| -}
    Dual (f &&& g)
 \end{code}
+\end{minipage}
 
 \bibliography{bib}
 
