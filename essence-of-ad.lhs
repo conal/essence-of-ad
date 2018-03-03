@@ -1283,7 +1283,7 @@ Compare \figref{magSqr-gradr} with the same example in \figreftwo{magSqr-adf}{ma
 
 \appendix
 
-\sectionl{Calculational proofs}
+\sectionl{Proofs}
 
 \subsection{\corRef{compose}}\proofLabel{corollary:compose}
 \begin{code}
@@ -1344,19 +1344,14 @@ Generalize to a stronger condition, replacing |(rcomp g)| and |(rcomp f)| with |
 \begin{code}
 Cont g . Cont f == Cont (f . g)
 \end{code}
-This strengthened condition is also in solved form, so we have a sufficient definition:
-\begin{code}
-instance Category k => Category (Cont k r) where
-  id = Cont id
-  Cont g . Cont f = Cont (f . g)
-\end{code}
+This strengthened condition is also in solved form.
 Notice the reversal of composition (and, more subtly, of |id|).
 
-Similarly, we can derive a |MonoidalPCat| instance from the specification that |cont| is a monoidal functor (i.e., a |MonoidalPCat| homomorphism):
+The monoidal functor (i.e., a |MonoidalPCat| homomorphism) property:
 \begin{code}
 cont (f *** g) == cont f *** cont g
 \end{code}
-Simplify both sides of this property:
+Simplify both sides:
 %format ha = h"_{"a"}"
 %format hb = h"_{"b"}"
 \begin{code}
@@ -1377,11 +1372,9 @@ Simplify both sides of this property:
 ==  Cont (join . ((rcomp f) *** (rcomp g)) . unjoin)                                  -- definition of |(.)|
 \end{code}
 The crucial trick here was to note that the continuation |h :: (a :* b) `k` r| can be split into two continuations |ha :: a `k` r| and |hb :: b `k` r| thanks to |join|/|unjoin| isomorphism from \secref{Derived operations}.\notefoot{In general, this splitting can lose efficiency, since |ha| and |hb| could duplicate work that was shared in |h|. Return to this concern later.}
-Now, strengthen the massaged specification, generalizing from |rcomp f| and |rcomp g| as usual.
-The result is in solved form and so translates directly to a implementation:
+Now, strengthen the massaged specification, generalizing from |rcomp f| and |rcomp g| as usual, resulting in a sufficient condition in solved form:
 \begin{code}
-instance MonoidalPCat k => MonoidalPCat (Cont k r) where
-  Cont f *** Cont g = Cont (join . (f *** g) . unjoin)
+Cont f *** Cont g == Cont (join . (f *** g) . unjoin)
 \end{code}
 
 Next, derive |ProductCat| and |CoproductPCat| instances from the specification that |cont| is a cartesian functor and a cocartesian functor (i.e., |ProductCat| and |CoproductPCat| homomorphisms), i.e.,\\
@@ -1432,10 +1425,7 @@ For instance,
 ==  Cont (\ h -> join (inl h))    -- definition of |inl| for functions
 ==  Cont (join . inl)             -- definition of |(.)| for functions
 \end{code}
-Similarly,
-\begin{code}
-   cont exr == Cont (join . inr)
-\end{code}
+Similarly, |cont exr == Cont (join . inr)|.
 For |dup :: a `k` (a :* a)|, we'll have |h :: (a :* a) ~> r|, so we can split |h| with |unjoin|:
 \begin{code}
     cont dup
@@ -1459,11 +1449,8 @@ For |CoproductCat|, we reason dually:
 ==  Cont (\ h -> exl (unjoin h))                               -- definition of |exl| for functions
 ==  Cont (exl . unjoin)                                        -- definition of |(.)| for functions
 \end{code}
-Similarly,
-\begin{code}
-   cont inr == Cont (exr . unjoin)
-\end{code}
-Then
+Similarly, |cont inr == Cont (exr . unjoin)|.
+Next,
 \begin{code}
     cont jam
 ==  Cont (\ h -> h . jam)            -- definition of |cont|
@@ -1474,13 +1461,7 @@ Then
 ==  Cont (join . dup)                -- definition of |dup| on functions
 \end{code}
 
-The final element of our linear vocabulary is scalar multiplication.
-From \secref{Numeric operations},
-\begin{code}
-class ScalarCat k a where
-   scale :: a -> (a `k` a)
-\end{code}
-The |Cont| version:\notefoot{Is there a more general argument to make? I haven't wanted to say that |h| is linear.}
+The final element of our linear vocabulary is scalar multiplication:\notefoot{Is there a more general argument to make? I haven't wanted to say that |h| is linear.}
 \begin{code}
     cont (scale s)
 ==  Cont (\ h -> h . scale s)  -- definition of |cont|
@@ -1508,18 +1489,18 @@ The following properties hold:
 \item |dot zeroV == zeroC| (zero vector vs zero morphism) \label{dot-zeroV}
 \end{enumerate}
 \end{lemma}
-\emph{Proofs:}
+\emph{Proof:}
 \begin{enumerate}
 \item Follows from the bilinearity of uncurried dot product:
 \begin{code}
     dot (u + v)
 ==  \ w -> dot (u + v) w      -- $\eta$-expansion
-==  \ w -> dot u w + dot v w  -- bilinearity
+==  \ w -> dot u w + dot v w  -- bilinearity of |dot|
 ==  dot u + dot v             -- definition of |(+)| of functions
 
     dot (s *^ u)
 ==  \ w -> dot (s *^ u) w     -- $\eta$-expansion
-==  \ w -> s *^ dot u w       -- bilinearity
+==  \ w -> s *^ dot u w       -- bilinearity of |dot|
 ==  s *^ dot u                -- definition of |(*^)| on functions
 \end{code}
 \item Invertible linear functions have linear inverses:
@@ -1528,6 +1509,11 @@ The following properties hold:
 ==  unDot (dot (unDot u) + dot (unDot v))  -- |dot . unDot == id|
 ==  unDot (dot (unDot u + unDot v))        -- linearity of |dot|
 ==  unDot u + unDot v                      -- |unDot . dot == id|
+
+    unDot (s *^ u)                         
+==  unDot (s *^ dot (unDot u))             -- |dot . unDot == id|
+==  unDot (dot (s *^ unDot u))             -- linearity of |dot| 
+==  s *^ unDot u                           -- |unDot . dot == id|
 \end{code}
 \item Noting that the argument of both sides is a pair,
 \begin{code}
@@ -1554,6 +1540,7 @@ The following properties hold:
 \end{code}
 \item Immediate from linearity and the definition of |zeroC| for functions.
 \end{enumerate}
+\emph{End of proof of \lemRef{dot-properties}}.\\
 
 For the |Category| instance, we'll need that |id == asDual id|.
 Simplifying the RHS,
@@ -1691,23 +1678,33 @@ Given the definitions in \figref{asDual},
 \bibliography{bib}
 
 \sectionl{To do}
-
 \begin{itemize}
+\item Paper sections:
+ \begin{itemize}
+ \item Introduction
+ \item Indexed biproducts
+ \item Incremental evaluation
+ \item Future work
+ \item Related work
+ \item Conclusions
+ \end{itemize}
 \item Probably remove the |Additive| constraints in |Cocartesian|, along with the |Cocartesian (->)| instance.
       Otherwise, mention that the implementation does so.
       |CoterminalCat (->)| isn't what we need.
-\item |dot| and |unDot|.
-\item |ConstCat| for |Dual| and for linear arrows in general.
-\item What is ``generalized AD''?
-      Is it AD at all or something else?
 \item Consider moving the current examples into a single section after gradients and duality.
       For each example, show the function, |andDerivF|, |andDerivR|, and |andGradR|.
 \item Mention graph optimization and maybe show one or more un-optimized graphs.
 \item Examples with generalized matrices.
 \item Mention flaw in the compose/chain and cross rules: the decomposed pieces may not be differentiable.
 \item Sub-differentiation. 
-\item Fix two-column (minipage) spacing and separation bars for ACM style.
-\item Code indentation for ACM style.
+\item |ConstCat| for |Dual| and for linear arrows in general.
+\item What is ``generalized AD''?
+      Is it AD at all or something else?
+\item Formatting issues:
+ \begin{itemize}
+ \item Fix two-column (minipage) spacing and separation bars for ACM style.
+ \item Code indentation for ACM style.
+ \end{itemize}
 \end{itemize}
 
 \end{document}
