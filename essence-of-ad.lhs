@@ -1181,7 +1181,11 @@ Given a vector space |A| over a scalar field |s|, the \emph{dual} of |A| is |A :
 This dual space is also a vector space, and when |A| has finite dimension, it is isomorphic to its dual.
 In particular, every linear map in |A :-* s| has the form |dot u| for some |u :: A|, where |dot| is the curried dot product:
 \begin{code}
-dot :: u -> (u :-* s)
+class HasDot s u where dot :: u -> (u :-* s)
+
+instance HasDot R R where dot = scale
+
+instance (HasDot s a, HasDot s b) => HasDot s (a :* b) where dot (u,v) = dot u ||| dot v
 \end{code}
 
 The |ContC k r| construction from \secref{Reverse mode AD} works for \emph{any} type/object |r|, so let's take |r| to be the scalar field |s|.
@@ -1196,14 +1200,14 @@ To construct dual representations of (generalized) linear maps, it suffices to c
 Composing this new functor with |cont :: (a `k` b) -> ContC k s a b| will give us a functor from |a `k` b| to |DualC k a b|.
 The new to-be-derived functor:
 \begin{code}
-asDual :: ContC k s a b -> DualC k a b
+asDual :: (HasDot s a, HasDot s b) => ContC k s a b -> DualC k a b
 asDual (Cont f) = Dual (onDot f)
 \end{code}
-where |onDot| uses both halves of the isomorphism between |a :-* s| and |a|:\notefoot{Maybe drop |onDot| in favor of its definition.}
+where |onDot| uses both halves of the isomorphism between |a :-* s| and |a|:\out{\notefoot{Maybe drop |onDot| in favor of its definition.}}
 %format unDot = dot"^{-1}"
 %% %format unDot = dot"^{\scriptscriptstyle -\!1}"
 \begin{code}
-onDot :: ((b :-* s) -> (a :-* s)) -> (b :-* a)
+onDot :: (HasDot s a, HasDot s b) => ((b :-* s) -> (a :-* s)) -> (b :-* a)
 onDot f = unDot . f . dot
 \end{code}
 
@@ -1523,7 +1527,7 @@ The following properties hold:
 \end{lemma}
 \emph{Proof:}
 \begin{enumerate}
-\item Follows from the bilinearity of uncurried dot product:
+\item Follows from the bilinearity of uncurried dot product:\notefoot{I'm treating linear maps here as functions. Revisit.}
 \begin{code}
     dot (u + v)
 ==  \ w -> dot (u + v) w      -- $\eta$-expansion
@@ -1554,7 +1558,7 @@ The following properties hold:
 ==  \ (u,v) -> (dot (u,v) . inlP, dot (u,v) . inrP)                    -- definition of |unjoin|
 ==  \ (u,v) -> (\ x -> dot (u,v) (inlP x), \ y -> dot (u,v) (inrP y))  -- definition of |(.)| for functions
 ==  \ (u,v) -> (\ x -> dot (u,v) (x,0), \ y -> dot (u,v) (0,y))        -- definition of |inlP| for linear functions
-==  \ (u,v) -> (\ x -> dot u x + dot v 0, \ y -> dot u 0 + dot v y)    -- definition of |dot|
+==  \ (u,v) -> (\ x -> dot u x + dot v 0, \ y -> dot u 0 + dot v y)    -- definition of |dot| for pairs
 ==  \ (u,v) -> (\ x -> dot u x, \ y -> dot v y)                        -- linearity of |dot|
 ==  \ (u,v) -> (dot u, dot v)                                          -- $\eta$-reduction
 ==  dot *** dot                                                        -- definition of |(***)| for functions
@@ -1567,7 +1571,7 @@ The following properties hold:
 ==  \ (x,y) -> jamP ((dot u *** dot v) (x,y))  -- definition of |(.)| for functions
 ==  \ (x,y) -> jamP (dot u x, dot v y)         -- definition of |(***)| for functions
 ==  \ (x,y) -> dot u x + dot v y               -- definition of |jamP| for functions
-==  \ (x,y) -> dot (u,v) (x,y)                 -- definition of |dot| for pairs
+==  \ (x,y) -> dot (u,v) (x,y)                 -- definition of |dot| for pairs\notefoot{Not exactly. Revisit.}
 ==  dot (u,v)                                  -- $\eta$-reduction
 \end{code}
 \item Immediate from linearity and the definition of |zeroC| for functions.
