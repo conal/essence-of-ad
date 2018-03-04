@@ -267,7 +267,7 @@ One other tool combines two functions in \emph{parallel}:\footnote{By ``parallel
 (***) :: (a -> c) -> (b -> d) -> (a :* b -> c :* d)
 f *** g = \ (a,b) -> (f a, g b)
 \end{code}
-We will sometimes refer to the |(***)| operation as ``cross'' \citep{Gibbons2002:Calculating}.
+We will sometimes refer to the |(***)| operation as ``cross'' \citep{Gibbons2002Calculating}.
 
 %% %% Move to the later introduction of |(&&&)|.
 %% Note that it can be used to give a terser specification: |ad f = f &&& der f|.
@@ -293,7 +293,7 @@ There is another, dual, form of composition as well, defined as follows and whic
 (|||) :: Additive c => (a -> c) -> (b -> c) -> (a :* b -> c)
 f ||| g = \ a -> f a + g a
 \end{code}
-Where |(&&&)| combines two functions with the same domain and pairs their results, |(###)| combines two functions with the same codomain and \emph{adds} their results.\footnote{\mynote{Move this commentary to a later place when I've introduced categories, and cite \cite{Gibbons2002:Calculating}.}
+Where |(&&&)| combines two functions with the same domain and pairs their results, |(###)| combines two functions with the same codomain and \emph{adds} their results.\footnote{\mynote{Move this commentary to a later place when I've introduced categories, and cite \cite{Gibbons2002Calculating}.}
 
 You may have expected a different type and definition, using \emph{sums} instead of products:
 \begin{code}
@@ -391,10 +391,11 @@ For any two morphisms |f :: a ~> b <- CU| and |g :: b ~> c <- CU| (note same cat
 The category laws state that
 (a) |id| is the left and right identity for composition, and (b) composition is associative.
 
-%format `k` = "\leadsto"
-%format k = "(\leadsto)"
+%% %format `k` = "\leadsto"
+%% %format k = "(\leadsto)"
 
-Although Haskell's type system is not expressive enough to capture the category laws explicitly, we can express the two required operations as a Haskell type class \needcite:\notefoot{Mention that Haskell doesn't really support infix type constructor variables like |(~>)|.}
+Although Haskell's type system is not expressive enough to capture the category laws explicitly, we can express the two required operations as a Haskell type class:%
+\out{\notefoot{Mention that Haskell doesn't really support infix type constructor variables like |(~>)|.}}
 \begin{code}
 class Category k where
   id   :: a `k` a
@@ -664,7 +665,7 @@ class Category k => CoproductPCat k where
   inr  ::  Additive a => b `k` (Prod k a b)
   jam  ::  Additive c => (Prod k a a) `k` a
 \end{code}
-Unlike |Category| and |ProductCat|, we've had to add an additivity requirement (having a notion of addition and corresponding identity) to the types involved, in order to have an instance for functions:\notefoot{Alternatively, skip the instance for |(->)| and instead begin in a category |(-+>)| of functions on additive types. I guess I'll have to change the category used in |Cont k r| from |(->)| to |(-+>)|.}
+Unlike |Category| and |ProductCat|, we've had to add an additivity requirement (having a notion of addition and corresponding identity) to the types involved, in order to have an instance for functions:\notefoot{Alternatively, skip the instance for |(->)| and instead begin in a category |(-+>)| of functions on additive types.\out{I guess I'll have to change the category used in |ContC k r| from |(->)| to |(-+>)|.}}
 %format zero = 0
 %format ^+^ = +
 \begin{code}
@@ -696,16 +697,16 @@ With |dup|, we can define an alternative to |(***)| that takes two morphisms sha
 (&&&) :: Cartesian k => (a `k` c) -> (a `k` d) -> (a `k` (Prod k c d))
 f &&& g = (f *** g) . dup
 \end{code}
-The |(&&&)| operation is sometimes called ``fork'' \citep{Gibbons2002:Calculating} and is particularly useful for translating from the $\lambda$-calculus to categorical form \citep[Section 3]{Elliott-2017-compiling-to-categories}.
+The |(&&&)| operation is sometimes called ``fork'' \citep{Gibbons2002Calculating} and is particularly useful for translating from the $\lambda$-calculus to categorical form \citep[Section 3]{Elliott-2017-compiling-to-categories}.
 
 Dually, |jam| lets us define a second alternative to |(***)| for two morphisms sharing a \emph{codomain}:\notefoot{Do I use |(###)|?}
 \begin{code}
 (|||) :: Cocartesian k => (c `k` a) -> (d `k` a) -> ((Prod k c d) `k` a)
 f ||| g = jam . (f +++ g)
 \end{code}
-The |(###)| operation is sometimes called ``join'' \citep{Gibbons2002:Calculating}.
+The |(###)| operation is sometimes called ``join'' \citep{Gibbons2002Calculating}.
 
-In their uncurried form, these two operations are invertible:\notefoot{For proofs, cite \cite{Gibbons2002:Calculating}.}
+In their uncurried form, these two operations are invertible:\notefoot{For proofs, cite \cite{Gibbons2002Calculating}.}
 \begin{code}
 fork    :: Cartesian    k => (a `k` c) :* (a `k` d) -> (a `k` (Prod k c d))
 unfork  :: Cartesian    k => (a `k` ((Prod k c d))) -> (a `k` c) :* (a `k` d)
@@ -894,15 +895,16 @@ Specifically, the composition of differentiable functions relies on the composit
 These corollaries follow closely from \thmRefs{compose}{linear}, which relate derivatives for these operations to the corresponding operations on linear maps.
 These properties make for a pleasantly poetic theory, but they also have a powerful, tangible benefit, which is that we can replace linear maps by any of a much broader variety of underlying categories to arrive at a greatly generalized notion of AD.
 
+%format (GD (k)) = D"_{"k"}"
+%% %format GD (k) a b = a "\leadsto_{"k"}" b
 The generalized AD definitions shown in \figref{GAD} result from making a few small changes to the non-generalized definitions derived in \secref{Putting the pieces together}:
 \begin{itemize}
-\item The new category |GD| takes as parameter a category |k| that replaces |(:-*)| in |D|.
+\item The new category takes as parameter a category |k| that replaces |(:-*)| in |D|.
 \item The |linearD| function takes two arrows, previously identified.\notefoot{Alternatively, posit an embedding function |lin :: (a :-* b) -> (a -> b)|, write \thmRef{linear} as |der (lin f) a = f|, and change to |linearD :: (a :-* b) -> D a b|.
 Then retroactively make |lin| a method of a new class.
 Could incremental computation implement |lin|?}
 \item The functionality needed of the underlying category becomes explicit.
 \end{itemize}
-
 \begin{figure}
 \begin{center}
 \begin{code}
@@ -1108,11 +1110,13 @@ Building a category around this idea results in turning \emph{all} patterns of c
 
 %format (rcomp f) = (. SPC f)
 
-First, package up the continuation representation as a transformation from one category |k| to a new category, |Cont k r|:\footnote{Following Haskell notation, for \emph{right sections}, ``|rcomp f|'' is shorthand for |\ h -> h . f|.}
+%format ContC (k) = Cont"_{"k"}"
+%format (ContC (k) (r)) = Cont"_{"k"}^{"r"}"
+First, package up the continuation representation as a transformation\footnote{Following Haskell notation, for \emph{right sections}, ``|rcomp f|'' is shorthand for |\ h -> h . f|.} from category |k| and codomain |r| to a new category, |ContC k r|:
 \begin{code}
-newtype Cont k r a b = Cont ((b `k` r) -> (a `k` r))
+newtype ContC k r a b = Cont ((b `k` r) -> (a `k` r))
 
-cont :: Category k => (a `k` b) -> Cont k r a b
+cont :: Category k => (a `k` b) -> ContC k r a b
 cont f = Cont (rcomp f)
 \end{code}
 As usual, we can derive instances for our new category by homomorphic specification.
@@ -1120,52 +1124,52 @@ As usual, we can derive instances for our new category by homomorphic specificat
 Given the definitions in \figref{cont}, |cont| is a homomorphism with respect to the instantiated classes.\notefoot{Missing numeric operations?}
 \end{theorem}
 Note the pleasant symmetries in these definitions.
-Each |ProductCat| or |CoproductPCat| operation on |Cont k r| is defined via the dual |CoproductPCat| or |ProductCat| operation, together with the |join|/|unjoin| isomorphism.
+Each |ProductCat| or |CoproductPCat| operation on |ContC k r| is defined via the dual |CoproductPCat| or |ProductCat| operation, together with the |join|/|unjoin| isomorphism.
 
 \begin{figure}
 \begin{center}
 \begin{code}
-newtype Cont k r a b = Cont ((b `k` r) -> (a `k` r))
+newtype ContC k r a b = Cont ((b `k` r) -> (a `k` r))
 
-instance Category k => Category (Cont k r) where
+instance Category k => Category (ContC k r) where
   id = Cont id
   Cont g . Cont f = Cont (f . g)
 
-instance MonoidalPCat k => MonoidalPCat (Cont k r) where
+instance MonoidalPCat k => MonoidalPCat (ContC k r) where
   Cont f *** Cont g = Cont (join . (f *** g) . unjoin)
 
-instance ProductCat k => ProductCat (Cont k r) where
+instance ProductCat k => ProductCat (ContC k r) where
   exl  = Cont (join . inl)
   exr  = Cont (join . inr)
   dup  = Cont (jamP . unjoin)
 
-instance CoproductCat k => CoproductCat (Cont k r) where
+instance CoproductCat k => CoproductCat (ContC k r) where
   inl  = Cont (exl . unjoin)
   inr  = Cont (exr . unjoin)
   jam  = Cont (join . dup)
 
-instance ScalarCat k a => ScalarCat (Cont k r) a where
+instance ScalarCat k a => ScalarCat (ContC k r) a where
    scale s = Cont (scale s)
 \end{code}
-\caption{Reverse mode AD}
+\caption{Continuation category transformer}
 \figlabel{cont}
 \end{center}
 \end{figure}
 
-\mynote{Mention Cayley's Theorem: that any monoid is equivalent to a monoid of functions under composition.
-I think |Cont| is a generalization from |Monoid| to |Category|.
-Also generalizes to the contravariant Yoneda lemma.}
+\out{\mynote{Mention Cayley's Theorem: that any monoid is equivalent to a monoid of functions under composition.
+I think |ContC| is a generalization from |Monoid| to |Category|.
+Also generalizes to the contravariant Yoneda lemma.}}
 
-The instances for |Cont k r| constitute a simple algorithm for reverse mode automatic differentiation.
+The instances for |ContC k r| constitute a simple algorithm for reverse mode automatic differentiation.
 \mynote{Contrast with other presentations.}
 
-\mynote{Explain better how |Cont k r| performs full left-association. Also, how to use it by applying to |id|.}
+\mynote{Explain better how |ContC k r| performs full left-association. Also, how to use it by applying to |id|.}
 
 %format adr = adf
-\figreftwo{magSqr-adr}{cosSinProd-adr} show the results of reverse mode AD via |Cont| corresponding to \figreftwo{magSqr}{cosSinProd} and \figreftwo{magSqr-adf}{cosSinProd-adf}
+\figreftwo{magSqr-adr}{cosSinProd-adr} show the results of reverse mode AD via |ContC| corresponding to \figreftwo{magSqr}{cosSinProd} and \figreftwo{magSqr-adf}{cosSinProd-adf}
 \figp{
-\figoneW{0.40}{magSqr-adr}{|magSqr| in |GD (Cont (-+>) R)|}}{
-\figoneW{0.58}{cosSinProd-adr}{|cosSinProd| in |GD (Cont (-+>) R)|}}
+\figoneW{0.40}{magSqr-adr}{|magSqr| in |GD (ContC ((-+>)) R)|}}{
+\figoneW{0.58}{cosSinProd-adr}{|cosSinProd| in |GD (ContC ((-+>)) R)|}}
 The derivatives are represented as (linear) functions again, but reversed (mapping from codomain to domain).
 
 \sectionl{Gradients and duality}
@@ -1175,26 +1179,29 @@ This case is very important local minimization by means of gradient descent, e.g
 
 Given a vector space |A| over a scalar field |s|, the \emph{dual} of |A| is |A :-* s|, i.e., the linear maps to the underlying field.
 This dual space is also a vector space, and when |A| has finite dimension, it is isomorphic to its dual.
-In particular, every linear map in |A :-* s| has the form |dot u| for some |u :: A|, where |dot| is the curried dot product \needcite{}:
+In particular, every linear map in |A :-* s| has the form |dot u| for some |u :: A|, where |dot| is the curried dot product:
 \begin{code}
 dot :: u -> (u :-* s)
 \end{code}
 
-The |Cont k r| construction from \secref{Reverse mode AD} works for \emph{any} type/object |r|, so let's take |r| to be the scalar field |s|.
-The internal representation of |Cont (:-*) s a b| is |(b :-* s) -> (a :-* s)|, which is isomorphic to |b -> a|.\notefoot{Maybe I don't need this isomorphism, and it suffices to consider those linear maps that do correspond to |dot u| for some |u|.}
-Call this representation the \emph{dual} of |k|:
+The |ContC k r| construction from \secref{Reverse mode AD} works for \emph{any} type/object |r|, so let's take |r| to be the scalar field |s|.
+The internal representation of |ContC ((:-*)) s a b| is |(b :-* s) -> (a :-* s)|, which is isomorphic to |b -> a|.\notefoot{Maybe I don't need this isomorphism, and it suffices to consider those linear maps that do correspond to |dot u| for some |u|.}
+Call this representation the \emph{dual} (or ``opposite'') of |k|:
+%% %format Dual = Op
+%format (DualC (k)) = Dual"_{"k"}"
 \begin{code}
-newtype Dual k a b = Dual (b `k` a)
+newtype DualC k a b = Dual (b `k` a)
 \end{code}
-To construct dual representations of (generalized) linear maps, it suffices to convert from |Cont k s| to |Dual k| by a functor we will now derive.
-Composing this new functor with |cont :: (a `k` b) -> Cont k s a b| will give us a functor from |a `k` b| to |Dual k a b|.
+To construct dual representations of (generalized) linear maps, it suffices to convert from |ContC k s| to |DualC k| by a functor we will now derive.
+Composing this new functor with |cont :: (a `k` b) -> ContC k s a b| will give us a functor from |a `k` b| to |DualC k a b|.
 The new to-be-derived functor:
 \begin{code}
-asDual :: Cont k s a b -> Dual k a b
+asDual :: ContC k s a b -> DualC k a b
 asDual (Cont f) = Dual (onDot f)
 \end{code}
 where |onDot| uses both halves of the isomorphism between |a :-* s| and |a|:\notefoot{Maybe drop |onDot| in favor of its definition.}
 %format unDot = dot"^{-1}"
+%% %format unDot = dot"^{\scriptscriptstyle -\!1}"
 \begin{code}
 onDot :: ((b :-* s) -> (a :-* s)) -> (b :-* a)
 onDot f = unDot . f . dot
@@ -1207,24 +1214,24 @@ Given the definitions in \figref{asDual}, |asDual| is a homomorphism with respec
 \begin{figure}
 \begin{center}
 \begin{code}
-instance Category k => Category (Dual k) where
+instance Category k => Category (DualC k) where
    id = Dual id
    Dual g . Dual f = Dual (f . g)
 
-instance MonoidalPCat k => MonoidalPCat (Dual k) where
+instance MonoidalPCat k => MonoidalPCat (DualC k) where
    Dual f *** Dual g = Dual (f *** g)
 
-instance ProductCat k => ProductCat (Dual k) where
+instance ProductCat k => ProductCat (DualC k) where
    exl  = Dual inlP
    exr  = Dual inrP
    dup  = Dual jamP
 
-instance CoproductCat k => CoproductCat (Dual k) where
+instance CoproductCat k => CoproductCat (DualC k) where
    inlP  = Dual exl
    inrP  = Dual exr
    jamP  = Dual dup
 
-instance ScalarCat k => ScalarCat (Dual k) where
+instance ScalarCat k => ScalarCat (DualC k) where
    scale s = Dual (scale s)
 \end{code}
 \caption{Dual category}
@@ -1241,15 +1248,19 @@ The derived operations are also dualized:
 \end{corollary}
 Recall from \secref{Matrices}, that |scale| forms $1 \times 1$ matrices, while |(###)| and |(&&&)| correspond to horizontal and vertical juxtaposition, respectively.
 Thus, from a matrix perspective, duality is \emph{transposition}, turning an $m \times n$ matrix into an $n \times m$ matrix.
-Note, however, that |Dual k| involves no actual matrix computations unless |k| does.
+Note, however, that |DualC k| involves no actual matrix computations unless |k| does.
 In particular, we can simply use the category of linear functions |(-+>)|.%
 \notefoot{I don't think I've defined |a -+> b| yet.}
 
 \figreftwo{magSqr-gradr}{cos-xpytz-gradr} show the results of reverse mode AD via |GD (Dual (-+>))|.
 Compare \figref{magSqr-gradr} with the same example in \figreftwo{magSqr-adf}{magSqr-adr}.
+%% \figp{
+%% \figoneW{0.40}{magSqr-gradr}{|magSqr :: GD (Dual (-+>)) R2 R|}}{
+%% \figoneW{0.56}{cos-xpytz-gradr}{|\ ((x,y),z) -> cos (x + y * z) :: GD (Dual (-+>)) R3 R|}}
 \figp{
 \figoneW{0.40}{magSqr-gradr}{|magSqr| in |GD (Dual (-+>))|}}{
 \figoneW{0.56}{cos-xpytz-gradr}{|\ ((x,y),z) -> cos (x + y * z)| in |GD (Dual (-+>))|}}
+
 
 \sectionl{Indexed biproducts}
 
@@ -1383,7 +1394,7 @@ Simplify both sides:
 ==  Cont (\ h -> join (unjoin h) . (f *** g))                                         -- |join . unjoin == id|
 ==  Cont (\ h -> let (ha,hb) = unjoin h in join (ha,hb) . (f *** g))                  -- refactor
 ==  Cont (\ h -> let (ha,hb) = unjoin h in (ha ||| hb) . (f *** g))                   -- definition of |join|
-==  Cont (\ h -> let (ha,hb) = unjoin h in (ha . f ||| hb . g))                       -- |Cocartesian| identity \needcite{}
+==  Cont (\ h -> let (ha,hb) = unjoin h in (ha . f ||| hb . g))                       -- |Cocartesian| identity \citep[Section 1.5.2]{Gibbons2002Calculating}
 ==  Cont (\ h -> let (ha,hb) = unjoin h in ((rcomp f) ha ||| (rcomp g) hb))           -- definition of right section
 ==  Cont (\ h -> let (ha,hb) = unjoin h in join ((rcomp f) ha , (rcomp g) hb))        -- definition of |join|
 ==  Cont (\ h -> let (ha,hb) = unjoin h in join (((rcomp f) *** (rcomp g)) (ha,hb)))  -- definition of |(***)|
@@ -1413,11 +1424,12 @@ cont inr  == inr
 cont jam  == jam
 \end{code}
 \end{minipage}}\\
-Reversing each of these equations gives simple, correct instances:\\
+Reversing each of these equations puts them in solved form, so they can be used directly as definitions.
+\out{\\
 \begin{minipage}[b]{0.45\textwidth}
 \begin{code}
 instance  ProductCat k =>
-          ProductCat (Cont k r) where
+          ProductCat (ContC k r) where
   exl  = cont exl
   exr  = cont exr
   dup  = cont dup
@@ -1427,13 +1439,13 @@ instance  ProductCat k =>
 \begin{minipage}[b]{0.0\textwidth}
 \begin{code}
 instance  CoproductCat k =>
-          CoproductCat (Cont k r) where
+          CoproductCat (ContC k r) where
   inl  = cont inl
   inr  = cont inr
   jam  = cont jam
 \end{code}
 \end{minipage}
-
+}
 While these definitions are correct, they can be made more efficient.
 For instance,
 \begin{code}
@@ -1488,13 +1500,14 @@ The final element of our linear vocabulary is scalar multiplication:\notefoot{Is
 ==  Cont (\ h -> scale s h)    -- definition of |scale| for functions/maps
 ==  Cont (scale s)             -- $\eta$-reduction
 \end{code}
+These optimized solved forms match the definitions in \figref{cont}.
 
 \subsection{\thmRef{asDual}}\proofLabel{theorem:asDual}
 
 \nc\lemDot[1]{\lemRef{dot-properties}, part \ref{#1}}
 \nc\lemDotTwo[2]{Lemma \ref{lemma:dot-properties}, parts \ref{#1} \& \ref{#2}}
 
-To derive instances for |Dual k|, we'll need some properties.
+To derive instances for |DualC k|, we'll need some properties.
 \begin{lemma} \lemLabel{dot-properties}
 The following properties hold:
 % https://tex.stackexchange.com/questions/38260/non-italic-text-in-theorems-definitions-examples
@@ -1565,7 +1578,7 @@ For the |Category| instance, we'll need that |id == asDual id|.
 Simplifying the RHS,
 \begin{code}
     asDual id
-==  asDual (Cont id)         -- definition of |id| for |Cont|
+==  asDual (Cont id)         -- definition of |id| for |ContC k r|
 ==  Dual (unDot . id . dot)  -- definition of |asDual|
 ==  Dual (unDot . dot)       -- |Category| law for |id|/|(.)|
 ==  Dual id                  -- |unDot . dot == id|
@@ -1574,7 +1587,7 @@ We also need |asDual (g . f) == asDual g . asDual f|, or (without loss of genera
 Simplifying both sides,
 \begin{code}
     asDual (Cont g . Cont f)
-==  asDual (Cont (f . g))                     -- definition of |(.)| for |Cont|
+==  asDual (Cont (f . g))                     -- definition of |(.)| for |ContC k r|
 ==  Dual (unDot . f . g . dot)                -- definition of |asDual|
 ==  Dual (unDot . f . dot . unDot . g . dot)  -- |dot . unDot == id|
 ==  Dual (onDot f . onDot g)                  -- definition of |onDot|
@@ -1607,7 +1620,7 @@ For |ProductCat|,
 \begin{code}
     exl
 ==  asDual exl                                           -- specification
-==  asDual (Cont (join . inl))                           -- definition of |exl| for |Cont|
+==  asDual (Cont (join . inl))                           -- definition of |exl| for |ContC k r|
 ==  Dual (onDot (join . inl))                            -- definition of |asDual|
 ==  Dual (unDot . join . inl . dot)                      -- definition of |onDot|, and associativity of |(.)|
 ==  Dual (\ u -> unDot (join (inl (dot u))))             -- definition of |(.)| for functions
@@ -1624,7 +1637,7 @@ For |ProductCat|,
     
     dup
 ==  asDual dup                                           -- specification
-==  asDual (Cont (jamP . unjoin))                        -- definition of |dup| for |Cont|
+==  asDual (Cont (jamP . unjoin))                        -- definition of |dup| for |ContC k r|
 ==  Dual (onDot (jamP . unjoin))                         -- definition of |asDual|
 ==  Dual (unDot . jamP . unjoin . dot)                   -- definition of |onDot|
 ==  Dual (\ (u,v) -> unDot (jamP (unjoin (dot (u,v)))))  -- definition of |(.)| for functions
@@ -1638,7 +1651,7 @@ The |CoproductPCat| instance comes out similarly:
 \begin{code}
     inlP
 ==  asDual inlP                                         -- specification
-==  asDual (Cont (exl . unjoin))                        -- definition of |inlP| for |Cont|
+==  asDual (Cont (exl . unjoin))                        -- definition of |inlP| for |ContC k r|
 ==  Dual (onDot (exl . unjoin))                         -- definition of |asDual|
 ==  Dual (unDot . exl . unjoin . dot)                   -- definition of |onDot|
 ==  Dual (\ (u,v) -> unDot (exl (unjoin (dot (u,v)))))  -- definition of |(.)| for functions
@@ -1668,7 +1681,7 @@ Finally, scaling:
 \begin{code}
     scale s
 ==  asDual (scale s)              -- specification
-==  asDual (Cont (scale s))       -- definition of |scale| for |Cont|
+==  asDual (Cont (scale s))       -- definition of |scale| for |ContC k r|
 ==  Dual (onDot (scale s))        -- definition of |asDual|
 ==  Dual (unDot . scale s . dot)  -- definition of |onDot|
 ==  Dual (scale s . unDot . dot)  -- \lemDot{unDot-linear}
@@ -1681,16 +1694,16 @@ Given the definitions in \figref{asDual},
 \begin{code}
     Dual f &&& Dual g
 ==  (Dual f *** Dual g) . dup   -- definition of |(&&&)|
-==  Dual (f *** g) . dup        -- definition of |(***)| for |Dual k|
-==  Dual (f *** g) . Dual jamP  -- definition of |dup| for |Dual k|
-==  Dual (jamP . (f *** g))     -- definition of |(.)| for |Dual k|
+==  Dual (f *** g) . dup        -- definition of |(***)| for |DualC k|
+==  Dual (f *** g) . Dual jamP  -- definition of |dup| for |DualC k|
+==  Dual (jamP . (f *** g))     -- definition of |(.)| for |DualC k|
 ==  Dual (f ||| g)              -- definition of |(###)|
     
     Dual f ||| Dual g
 ==  jamP . (Dual f *** Dual g)  -- definition of |(###)|
-==  jamP . Dual (f *** g)       -- definition of |(***)| for |Dual k|
-==  Dual dup . Dual (f *** g)   -- definition of |jamP| for |Dual k|
-==  Dual ((f *** g) . dup)      -- definition of |(.)| for |Dual k|
+==  jamP . Dual (f *** g)       -- definition of |(***)| for |DualC k|
+==  Dual dup . Dual (f *** g)   -- definition of |jamP| for |DualC k|
+==  Dual ((f *** g) . dup)      -- definition of |(.)| for |DualC k|
 ==  Dual (f &&& g)              -- definition of |(&&&)|
 \end{code}
 
@@ -1704,7 +1717,6 @@ Given the definitions in \figref{asDual},
  \item Indexed biproducts
  \item Incremental evaluation
  \item Future work
- \item Related work
  \item Conclusions
  \end{itemize}
 \item Probably remove the |Additive| constraints in |Cocartesian|, along with the |Cocartesian (->)| instance.
@@ -1716,7 +1728,7 @@ Given the definitions in \figref{asDual},
 \item Examples with generalized matrices.
 \item Mention flaw in the compose/chain and cross rules: the decomposed pieces may not be differentiable.
 \item Sub-differentiation. 
-\item |ConstCat| for |Dual| and for linear arrows in general.
+\item |ConstCat| for |DualC k| and for linear arrows in general.
 \item What is ``generalized AD''?
       Is it AD at all or something else?
 \item Formatting issues:
