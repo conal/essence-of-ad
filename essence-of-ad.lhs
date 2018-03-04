@@ -121,7 +121,7 @@
 
 Automatic differentiation (AD) is often presented in two forms: forward mode and reverse mode.
 Forward mode is quite simple to implement and package via operator overloading but is inefficient for many problems of practical interest such as deep learning and other uses of gradient-based optimization.
-Reverse mode (including its specialization, back-propagation) is much more efficient for these problems, but is also typically given much more complicated explanations and implementations, involving mutation, graph construction, and ``tapes''.
+Reverse mode (including its specialization, backpropagation) is much more efficient for these problems, but is also typically given much more complicated explanations and implementations, involving mutation, graph construction, and ``tapes''.
 This talk develops a very simple specification and Haskell implementation for mode-independent AD based on the vocabulary of categories (generalized functions).
 Although the categorical vocabulary would be difficult to write in directly, one can instead write regular Haskell programs to be converted to this vocabulary automatically (via a compiler plugin) and then interpreted as differentiable functions.
 The result is direct, exact, and efficient differentiation with no notational overhead.
@@ -877,7 +877,7 @@ Stepping back to consider what we've done, a general recipe emerges:\notefoot{Go
 \item Start with an expensive or even non-computable specification (here involving differentiation).
 \item Build the desired result into the representation of a new data type (here as the combination of a function and its derivative).
 \item Try to show that conversion from a simpler form (here regular functions) to the new data type---even if not computable---is \emph{compositional} with respect to a well-understood algebraic abstraction (here |Category|).
-\item If compositionality fails (as with |der|, unadorned differentiation, in \secref{Sequential composition}), then examine the failure to find an augmented specification, iterating as needed until converging on a representation and corresponding specification that \emph{is} compositional.
+\item If compositionality fails (as with |der|, unadorned differentiation, in \secref{Sequential composition}), examine the failure to find an augmented specification, iterating as needed until converging on a representation and corresponding specification that \emph{is} compositional.
 \item Set up an algebra problem whose solution will be an instance of the well-understood algebraic abstraction for the chosen representation.
 These algebra problems always have a particular stylized form, namely that the operation being solved for is a \emph{homomorphism} for the chosen abstraction (here a category homomorphism, also called a ``functor'').
 \item Solve the algebra problem by using the compositionality properties.
@@ -1084,12 +1084,12 @@ Although matrix multiplication is associative (because it correctly implements c
 The problem of optimally associating a chain of matrix multiplications can be solved via dynamic programming in $O(n^3)$ time \citep[Section 15.2]{CLRS} or in $O(n \log n)$ time with a more subtle algorithm \citep{Hu:Shing:1981}.
 Solving this problem requires knowing only the sizes (heights and widths) of the matrices involved, and those sizes depend only on the types involved for the sort of strongly typed linear map representation |L s a b| above.
 One can thus choose an optimal association at compile time rather than waiting for run-time and then solving the problem repeatedly.
-\mynote{Read, grok, and cite \cite {Naumann2008OptimalJA}.}
+A more sophisticated version of this question, is known as the ``optimal Jacobian accumulation'' problem and is NP-complete \citep {Naumann2008OptimalJA}.
 
 Alternatively, for some kinds of problems we might want to choose a particular association for sequential composition.
 For instance, gradient-based optimization (including its use in deep learning) uses ``reverse-mode'' automatic differentiation (RAD), which is to say fully left-associated compositions.\notefoot{Is RAD always optimal for gradient problems?}
 (Dually, ``foward-mode'' AD fully right-associates.)
-Reverse mode (including its specialization, back-propagation) is much more efficient for these problems, but is also typically given much more complicated explanations and implementations, involving mutation, graph construction, and ``tapes'' \needcite.
+Reverse mode (including its specialization, backpropagation) is much more efficient for these problems, but is also typically given much more complicated explanations and implementations, involving mutation, graph construction, and ``tapes'' \needcite.
 One the main purposes of this paper is to demonstrate that RAD can be accounted for quite simply, while retaining or improving its efficiency of implementation.
 
 \sectionl{Reverse mode AD}
@@ -1153,7 +1153,8 @@ instance ScalarCat k a => ScalarCat (Cont k r) a where
 \end{figure}
 
 \mynote{Mention Cayley's Theorem: that any monoid is equivalent to a monoid of functions under composition.
-I think |Cont| is a generalization from |Monoid| to |Category|.}
+I think |Cont| is a generalization from |Monoid| to |Category|.
+Also generalizes to the contravariant Yoneda lemma.}
 
 The instances for |Cont k r| constitute a simple algorithm for reverse mode automatic differentiation.
 \mynote{Contrast with other presentations.}
@@ -1260,20 +1261,38 @@ Compare \figref{magSqr-gradr} with the same example in \figreftwo{magSqr-adf}{ma
 
 \sectionl{Related work}
 
+The literature on automatic differentiation is vast, beginning with forward mode \citep{Wengert64} and later reverse mode \citep{Speelpenning:1980:CFP,Rall1981Automatic}, with many developments since \citep{Griewank89onAD,GriewankWalther2008EvalDerivs}.
+While most techniques and uses of AD have been directed at imperative programming, there are also variations for functional programs \citep{Karczmarczuk1999FunCoding,Karczmarczuk00adjointcodes,Karczmarczuk2001FunDif,Pearlmutter2007LMH,Pearlmutter2008RAF,Elliott2009-beautiful-differentiation}.
+These work in this paper differs in being phrased at the level of functions/morphisms and specified by functoriality without any allusion to or manipulation of graphs or other syntactic representations.\footnote{Of course the Haskell compiler itself manipulates syntax trees, and the compiler plugin that converts Haskell code to categorical form helps do so, but both are entirely domain-independent, with no any knowledge of or special support for differentiation or linear algebra \citep{Elliott-2017-compiling-to-categories}.}
+Moreover, the specifications in this paper are simple enough that the various forms of AD presented can be calculated into being (easily), and so are correct by construction.
+
+Closely related to our choice of derivatives as linear maps and the categorical generalizations is the work of \citet{MacedoOliveira2013Typing}, also based on biproducts (though not addressing differentiation).
+That work uses natural numbers as categorical objects to capture the dimensions of vectors and matrices, while the current paper uses vector spaces themselves.
+The difference is perhaps minor, however, since natural numbers can be thought of as representing finite sets (or corresponding cardinality), which are \emph{bases} of finite-dimensional free vector spaces (as in \secref{Generalized matrices}).
+On the other hand, the duality-based gradient algorithm of \secref{Gradients and duality} involves no matrices at all in their traditional representation (arrays of numbers) or generalized sense of \secref{Generalized matrices} (representable functors).
+
+Also sharing a categorical style is the work of \citep{Fong2017BackpropAF}, formulating the ``backpropropagation'' algorithm as a functor.
+That work, which also uses biproducts (in monoidal but not cartesian form), doesn't appear to be separable from the application to machine learning, and so would seem to complement this paper.
+Backpropagation is a specialization of AD to the context of machine learning made famous by \citet{Rumelhart1988backprop}, though discovered earlier by \citet{Linnainmaa1970MS}.
+
+The continuation transformation of \secref{Reverse mode AD} was inspired by Mitch Wand's work on continuation-based program transformation \citep{Wand80continuation-basedprogram}.
+He derived a variety of algorithms based on a single elegant technique: transform a simple recursive program into continuation-passing form, examine the continuations that arise, and find a data (rather than function) representation for them.
+Each such representation is a monoid, with its identity and associative operation corresponding to identity and composition of the continuations.
+Monoids are categories with only one object, but the technique extends to general categories.
+Cayley's theorem for groups (or monoids) captures this same insight and is a corollary (in retrospect) of the Yoneda lemma \cite[Section 2.2]{Riehl2016category}.
+The idea of using data representations for functions (``defunctionalization'') was pioneered by \citep{Reynolds72definitionalinterpreters} and further explored by \citep{Danvy2001DW}.
+
+The notion of derivatives as linear maps is the basis of calculus on manifolds \cite{Spivak65} and was also used by \citet{Elliott2009-beautiful-differentiation}.
+The latter addressed only forward-mode AD but also included all orders of derivatives.
+
 \mynote{
+Perhaps more about the following:
 \begin{itemize}
-\item \emph{Typing linear algebra} \citep{MacedoOliveira2013Typing}.
-\item Other work on linear algebra and static typing.
-      Mention that we're not just using \emph{sizes}.
-      For instance, \emph{Statically Typed Linear Algebra in Haskell}.
-\item Cayley's theorem and the Yoneda lemma.
-\item Categorical pullbacks.
+\item AD work by Barak Pearlmutter and coauthors.
 \item \emph{Kan Extensions for Program Optimisation} \citep{Hinze2012KanEF}.
+\item \emph{Beautiful differentiation} \citep{Elliott2009-beautiful-differentiation}
 \item Denotational design \citep{Elliott2009-type-class-morphisms-TR} (similar methodologies).
 \item \emph{Algebra of programming} \citep{BirddeMoor96:Algebra}.
-\item \emph{Backprop as Functor} \citep{Fong2017BackpropAF}.
-\item AD work by Barak Pearlmutter and coauthors.
-\item \emph{Beautiful differentiation} \citep{Elliott2009-beautiful-differentiation}
 \end{itemize}
 }
 
