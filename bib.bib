@@ -219,12 +219,259 @@ keywords = "Linear algebra, Categories of matrices, Algebra of programming"
 }
 
 % General AD references
+@book{GriewankWalther2008EvalDerivs,
+  author = {Griewank, Andreas and Walther, Andrea},
+  year = {2008},
+  month = {01},
+  title = {Evaluating derivatives. Principles and techniques of algorithmic differentiation. 2nd ed},
+  Qisbn = {978-0-89871-659-7}
+}
 
-@inproceedings{Griewank89onautomatic,
+@inproceedings{Griewank89onAD,
     author = {Andreas Griewank},
     title = {On Automatic Differentiation},
     booktitle = {In Mathematical Programming: Recent Developments and Applications},
     year = {1989},
     Qpages = {83--108},
     Qpublisher = {Kluwer Academic Publishers}
+}
+
+@incollection{RallCorliss1996IntroAD,
+    author = "Louis B. Rall and George F. Corliss",
+    editor = "Martin Berz and Christian H. Bischof and George F. Corliss and Andreas Griewank",
+    title = "An Introduction to Automatic Differentiation",
+    booktitle = "Computational Differentiation: Techniques, Applications, and Tools",
+    pages = "1--17",
+    abstract = "This paper provides a gentle introduction to the field of automatic differentiation
+      (AD), with the goal of equipping the reader for the other papers in this book. AD is the systematic
+      application of the familiar rules of calculus to computer programs, yielding programs for the
+      propagation of numerical values of first, second, or higher derivatives. AD can be regarded as
+      traversing the code list (or computational graph) in the forward mode, the reverse mode, or a
+      combination of the two. Algorithms for numerical optimization, differential equations, and interval
+      analysis all could use AD technology to compute the required derivatives. AD typically is
+      implemented by using either source code transformation or operator overloading. We give examples of
+      code for each. Finally, we outline some pitfalls of AD for naive users, and we present opportunities
+      for future research.",
+    year = "1996"
+}
+
+@INCOLLECTION{Griewank2003MathViewAD,
+    author = "Andreas Griewank",
+    title = "A Mathematical View of Automatic Differentiation",
+    booktitle = "Acta Numerica",
+    volume = "12",
+    year = "2003",
+    pages = "321--398",
+    publisher = "Cambridge University Press",
+    Qdoi = "10.1017/S0962492902000132",
+    abstract = "Automatic, or algorithmic, differentiation addresses the need for the accurate and
+      efficient calculation of derivative values in scientific computing. To this end procedural programs
+      for the evaluation of problem-specific functions are transformed into programs that also compute the
+      required derivative values at the same numerical arguments in floating point arithmetic.
+      Disregarding many important implementation issues, we examine in this article complexity bounds and
+      other more mathematical aspects of the program transformation task sketched above.",
+    Qad_theotech = "General"
+}
+
+@article{Wengert64,
+  author =       "R. E. Wengert",
+  title =        "A simple automatic derivative evaluation program",
+  journal =      "Communications of the ACM",
+  volume =       "7",
+  number =       "8",
+  year =         "1964",
+  pages =        "463 -- 464",
+  abstract =     "A procedure for automatic evaluation of total and
+                 partial derivatives of arbitrary algebraic functions
+                 is presented. The numerical values of derivatives are
+                 computed without developing analytic expressions for
+                 the derivatives. The function is decomposed into a
+                 sequence of elementary expressions A library is
+                 provided for differentiating of elementary functions.",
+}
+
+
+@phdthesis{Speelpenning:1980:CFP,
+ author = {Speelpenning, Bert},
+ title = {\href{https://archive.org/details/compilingfastpar1002spee}{Compiling Fast Partial Derivatives of Functions Given by Algorithms}},
+ year = {1980},
+ Qnote = {AAI8017989},
+ Qpublisher = {University of Illinois at Urbana-Champaign},
+ Qaddress = {Champaign, IL, USA},
+}
+
+@book{Rall1981Automatic,
+  title={Automatic Differentiation: Techniques and Applications},
+  author={Louis B. Rall},
+  Qisbn={9780387108612},
+  Qlccn={81014439},
+  Qseries={120//a},
+  Qurl={https://books.google.com/books?id=HFRqQgAACAAJ},
+  year={1981},
+  publisher={Springer-Verlag}
+}
+
+@article{Pearlmutter2008RAF,
+ author = {Pearlmutter, Barak A. and Siskind, Jeffrey Mark},
+ title = {\href{http://www-bcl.cs.may.ie/~barak/papers/toplas-reverse.pdf}{Reverse-mode AD in a Functional Framework: Lambda the Ultimate Backpropagator}},
+ journal = {ACM TOPLAS},
+ issue_date = {March 2008},
+ volume = {30},
+ number = {2},
+ month = mar,
+ year = {2008},
+ Qissn = {0164-0925},
+ Qpages = {7:1--7:36},
+ Qarticleno = {7},
+ Qnumpages = {36},
+ Qurl = {http://doi.acm.org/10.1145/1330017.1330018},
+ Qdoi = {10.1145/1330017.1330018},
+ Qacmid = {1330018},
+ Qpublisher = {ACM},
+ Qaddress = {New York, NY, USA},
+ Qkeywords = {Closures, Jacobian, derivatives, forward-mode AD, higher-order AD, higher-order functional languages, program transformation, reflection},
+} 
+
+@inproceedings{Pearlmutter2007LMH,
+ author = {Pearlmutter, Barak A. and Siskind, Jeffrey Mark},
+ title = {\href{http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.73.7074}{Lazy Multivariate Higher-order Forward-mode AD}},
+ booktitle = {Proceedings of the 34th Annual ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages},
+ series = {POPL '07},
+ year = {2007},
+ Qisbn = {1-59593-575-4},
+ Qlocation = {Nice, France},
+ Qpages = {155--160},
+ Qnumpages = {6},
+ Qurl = {http://doi.acm.org/10.1145/1190216.1190242},
+ Qdoi = {10.1145/1190216.1190242},
+ Qacmid = {1190242},
+ Qpublisher = {ACM},
+ Qaddress = {New York, NY, USA},
+ Qkeywords = {nonstandard interpretation, power series},
+} 
+
+@article{Karczmarczuk2001FunDif,
+ author    = {Jerzy Karczmarczuk},
+ title     = {\href{http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.31.8402}{Functional Differentiation of Computer Programs}},
+ journal   = {Higher-Order and Symbolic Computation},
+ volume    = 14,
+ number    = 1,
+ year      = 2001,
+ publisher = {Kluwer Academic Publishers},
+ Qdoi = {http://dx.doi.org/10.1023/A:1011501232197},
+ Qaddress = {Hingham, MA, USA},
+ Qissn = {1388-3690},
+ Qpages = {35--57},
+}
+
+@inproceedings{Karczmarczuk1999FunCoding,
+  author = {Jerzy Karczmarczuk},
+  title = {\href{http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.31.4684}{Functional Coding of Differential Forms}},
+  booktitle = {{Scottish} Workshop on Functional Programming},
+  year = {1999},
+  Qdoi = {http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.31.4684}
+}
+
+@misc{Karczmarczuk00adjointcodes,
+    author = {Jerzy Karczmarczuk},
+    title = {\href{http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.43.6836}{Adjoint Codes in Functional Framework}},
+    year = {2000}
+}
+
+% Unused
+@inproceedings{Eaton2006STL,
+ author = {Frederik Eaton},
+ title = {\href{http://www.ofb.net/~frederik/stla/extabs.pdf}{Statically typed linear algebra in Haskell (extended abstract)}},
+ booktitle = {Proceedings of the 2006 ACM SIGPLAN Workshop on Haskell},
+ series = {Haskell '06},
+ year = {2006},
+ Qisbn = {1-59593-489-8},
+ Qlocation = {Portland, Oregon, USA},
+ Qpages = {120--121},
+ Qnumpages = {2},
+ Qurl = {http://doi.acm.org/10.1145/1159842.1159859},
+ Qdoi = {10.1145/1159842.1159859},
+ Qacmid = {1159859},
+ Qpublisher = {ACM},
+ Qaddress = {New York, NY, USA},
+ Qkeywords = {existential types, higher-rank polymorphism, linear algebra, staging, template Haskell},
+}
+
+@incollection{Rumelhart1988backprop,
+ author = {Rumelhart, David E. and Hinton, Geoffrey E. and Williams, Ronald J.},
+ chapter = {Learning Representations by Back-propagating Errors},
+ title = {Neurocomputing: Foundations of Research},
+ year = {1988},
+ Qeditor = {Anderson, James A. and Rosenfeld, Edward},
+ Qisbn = {0-262-01097-6},
+ Qpages = {696--699},
+ Qnumpages = {4},
+ Qurl = {http://dl.acm.org/citation.cfm?id=65669.104451},
+ Qacmid = {104451},
+ Qpublisher = {MIT Press},
+ Qaddress = {Cambridge, MA, USA},
+} 
+
+@MastersThesis{Linnainmaa1970MS,
+  author =       {Seppo Linnainmaa},
+  title =        {The representation of the cumulative rounding error of an algorithm as a Taylor expansion of the local rounding errors},
+  school =       {University of Helsinki},
+  year =         1970}
+
+@article{Wand80continuation-basedprogram,
+    author = {Mitchell Wand},
+    title = {Continuation-Based Program Transformation Strategies},
+    journal = {Journal of the {ACM}},
+    year = {1980},
+    volume = {27},
+    number = {1},
+    pages = {164--180}
+}
+                  
+@book{Awodey2010CT,
+ author = {Awodey, Steve},
+ title = {Category Theory},
+ year = {2010},
+ edition = {2nd},
+ publisher = {Oxford University Press, Inc.},
+ Qisbn = {0199237182, 9780199237180},
+ Qaddress = {New York, NY, USA},
+} 
+
+@inproceedings{Reynolds72definitionalinterpreters,
+    author = {John C. Reynolds},
+    title = {\href{http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.110.5892}{Definitional interpreters for higher-order programming languages}},
+    booktitle = {Reprinted from the proceedings of the 25th ACM National Conference},
+    year = {1972},
+    pages = {717--740},
+    publisher = {ACM}
+}
+                  
+@inproceedings{Danvy2001DW,
+ author = {Danvy, Olivier and Nielsen, Lasse R.},
+ title = {\href{http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.164.8417}{Defunctionalization at Work}},
+ booktitle = {Proceedings of the 3rd ACM SIGPLAN International Conference on Principles and Practice of Declarative Programming},
+ series = {PPDP '01},
+ year = {2001},
+ pages = {162--174},
+ Qisbn = {1-58113-388-X},
+ Qlocation = {Florence, Italy},
+ Qnumpages = {13},
+ Qurl = {http://doi.acm.org/10.1145/773184.773202},
+ Qdoi = {10.1145/773184.773202},
+ Qacmid = {773202},
+ Qpublisher = {ACM},
+ Qaddress = {New York, NY, USA},
+ Qkeywords = {CPS transformation, ML, Scheme, church encoding, closure conversion, continuation-passing style (CPS), continuations, defunctionalization, direct-style transformation, first-order programs, higher-order programs, lambda-lifting, regular expressions, supercombinator conversion, syntactic theories},
+} 
+
+@book{Riehl2016category,
+  title={Category Theory in Context},
+  author={Emily Riehl},
+  year={2016},
+  publisher={Dover Publications},
+  Qisbn={9780486809038},
+  Qlccn={2016498457},
+  Qseries={Aurora: Dover Modern Math Originals},
+  Qurl={https://books.google.com/books?id=YcLMjwEACAAJ},
 }
