@@ -1066,7 +1066,7 @@ Given a scalar field |s|, any free vector space has the form |p -> s| for some |
 The size of |p| is the dimension of the vector space.
 Scaling a vector |v :: p -> s| or adding two such vectors is defined in the usual was as for functions.
 Rather than using functions directly as a representation, one can instead use any representation isomorphic to such a function.
-In particular, we can represent vector spaces over a given field as a \emph{representable functor}, i.e., a functor |F| such that |F s =~= p -> s| for some |p| (where ``|=~=|'' denotes isomorphism).\notefoot{Relate this notion of \emph{functor} to the one used for specifying |adf|.}
+In particular, we can represent vector spaces over a given field as a \emph{representable functor}, i.e., a functor |F| such that $\exists p \, \forall s$ |F s =~= p -> s| (where ``|=~=|'' denotes isomorphism)\notefoot{Relate this notion of \emph{functor} to the one used for specifying |adf|.}
 This method is convenient in a richly typed functional language like Haskell, which comes with libraries of functor-level building blocks.
 Four such building blocks are functor product, functor composition, and their corresponding identities, which are the unit functor (containing no elements) and the identity functor (containing one element) \citep{Magalhaes:2010,HaskellWikiGhcGenerics}.
 \begin{code}
@@ -1078,17 +1078,21 @@ newtype  Par1         a = Par1 a                    -- identity
 \end{code}
 Use of these functors gives data representation of functions that saves recomputation over a native function representation, as a form of functional memoization \cite{Hinze00memofunctions}.
 
+%format toV = to"\!_"V
+%format unV = un"\!_"V
+%format Type = "\ast"
+%format V (s) = V"\!_{"s"}"
+%format (HasV (s)) = HasV"\!_{"s"}"
+
 One way to relate these representable functors to the types that appear in our categorical operations is to use associated types \needcite, associating a functor representation to various types.
 Given a scalar field |s| and type |a| of values, presumably built up from a scalar type |s|, the associated |V s a| is a functor such that |V s a s =~= a|.
 In other words, the type |a| is modeled as a structure of |s| values, where the structure is given by the associated functor |V s a|.
 A ``generalized matrix'' for the linear map type |a :-* b| is the composition of two functors, an outer functor for |b| and an inner functor for |a|, together containing elements from the underlying scalar field |s|:
+%format (LC (s)) = L"_{"s"}"
 \begin{code}
-newtype L s a b = L (V s b (V s a s))
+newtype LC s a b = L (V s b (V s a s))
 \end{code}
 For a given type |t|, in addition to the choice of functor |V s t|, there must be functions to convert from |t| to |V s t s| and back:
-%format toV = to"\!_"V
-%format unV = un"\!_"V
-%format Type = "\ast"
 \begin{code}
 class HasV s t where
   type V s t :: Type -> Type -- Free vector space as representable functor
@@ -1130,14 +1134,14 @@ instance (HasV s b, KnownNat n) => HasV s (Vector n b) where
 \caption{Some ``vector'' representations}
 \figlabel{HasV instances}
 \end{figure}
-Finally, one must define the standard functionality for linear maps in the form of instances of the following form, whose details are left as an exercise for the reader:\footnote{Hint: begin by defining |lfun :: L s a b -> (a -+> b)| (using |toV| and |unV|), and a specification that |lfun| is a functor, monoidal functor, etc.
+Finally, one must define the standard functionality for linear maps in the form of instances of the following form, whose details are left as an exercise for the reader:\footnote{Hint: begin by defining |lfun :: LC s a b -> (a -+> b)| (using |toV| and |unV|), and a specification that |lfun| is a functor, monoidal functor, etc.
 The operations of matrix/vector multiplication (representing linear map application) and matrix/matrix multiplication (representing linear map composition) are easily implemented in terms of standard functional programming maps, zips, and folds.}
 \begin{code}
-instance Category       (L s)    where ...
-instance MonoidalPCat   (L s)    where ...
-instance ProductCat     (L s)    where ...
-instance CoproductPCat  (L s)    where ...
-instance ScalarCat      (L s) s  where ...
+instance Category       (LC s)    where ...
+instance MonoidalPCat   (LC s)    where ...
+instance ProductCat     (LC s)    where ...
+instance CoproductPCat  (LC s)    where ...
+instance ScalarCat      (LC s) s  where ...
 \end{code}
 
 \mynote{Mention upcoming categorical generalizations, which rely on \emph{indexed} biproducts.}
@@ -1150,9 +1154,9 @@ The generalized matrix representation of \secref{Generalized matrices} eliminate
 One particularly important efficiency concern is that of (generalized) matrix multiplication.
 Although matrix multiplication is associative (because it correctly implements composition of linear maps represented as matrices), different associations can result in very different computational cost.
 The problem of optimally associating a chain of matrix multiplications can be solved via dynamic programming in $O(n^3)$ time \citep[Section 15.2]{CLRS} or in $O(n \log n)$ time with a more subtle algorithm \citep{Hu:Shing:1981}.
-Solving this problem requires knowing only the sizes (heights and widths) of the matrices involved, and those sizes depend only on the types involved for the sort of strongly typed linear map representation |L s a b| above.
+Solving this problem requires knowing only the sizes (heights and widths) of the matrices involved, and those sizes depend only on the types involved for the sort of strongly typed linear map representation |LC s a b| above.
 One can thus choose an optimal association at compile time rather than waiting for run-time and then solving the problem repeatedly.
-A more sophisticated version of this question, is known as the ``optimal Jacobian accumulation'' problem and is NP-complete \citep {Naumann2008OptimalJA}.
+A more sophisticated version of this question is known as the ``optimal Jacobian accumulation'' problem and is NP-complete \citep {Naumann2008OptimalJA}.
 
 Alternatively, for some kinds of problems we might want to choose a particular association for sequential composition.
 For instance, gradient-based optimization (including its use in deep learning) uses ``reverse-mode'' automatic differentiation (RAD), which is to say fully left-associated compositions.\notefoot{Is RAD always optimal for gradient problems?}
@@ -1344,8 +1348,15 @@ Compare \figref{magSqr-gradr} with the same example in \figreftwo{magSqr-adf}{ma
 
 The literature on automatic differentiation is vast, beginning with forward mode \citep{Wengert64} and later reverse mode \citep{Speelpenning:1980:CFP,Rall1981Automatic}, with many developments since \citep{Griewank89onAD,GriewankWalther2008EvalDerivs}.
 While most techniques and uses of AD have been directed at imperative programming, there are also variations for functional programs \citep{Karczmarczuk1999FunCoding,Karczmarczuk00adjointcodes,Karczmarczuk2001FunDif,Pearlmutter2007LMH,Pearlmutter2008RAF,Elliott2009-beautiful-differentiation}.
-These work in this paper differs in being phrased at the level of functions/morphisms and specified by functoriality without any allusion to or manipulation of graphs or other syntactic representations.\footnote{Of course the Haskell compiler itself manipulates syntax trees, and the compiler plugin that converts Haskell code to categorical form helps do so, but both are entirely domain-independent, with no any knowledge of or special support for differentiation or linear algebra \citep{Elliott-2017-compiling-to-categories}.}
-Moreover, the specifications in this paper are simple enough that the various forms of AD presented can be calculated into being (easily), and so are correct by construction.
+The work in this paper differs in being phrased at the level of functions/morphisms and specified by functoriality without any allusion to or manipulation of graphs or other syntactic representations.\footnote{Of course the Haskell compiler itself manipulates syntax trees, and the compiler plugin that converts Haskell code to categorical form helps do so, but both are entirely domain-independent, with no any knowledge of or special support for differentiation or linear algebra \citep{Elliott-2017-compiling-to-categories}.}
+Moreover, the specifications in this paper are simple enough that the various forms of AD presented can be calculated into being (easily)\notefoot{In the conference version, add a citation here to \secref{Proofs}.}, and so are correct by construction.
+
+\citet{Pearlmutter2008RAF} make the following observation:
+\begin{quotation}\noindent
+In this context, reverse-mode AD refers to a particular construction in which the primal data-flow graph is transformed to construct an adjoint graph that computes the sensitivity values. In the adjoint, the direction of the data-flow edges are reversed; addition nodes are replaced by fanout nodes; fanout nodes are replaced by addition nodes; and other nodes are replaced by multiplication by their linearizations. The main constructions of this paper can, in this context, be viewed as a method for constructing scaffolding that supports this adjoint computation.
+\end{quotation}
+The |Cont| and |Dual| category transformers described in \secreftwo{Reverse mode AD}{Gradients and duality} (shown in \figreftwo{cont}{asDual}) explain this ``adjoint graph'' construction.
+Data-flow edge reversal corresponds to the reversal of |(.)| (from |Category|), while fanout and addition correspond to |dup| and |jam| (from |ProductCat| and |CoproductPCat| respectively).
 
 Closely related to our choice of derivatives as linear maps and the categorical generalizations is the work of \citet{MacedoOliveira2013Typing}, also based on biproducts (though not addressing differentiation).
 That work uses natural numbers as categorical objects to capture the dimensions of vectors and matrices, while the current paper uses vector spaces themselves.
@@ -1789,7 +1800,6 @@ Given the definitions in \figref{asDual},
 \begin{itemize}
 \item Paper sections:
  \begin{itemize}
- \item Introduction
  \item Indexed biproducts
  \item Incremental evaluation
  \item Future work
