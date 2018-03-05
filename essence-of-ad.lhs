@@ -140,7 +140,7 @@ Another instance of generalized AD is automatic incremental evaluation of functi
 The accurate, efficient, and reliable computation of derivatives has become increasingly important over the last several years, thanks in large part to the successful use of \emph{backpropagation} in deep learning (multi-layer neural networks).
 Backpropagation is a specialization and independent invention of the \emph{reverse mode} of automatic differentiation (AD) and is used to automatically tune a parametric model to closely match observed data, using the more general \emph{gradient descent} (or \emph{stochastic} gradient descent) optimization algorithm \needcite.
 Deep learning and other gradient-based optimization problems typically rely on derivatives of functions with very high dimensional domains \needcite{} and a scalar codomain---exactly the conditions under which reverse-mode AD is much more efficient than forward-mode AD (by a factor proportional to the domain dimension).
-Unfortunately, while forward-mode AD (FAD) is easily understood and implemented \needcite, reverse-mode AD (FAD) and backpropagation have much more complicated explanations and implementations, involving mutation, graph construction and traversal, and ``tapes'' (sequences of reified assignments to be interpreted) \needcite.
+Unfortunately, while forward-mode AD (FAD) is easily understood and implemented \needcite, reverse-mode AD (FAD) and backpropagation have much more complicated explanations and implementations, involving mutation, graph construction and traversal, and ``tapes'' (sequences of reified assignments to be interpreted and also called ``traces'' or ``Wengert lists'') \needcite.
 The use of mutation, while motivated by efficiency concerns, makes parallel execution difficult and so undermines efficiency as well.
 The construction and interpretation (or compilation) of graphs and tapes also adds execution overhead.
 The importance of the RAD algorithm makes its current complicated and bulky implementations especially problematic.
@@ -163,6 +163,8 @@ Both levels have notions of operations, variables, and information flow.
 Both have notions of values and types of those values.
 Both have notions of parametrization.
 Both have execution models that must be understood.
+
+\mynote{Relate traditional, graph-centered DL frameworks to deep DSELs.}
 
 A much simpler and cleaner foundation for DL would be to have just the programming language, omitting the graphs/networks altogether.
 Since DL is about (mathematical) functions, one would want to choose a programming language that supported functions well, i.e., a functional language, or at least a language with strong functional features.
@@ -1364,7 +1366,11 @@ The idea of using data representations for functions (``defunctionalization'') w
 The notion of derivatives as linear maps is the basis of calculus on manifolds \cite{Spivak65} and was also used by \citet{Elliott2009-beautiful-differentiation}.
 The latter addressed only forward-mode AD but also included all orders of derivatives.
 
-\mynote{Other functional AD, especially reverse-mode.}
+While there are many forward-mode AD libraries for Haskell, reverse mode (RAD) has been much more difficult.
+The most successful implementations appears to be in the \emph{ad} library \citep{Kmett2010AD}.
+One RAD implementation there uses stable names \citep{PeytonJones99Stretching} and reification \citep{Gill2009TOS} to recover sharing information.
+Another maintains a Wengert list (or ``tape'') with the help of a reflection library \citep{Kiselyov2004FPI}.
+Both implementations rely on carefully crafted use of side effects.
 
 \mynote{
 Perhaps more about the following:
