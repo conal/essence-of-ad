@@ -70,6 +70,8 @@
 
 %% \markboth{...}{...}
 
+%% \title{The simple essence of automatic differentiation \\ (differentiable functional programming made easy)}
+\title{Differentiable functional programming made easy}
 \title{The simple essence of automatic differentiation}
 \date{Draft\footnote{In this draft, \mynote{red bracketed text} indicates notes to be addressed and eliminated as writing progresses.}~\ of \today}
 %% \institute[]{Target}
@@ -121,7 +123,7 @@
 
 Automatic differentiation (AD) is often presented in two forms: forward mode and reverse mode.
 Forward mode is quite simple to implement and package via operator overloading but is inefficient for many problems of practical interest such as deep learning and other uses of gradient-based optimization.
-Reverse mode (including its specialization, backpropagation) is much more efficient for these problems, but is also typically given much more complicated explanations and implementations, involving mutation, graph construction, and ``tapes''.
+Reverse mode (including its specialization, backpropagation) is much more efficient for these problems, but is also typically given much more complicated explanations and implementations.
 This talk develops a very simple specification and Haskell implementation for mode-independent AD based on the vocabulary of categories (generalized functions).
 Although the categorical vocabulary would be difficult to write in directly, one can instead write regular Haskell programs to be converted to this vocabulary automatically (via a compiler plugin) and then interpreted as differentiable functions.
 The result is direct, exact, and efficient differentiation with no notational overhead.
@@ -132,6 +134,64 @@ Another instance of generalized AD is automatic incremental evaluation of functi
 \end{abstract}
 
 \ifacm \maketitle \else \fi
+
+\sectionl{Introduction}
+
+The accurate, efficient, and reliable computation of derivatives has become increasingly important over the last several years, thanks in large part to the successful use of \emph{backpropagation} in deep learning (multi-layer neural networks).
+Backpropagation is a specialization and independent invention of the \emph{reverse mode} of automatic differentiation (AD) and is used to automatically tune a parametric model to closely match observed data, using the more general \emph{gradient descent} (or \emph{stochastic} gradient descent) optimization algorithm \needcite.
+Deep learning and other gradient-based optimization problems typically rely on derivatives of functions with very high dimensional domains \needcite{} and a scalar codomain---exactly the conditions under which reverse-mode AD is much more efficient than forward-mode AD (by a factor proportional to the domain dimension).
+Unfortunately, while forward-mode AD (FAD) is easily understood and implemented \needcite, reverse-mode AD (FAD) and backpropagation have much more complicated explanations and implementations, involving mutation, graph construction and traversal, and ``tapes'' (sequences of reified assignments to be interpreted) \needcite.
+The use of mutation, while motivated by efficiency concerns, makes parallel execution difficult and so undermines efficiency as well.
+The construction and interpretation (or compilation) of graphs and tapes also adds execution overhead.
+The importance of the RAD algorithm makes its current complicated and bulky implementations especially problematic.
+The increasingly large machine learning (and other optimization) problems being solved with RAD (via backpropagation) suggest the need to find more streamlined, efficient implementations, especially with the massive hardware parallelism now readily and inexpensively available in the form of graphics processors (GPUs) and FPGAs.
+
+Another difficulty in the practical application of AD in deep learning (DL) comes from the nature of many currently popular DL frameworks, including TensorFlow, Keras, \ldots \needcite.
+These frameworks are typically designed around the notion of a ``graph'' or ``network'' of interconnected nodes, each of which is a mathematical operation---a sort of data flow graph.
+Application programs construct these graphs \emph{explicitly}, creating nodes and connecting them to other nodes.
+After construction, the graphs must then be processed into a representation that is more efficient to execute, i.e., train and to evaluate.
+These graphs are essentially mathematical expressions with sharing, hence directed acyclic graphs (DAGs).
+This paradigm of graph construction, compilation, and execution bears a striking resemblance to what programmers and compilers do all the time:
+\begin{itemize}
+\item Programs are written by a human.
+\item The compiler or interpreter front-end parses the program into a DAG representation.
+\item The compiler back-end transforms the DAGs into a form efficient for execution.
+\item A human runs the result of compilation.
+\end{itemize}
+When using a typical DL framework, programmers experience this sequence of steps \emph{at two levels}: working (a) with their code and (b) with the graphs that their code generates.
+Both levels have notions of operations, variables, and information flow.
+Both have notions of values and types of those values.
+Both have notions of parametrization.
+Both have execution models that must be understood.
+
+A much simpler and cleaner foundation for DL would be to have just the programming language, omitting the graphs/networks altogether.
+Since DL is about (mathematical) functions, one would want to choose a programming language that supported functions well, i.e., a functional language, or at least a language with strong functional features.
+One might call this alternative ``differentiable functional programming''.
+In this paradigm, programmers directly defines their functions of interest, using the standard tools of functional programming, with the addition of a differentiation operator, whose meaning is as in traditional calculus, thanks to the simple and precise mathematical semantics of (pure) functional programs.
+(Since not all computable functions are differentiable, differentiation is partial.)
+
+How can we realize this vision of differentiable functional programming?
+One way is to create new languages, but doing so requires enormous effort to define and implement efficiently, and perhaps still more effort to evangelize.
+Alternatively, we might choose a suitable purely functional language like Haskell and then figure out how to add differentiation.
+The present paper embodies the latter choice, augmenting the popular Haskell compiler GHC \needcite{} with a plugin that converts standard Haskell code into categorical form to then be instantiated in any of a variety of categories, including differentiable functions \citep{Elliott-2017-compiling-to-categories}.
+
+This paper makes the following specific contributions:
+\begin{itemize}
+\item
+  Recast AD in categorical terms, defining a category of derivative-augmented functions, and specifying AD simply and precisely by requiring this augmentation to be a cartesian functor.
+\item
+  Calculate a correct-by-construction AD implementation from the functor specification.
+\item
+  Define derivatives abstractly as \emph{linear maps} rather than concretely as numbers, vectors, covectors, matrices, etc, handling higher-dimensional AD without the complexity of partial derivatives or indexing.
+\item
+  Generalize AD by replacing linear maps with an arbitrary cartesian category.
+  One application is automatic incrementalization of functional programs.
+\item
+  Define several AD variations, all stemming from different representations of linear maps: functions (satisfying linearity), composed representable functors (``generalized matrices''), continuation-based transformations of any other linear map representation, and dualized version of any linear map representation.
+  The latter two variations yield correct-by-construction implementations of reverse-mode AD that are much simpler than previously known and are composed from generally useful components.
+  In particular, the choice of dualized linear functions for gradient computations is particularly compelling in simplicity and efficiency.
+  It requires no matrix-level computation and is suitable for scalar codomains, as in the case of gradient-based optimization, e.g., for machine learning.
+\end{itemize}
 
 \sectionl{What's a derivative?}
 
@@ -868,8 +928,12 @@ The results are rendered in \figreftwo{magSqr-adf}{cosSinProd-adf}.
 \figp{
 \figone{magSqr-adf}{|adf magSqr|}}{
 \figone{cosSinProd-adf}{|adf cosSinProd|}}
-Note that the derivatives are (linear) functions, as depicted in boxes.
-Also note the sharing of work between the a function's result and its derivative in \figref{cosSinProd-adf}.\notefoot{Introduce the term ``primal'' early on and use it throughout.}
+Some remarks:
+\begin{itemize}
+\item The derivatives are (linear) functions, as depicted in boxes.
+\item Work between the a function's result (the ``primal'') and its derivative in \figref{cosSinProd-adf}
+\item The graphs shown here are used solely for visualizing functions before and after differentiation, playing no role in the programming interface or in the implementation of differentiation.
+\end{itemize}
 
 \sectionl{Programming as defining and solving algebra problems}
 
@@ -1300,6 +1364,8 @@ The idea of using data representations for functions (``defunctionalization'') w
 The notion of derivatives as linear maps is the basis of calculus on manifolds \cite{Spivak65} and was also used by \citet{Elliott2009-beautiful-differentiation}.
 The latter addressed only forward-mode AD but also included all orders of derivatives.
 
+\mynote{Other functional AD, especially reverse-mode.}
+
 \mynote{
 Perhaps more about the following:
 \begin{itemize}
@@ -1723,6 +1789,10 @@ Given the definitions in \figref{asDual},
  \item Future work
  \item Conclusions
  \end{itemize}
+\item Nested AD. I think the categorical approach in this paper can correctly handle nesting with ease and that the nesting problem indicates an unfortunate choice of abstraction together with non-rigorous specification and development.
+\item Possible title or subtitle: ``Differentiable functional programming made easy''.
+Note the two meanings: easy to implement correctly and efficiently, and easy to use.
+Perhaps save that title for another talk and paper (to write soon).
 \item Probably remove the |Additive| constraints in |Cocartesian|, along with the |Cocartesian (->)| instance.
       Otherwise, mention that the implementation does so.
       |CoterminalCat (->)| isn't what we need.
