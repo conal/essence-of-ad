@@ -44,8 +44,6 @@
 
 \else
 
-%% \zoink
-
 %% While editing/previewing, use 12pt and tiny margin.
 \documentclass[12]{article}  % fleqn,
 \usepackage[margin=0.12in]{geometry}  % 0.9in
@@ -1164,10 +1162,10 @@ For instance, gradient-based optimization (including its use in deep learning) u
 Reverse mode (including its specialization, backpropagation) is much more efficient for these problems, but is also typically given much more complicated explanations and implementations, involving mutation, graph construction, and ``tapes'' \needcite.
 One the main purposes of this paper is to demonstrate that RAD can be accounted for quite simply, while retaining or improving its efficiency of implementation.
 
-\sectionl{Reverse mode AD}
+\sectionl{Reverse-mode AD}
 
 The AD algorithm derived in \secref{Putting the pieces together} and generalized in \figref{GAD} can be thought of as a family of algorithms.
-For fully right-associated compositions, it becomes forward mode AD; for fully left-associated compositions, reverse mode AD; and for all other associations, various mixed modes.
+For fully right-associated compositions, it becomes forward mode AD; for fully left-associated compositions, reverse-mode AD; and for all other associations, various mixed modes.
 
 Let's now look at how to separate the associations used in formulating a differentiable function from the associations used to compose its derivatives.
 A practical reason for making this separation is that we want to do gradient-based optimization (calling for left association), while modular program organization leads to a mixture of compositions.
@@ -1230,13 +1228,13 @@ instance ScalarCat k a => ScalarCat (ContC k r) a where
 I think |ContC| is a generalization from |Monoid| to |Category|.
 Also generalizes to the contravariant Yoneda lemma.}}
 
-The instances for |ContC k r| constitute a simple algorithm for reverse mode automatic differentiation.
+The instances for |ContC k r| constitute a simple algorithm for reverse-mode automatic differentiation.
 \mynote{Contrast with other presentations.}
 
 \mynote{Explain better how |ContC k r| performs full left-association. Also, how to use it by applying to |id|.}
 
 %format adr = adf
-\figreftwo{magSqr-adr}{cosSinProd-adr} show the results of reverse mode AD via |ContC| corresponding to \figreftwo{magSqr}{cosSinProd} and \figreftwo{magSqr-adf}{cosSinProd-adf}
+\figreftwo{magSqr-adr}{cosSinProd-adr} show the results of reverse-mode AD via |ContC| corresponding to \figreftwo{magSqr}{cosSinProd} and \figreftwo{magSqr-adf}{cosSinProd-adf}
 \figp{
 \figoneW{0.40}{magSqr-adr}{|magSqr| in |GD (ContC ((-+>)) R)|}}{
 \figoneW{0.58}{cosSinProd-adr}{|cosSinProd| in |GD (ContC ((-+>)) R)|}}
@@ -1244,7 +1242,7 @@ The derivatives are represented as (linear) functions again, but reversed (mappi
 
 \sectionl{Gradients and duality}
 
-As a special case of reverse mode automatic differentiation, let's consider its use to compute \emph{gradients}, i.e., derivatives of functions with a scalar codomain.
+As a special case of reverse-mode automatic differentiation, let's consider its use to compute \emph{gradients}, i.e., derivatives of functions with a scalar codomain.
 This case is very important local minimization by means of gradient descent, e.g., as used in deep learning \needcite{}.
 
 Given a vector space |A| over a scalar field |s|, the \emph{dual} of |A| is |A :-* s|, i.e., the linear maps to the underlying field.
@@ -1258,11 +1256,11 @@ instance HasDot R R where dot = scale
 instance (HasDot s a, HasDot s b) => HasDot s (a :* b) where dot (u,v) = dot u ||| dot v
 \end{code}
 
-The |ContC k r| construction from \secref{Reverse mode AD} works for \emph{any} type/object |r|, so let's take |r| to be the scalar field |s|.
+The |ContC k r| construction from \secref{reverse-mode AD} works for \emph{any} type/object |r|, so let's take |r| to be the scalar field |s|.
 The internal representation of |ContC ((:-*)) s a b| is |(b :-* s) -> (a :-* s)|, which is isomorphic to |b -> a|.\notefoot{Maybe I don't need this isomorphism, and it suffices to consider those linear maps that do correspond to |dot u| for some |u|.}
 Call this representation the \emph{dual} (or ``opposite'') of |k|:
 %% %format Dual = Op
-%format (DualC (k)) = Dual"_{"k"}"
+%format (DualC k) = Dual"_{"k"}"
 \begin{code}
 newtype DualC k a b = Dual (b `k` a)
 \end{code}
@@ -1326,14 +1324,14 @@ Note, however, that |DualC k| involves no actual matrix computations unless |k| 
 In particular, we can simply use the category of linear functions |(-+>)|.%
 \notefoot{I don't think I've defined |a -+> b| yet.}
 
-\figreftwo{magSqr-gradr}{cos-xpytz-gradr} show the results of reverse mode AD via |GD (Dual (-+>))|.
-Compare \figref{magSqr-gradr} with the same example in \figreftwo{magSqr-adf}{magSqr-adr}.
+\figreftwo{magSqr-gradr}{cos-xpytz-gradr} show the results of reverse-mode AD via |GD (DualC (-+>))|.
+Compare \figref{magSqr-gradr} with\out{ the same example in} \figreftwo{magSqr-adf}{magSqr-adr}.
 %% \figp{
-%% \figoneW{0.40}{magSqr-gradr}{|magSqr :: GD (Dual (-+>)) R2 R|}}{
-%% \figoneW{0.56}{cos-xpytz-gradr}{|\ ((x,y),z) -> cos (x + y * z) :: GD (Dual (-+>)) R3 R|}}
+%% \figoneW{0.40}{magSqr-gradr}{|magSqr :: GD (DualC (-+>)) R2 R|}}{
+%% \figoneW{0.56}{cos-xpytz-gradr}{|\ ((x,y),z) -> cos (x + y * z) :: GD (DualC (-+>)) R3 R|}}
 \figp{
-\figoneW{0.40}{magSqr-gradr}{|magSqr| in |GD (Dual (-+>))|}}{
-\figoneW{0.56}{cos-xpytz-gradr}{|\ ((x,y),z) -> cos (x + y * z)| in |GD (Dual (-+>))|}}
+\figoneW{0.40}{magSqr-gradr}{|magSqr| in |GD (DualC (-+>))|}}{
+\figoneW{0.56}{cos-xpytz-gradr}{|\ ((x,y),z) -> cos (x + y * z)| in |GD (DualC (-+>))|}}
 
 
 \sectionl{Indexed biproducts}
@@ -1341,8 +1339,6 @@ Compare \figref{magSqr-gradr} with the same example in \figreftwo{magSqr-adf}{ma
 \sectionl{Incremental evaluation}
 
 \mynote{If I drop this section, remove also from the abstract.}
-
-\sectionl{Future work}
 
 \sectionl{Related work}
 
@@ -1355,8 +1351,14 @@ Moreover, the specifications in this paper are simple enough that the various fo
 \begin{quotation}\noindent
 In this context, reverse-mode AD refers to a particular construction in which the primal data-flow graph is transformed to construct an adjoint graph that computes the sensitivity values. In the adjoint, the direction of the data-flow edges are reversed; addition nodes are replaced by fanout nodes; fanout nodes are replaced by addition nodes; and other nodes are replaced by multiplication by their linearizations. The main constructions of this paper can, in this context, be viewed as a method for constructing scaffolding that supports this adjoint computation.
 \end{quotation}
-The |Cont| and |Dual| category transformers described in \secreftwo{Reverse mode AD}{Gradients and duality} (shown in \figreftwo{cont}{asDual}) explain this ``adjoint graph'' construction.
+The |Cont| and |Dual| category transformers described in \secreftwo{reverse-mode AD}{Gradients and duality} (shown in \figreftwo{cont}{asDual}) above explain this ``adjoint graph'' construction without involving graphs.
 Data-flow edge reversal corresponds to the reversal of |(.)| (from |Category|), while fanout and addition correspond to |dup| and |jam| (from |ProductCat| and |CoproductPCat| respectively).
+\citet{Pearlmutter2008RAF} further remark:
+\begin{quotation}\noindent
+The main technical difficulty to be faced is that reverse-mode AD must convert fanout (multiple use of a variable) in the untransformed code into addition in the reverse phase of the transformed code. We address this by expressing all straight-line code segments in A-normal form, which makes fanout lexically apparent. 
+\end{quotation}
+The categorical approach in this paper makes fanout easily apparent as well as appearances of |dup|, which are produced during translation from Haskell to categorical form \citep{Elliott-2017-compiling-to-categories} (via |(&&&)| as defined in \secref{Derived operations}).
+This translation is specified and implemented independently of AD.
 
 Closely related to our choice of derivatives as linear maps and the categorical generalizations is the work of \citet{MacedoOliveira2013Typing}, also based on biproducts (though not addressing differentiation).
 That work uses natural numbers as categorical objects to capture the dimensions of vectors and matrices, while the current paper uses vector spaces themselves.
@@ -1367,7 +1369,7 @@ Also sharing a categorical style is the work of \citep{Fong2017BackpropAF}, form
 That work, which also uses biproducts (in monoidal but not cartesian form), doesn't appear to be separable from the application to machine learning, and so would seem to complement this paper.
 Backpropagation is a specialization of AD to the context of machine learning made famous by \citet{Rumelhart1988backprop}, though discovered earlier by \citet{Linnainmaa1970MS}.
 
-The continuation transformation of \secref{Reverse mode AD} was inspired by Mitch Wand's work on continuation-based program transformation \citep{Wand80continuation-basedprogram}.
+The continuation transformation of \secref{reverse-mode AD} was inspired by Mitch Wand's work on continuation-based program transformation \citep{Wand80continuation-basedprogram}.
 He derived a variety of algorithms based on a single elegant technique: transform a simple recursive program into continuation-passing form, examine the continuations that arise, and find a data (rather than function) representation for them.
 Each such representation is a monoid, with its identity and associative operation corresponding to identity and composition of the continuations.
 Monoids are categories with only one object, but the technique extends to general categories.
@@ -1383,6 +1385,7 @@ One RAD implementation there uses stable names \citep{PeytonJones99Stretching} a
 Another maintains a Wengert list (or ``tape'') with the help of a reflection library \citep{Kiselyov2004FPI}.
 Both implementations rely on carefully crafted use of side effects.
 
+%if False
 \mynote{
 Perhaps more about the following:
 \begin{itemize}
@@ -1393,10 +1396,49 @@ Perhaps more about the following:
 \item \emph{Algebra of programming} \citep{BirddeMoor96:Algebra}.
 \end{itemize}
 }
+%endif
+
+\sectionl{Future work}
+
+\mynote{
+\begin{itemize}
+\item Analyze time and space performance, especially comparing the reverse-mode implementations in this paper (|GD (Cont s (-+>))| and |GD (DualC (-+>))|) with commonly used stateful implementations.
+\end{itemize}
+}
 
 \sectionl{Conclusions}
 
-\mynote{Include remarks on symbolic vs automatic differentiation.}
+%if False
+
+From my PEPM talk:
+\begin{itemize}
+\item Simple AD algorithm, specializing to forward, reverse, mixed.
+\item No graphs; no partial derivatives.
+\item One rule per combining form (|(.)| and |(***)|) and one for all linear operations (|id|, |exl|, |inlP|, etc).
+\item Reverse mode via simple, generally useful (beyond AD), categorical constructions.
+\item Generalizes to derivative categories other than linear maps.
+\item Differentiate regular Haskell code (via plugin).
+\end{itemize}
+
+%endif
+
+This paper develops a simple, mode-independent, AD algorithm (\secref{Putting the pieces together}), calculated from a simple, natural specification in terms of elementary category theory (functoriality).
+It then generalizes the algorithm, replacing linear maps (as derivatives) by an arbitrary biproduct category (\figref{GAD}).
+Specializing this general algorithm to two well-known categorical constructions (\figreftwo{cont}{asDual}), also calculated, yields reverse-mode AD (RAD) for general derivatives and for gradients.
+These RAD implementations are far simpler than any we have seen.
+In contrast to common approaches to AD, the algorithms described here involve no graphs, tapes, variables, partial derivatives, or mutation, and are usable directly from an existing programming language without the need for new data types or programming style (thanks to use of a compiler plugin that knows nothing about AD).
+
+AD is typically said to be about the chain rule for sequential composition (\thmRef{compose}) \needcite.
+This paper rounds out the story with two more rules: one for parallel composition and one for all linear operations (\thmRefTwo{cross}{linear}).
+
+AD is also typically presented in opposition to symbolic differentiation (SD), which is described as applying differentiation rules symbolically.
+The main criticism is that SD can blow up expressions, resulting a great deal of redundant work \needcite{}.
+Secondly, SD requires implementation of symbolic manipulation as in a computer algebra system.
+In contrast, AD is more of a numeric method and can retain the complexity of the original function (within a small constant factor) if carefully implemented, as in RAD.
+The approach explored in this paper suggests a different perspective: \emph{AD is SD done by a compiler.}
+Compilers already work symbolically and already take preserve sharing in computations.
+
+\mynote{Return to the theme of machine learning.}
 
 \appendix
 
