@@ -82,8 +82,6 @@
 
 %% \nc\wow\emph
 
-\nc{\der}{\mathop{\mathcal{D}}}
-
 \newtheorem{theorem}{Theorem}%[section]
 \nc\thmLabel[1]{\label{theorem:#1}}
 \nc\thmRef[1]{Theorem \ref{theorem:#1}}
@@ -242,9 +240,9 @@ The numbers, vectors, matrices, etc mentioned above are all different \emph{repr
 Here, |a| and |b| must be vector spaces that share a common underlying field.
 Written as a Haskell-style type signature,
 
-%% %format der = "\mathcal{D}"
-%% %format der = "{}\der{} "
-%format der = "\mathop{\mathcal{D}}"
+%% %format der = "\mathop{\mathcal{D}}"
+%% %format der = "\raisebox{0pt}{$\mathcal{D}$}"
+%format der = "\mathcal{D}"
 
 \begin{code}
 der :: (a -> b) -> (a -> (a :-* b))
@@ -331,9 +329,6 @@ f *** g = \ (a,b) -> (f a, g b)
 \end{code}
 We will sometimes refer to the |(***)| operation as ``cross'' \citep{Gibbons2002Calculating}.
 
-%% %% Move to the later introduction of |(&&&)|.
-%% Note that it can be used to give a terser specification: |ad f = f &&& der f|.
-
 While the derivative of the sequential composition is a sequential composition of derivatives, the derivative of a parallel composition is a parallel composition of the derivatives \citep[variant of Theorem 2-3 (3)]{Spivak65}:\notefoot{Is there a name for this rule? I've never seen it mentioned.}
 \begin{theorem}[cross rule] \thmLabel{cross}
 $$|der (f *** g) (a,b) == der f a *** der g b|$$
@@ -345,48 +340,6 @@ If |f :: a -> c| and |g :: b -> d|, then |der f a :: a :-* c| and |der g b :: b 
 |ad| is compositional with respect to |(***)|. Specifically,
 $$|ad (f *** g) (a,b) == let { (c,f') = ad f a ; (d,g') = ad g b } in ((c,d), f' *** g')|$$
 \end{corollary}
-
-%if False
-
-\subsectionl{Products in the domain}
-
-There is another, dual, form of composition as well, defined as follows and which we will pronounce ``join'':
-\begin{code}
-(|||) :: Additive c => (a -> c) -> (b -> c) -> (a :* b -> c)
-f ||| g = \ a -> f a + g a
-\end{code}
-Where |(&&&)| combines two functions with the same domain and pairs their results, |(###)| combines two functions with the same codomain and \emph{adds} their results.\footnote{\mynote{Move this commentary to a later place when I've introduced categories, and cite \cite{Gibbons2002Calculating}.}
-
-You may have expected a different type and definition, using \emph{sums} instead of products:
-\begin{code}
-(|||) :: (a -> c) -> (b -> c) -> (a :+ b -> c)
-(f ||| g) (Left   a) = f a
-(f ||| g) (Right  b) = g b
-\end{code}
-More generally, |(&&&)| and |(###)| work with categorical products and coproducts.
-The categories involved in this paper (functions on additive types, linear maps, and differentiable functions) are all \emph{biproduct} categories, where categorical products and coproducts coincide \needcite{}.
-}
-
-Happily, there is a differentiation rule for |(###)| as well, having the same poetry as the rules for |(.)| and |(&&&)|, namely that the derivative of a join is a join of the derivatives:\notefoot{Prove, or cite \citep{Spivak65}.}
-\begin{theorem}[join rule] \thmLabel{join}
-$$|der (f ### g) (a,b) = der f a ### der g b|$$
-\end{theorem}
-If |f :: a -> c| and |g :: b -> c|, then |der f a :: a :-* c| and |der g b :: b :-* c|, so |der f a ### der g b :: a :* b :-* c|, as needed.
-
-\thmRef{join} is exactly what we need to construct |ad (f ### g)| compositionally:
-\begin{corollary} \corLabel{join}
-|ad| is compositional with respect to |(###)|. Specifically,
-\begin{code}
-    ad (f ||| g) (a,b)
-==  ((f ||| g) (a,b), der (f ||| g) (a,b))                                               -- definition of |ad|
-==  ((f a + g b), der (f ||| g) (a,b))                                                   -- definition of |(###)|
-==  ((f a + g b), der f a ||| der g b)                                                   -- \thmRef{join}
-==  let { (c,f') = (f a, der f a) ; (d,g') = (g b, der g b) } in ((c + d), (f' ||| g'))  -- refactoring
-==  let { (c,f') = ad f a ; (d,g') = ad g b } in (c + d, (f' ||| g'))                    -- definition of |ad|
-\end{code}
-\end{corollary}
-
-%endif
 
 An important point left implicit in the discussion above is that sequential and parallel composition preserve linearity.
 This property is what makes it meaningful to use these forms to combine derivatives, i.e., linear maps, as we've done above.
@@ -456,7 +409,8 @@ The category laws state that
 %% %format `k` = "\leadsto"
 %% %format k = "(\leadsto)"
 
-Although Haskell's type system is not expressive enough to capture the category laws explicitly, we can express the two required operations as a Haskell type class:%
+Although Haskell's type system cannot capture the category laws explicitly, we can express the two required operations as a Haskell type class:%
+\notefoot{To save space, present each category class with the `(->)` to the right, as in \citet{Elliott-2017-compiling-to-categories}.}
 \out{\notefoot{Mention that Haskell doesn't really support infix type constructor variables like |(~>)|.}}
 \begin{code}
 class Category k where
@@ -725,14 +679,19 @@ instance ProductCat D where
 %format inrP = inr
 %format jamP = jam
 
-Cartesian categories have a dual, known as \emph{cocartesian categories}, with each cartesian operation having a mirror image with morphisms reversed (swapping domain and codomain):\notefoot{Mention sums again.}
+%% %format -+> = ->
+
+Cartesian categories have a dual, known as \emph{cocartesian categories}, with each cartesian operation having a mirror image with morphisms reversed (swapping domain and codomain):
+In general, each category can gave its own notion of coproduct, e.g., sum (disjoint union) types for the |(->)| category.
+In this paper, however, coproducts will be pairs (cartesian \emph{products}, coinciding with the categorical products), i.e., we'll be using biproduct categories \citep{MacedoOliveira2013Typing}:
 \begin{code}
 class Category k => CoproductPCat k where
   inl  ::  Additive b => a `k` (Prod k a b)
   inr  ::  Additive a => b `k` (Prod k a b)
   jam  ::  Additive c => (Prod k a a) `k` a
 \end{code}
-Unlike |Category| and |ProductCat|, we've had to add an additivity requirement (having a notion of addition and corresponding identity) to the types involved, in order to have an instance for functions:\notefoot{Alternatively, skip the instance for |(->)| and instead begin in a category |(-+>)| of functions on additive types.\out{I guess I'll have to change the category used in |ContC k r| from |(->)| to |(-+>)|.}}
+Unlike |Category| and |ProductCat|, we've had to add an additivity requirement (having a notion of addition and corresponding identity) to the types involved, in order to have an instance for functions:%
+%% \notefoot{Alternatively, skip the instance for |(->)| and instead begin in a category |(-+>)| of functions on additive types.\out{I guess I'll have to change the category used in |ContC k r| from |(->)| to |(-+>)|.}}
 %format zero = 0
 %format ^+^ = +
 \begin{code}
@@ -749,13 +708,21 @@ F inr  == inr
 F jam  == jam
 \end{code}
 \end{closerCodePars}%
-From the specification that |adf| is a cocartesian functor and the linearity of |inl|, |inr|, and |jam|, we can derive a correct-by-construction |CoproductPCat| instance for differentiable functions:
+From the specification that |adf| is a cocartesian functor and the linearity of |inl|, |inr|, and |jam|, we can derive a correct-by-construction |CoproductPCat| instance for differentiable functions:%
 \begin{code}
 instance CoproductPCat D where
   inl  = linearD inl
   inr  = linearD inr
   jam  = linearD jam
 \end{code}
+
+The translation from Haskell to categorical form \citep{Elliott-2017-compiling-to-categories} does not use |CoproductPCat|, so the |CoproductPCat D| instance is not used.
+In fact, |Additive| constraints in the |CoproductPCat| class are only for concise presentation.
+The actual implementation omits these constraints in the |CoproductPCat| class definition and has no |CoproductPCat (->)| instance.
+Instead, there is a category |(-+>)| of additive functions, defined simply as a |newtype| wrapper around regular functions.
+The |CoproductPCat (-+>)| instance is a wrapped version of the |CoproductPCat (->)| instance shown above.
+The full |Category| class includes an associated constraint \cite{Bolingbroke2011CK} restricting the types involved in all categorical operations, and defines this constraint for |(-+>)| to be |Additive|.
+As a reminder of this distinction, ``|(-+>)|'' is used below where regular functions are used to represent linear (and hence additive) functions.
 
 \subsectionl{Derived operations}
 
@@ -766,7 +733,7 @@ f &&& g = (f *** g) . dup
 \end{code}
 The |(&&&)| operation is sometimes called ``fork'' \citep{Gibbons2002Calculating} and is particularly useful for translating from the $\lambda$-calculus to categorical form \citep[Section 3]{Elliott-2017-compiling-to-categories}.
 
-Dually, |jam| lets us define a second alternative to |(***)| for two morphisms sharing a \emph{codomain}:\notefoot{Do I use |(###)|?}
+Dually, |jam| lets us define a second alternative to |(***)| for two morphisms sharing a \emph{codomain}:
 \begin{code}
 (|||) :: Cocartesian k => (c `k` a) -> (d `k` a) -> ((Prod k c d) `k` a)
 f ||| g = jam . (f +++ g)
@@ -810,11 +777,11 @@ f `plusC` g = jamP . (f *** g) . dup
 
 \mynote{Relate |zeroC| and |plusC| to existing vocabulary in other ways as well.}
 
-\mynote{Perhaps replace this section with a remark and reference to \citet{MacedoOliveira2013Typing}.}
+\mynote{Perhaps replace this section with a remark and reference to \citet{MacedoOliveira2013Typing}. Otherwise, introduce |TerminalCat| and |CoterminalCat|.}
 
 \subsectionl{Numeric operations}
 
-So far, the vocabulary we've considered comprises linear functions and combining forms (|(.)|, |(&&&)|, and |(###)|) that preserve linearity.
+So far, the vocabulary we've considered comprises linear functions and combining forms (|(.)| and |(***)|) that preserve linearity.
 To make differentiation interesting, we'll need some non-linear primitives as well.
 Let's now add these primitives, while continuing to derive correct implementations from simple, regular specifications in terms of structure preservation.
 We'll define a collection of interfaces for numeric operations, roughly imitating Haskell's numeric type class hierarchy \needcite.
@@ -846,17 +813,17 @@ instance Num a => NumCat (->) a where
   ...
 \end{code}
 
-Differentiation rules for these operations are part of basic differential calculus:
+Differentiation rules for these operations are part of basic differential calculus:\footnote{These conventional differentiation rules treat derivatives as numbers rather than linear maps.}
 \begin{code}
 der (negate u) == negate (der u)
-der (u + v) == der u + der v
+der (u  +  v) == der u + der v
 der (u * v) == u * der v + v * der u
 \end{code}
-This conventional form is unnecessarily complex, as each of these rules involves not just a numeric operation, but also the chain rule itself.
+This conventional form is unnecessarily complex, as each of these rules involves not just a numeric operation, but also an application of the chain rule.
 This form is also imprecise about the nature of |u| and |v|.
-If they are functions, then one needs to explain arithmetic on functions; and if they are not functions, then differentiation of non-functions needs explanation.
+If they are functions, then one needs to explain arithmetic on functions; and if they are not functions, then differentiation of non-functions needs explanation.\out{\footnote{Arithmetic on functions is usually defined pointwise, e.g., $u + v = \ t -> u t + v t$.}}
 
-A simpler presentation is to remove the arguments and talk about differentiating the primitive operations directly.
+A precise and simpler presentation is to remove the arguments and talk about differentiating the primitive operations directly.
 We already have the chain rule to account for context, so we do not need to involve it in every numeric operation.
 Since negation and (uncurried) addition are linear, we already know how to differentiate them.
 Multiplication is a little more involved \citep[Theorem 2-3 (2)]{Spivak65}:
@@ -869,7 +836,7 @@ der f (a,b) = \ (da,db) -> f (da,b) + f (a,db)
 \end{code}
 }
 To make the linearity more apparent, and to prepare for variations later in this paper, let's now rephrase |der mulC| without using lambda directly.
-Just as |Category|, |Cartesian|, |Cocartesian|, |NumCat|, etc generalize operations beyond functions, it will also be handy to generalize scaling as well:
+Just as |Category|, |Cartesian|, |Cocartesian|, |NumCat|, etc generalize operations beyond functions, it will also be handy to generalize scalar multiplication as well:
 %format ScalarCat = Scalable
 \begin{code}
 class ScalarCat k a where
@@ -958,6 +925,8 @@ These algebra problems always have a particular stylized form, namely that the o
 The result of this recipe is not quite an implementation of our homomorphic specification, which may after all be non-computable.
 Rather, it gives a computable alternative that is nearly as useful: if the input to the specified conversion is expressed in vocabulary of the chosen algebraic abstraction, then a re-interpretation of that vocabulary in the new data type is the result of the (possibly non-computable) specification.
 Furthermore, if we can \emph{automatically} convert conventionally written functional programs into the chosen algebraic vocabulary (as in \citep{Elliott-2017-compiling-to-categories}), then those programs can be re-interpreted to compute the desired specification.
+
+\mynote{Relate to \citet{BirddeMoor96:Algebra} and maybe \citet{Elliott2009-type-class-morphisms-TR}.}
 
 \sectionl{Generalizing automatic differentiation}
 
@@ -1105,7 +1074,7 @@ class HasV s t where
   unV  :: V s t s -> t
 \end{code}
 %format Double = R
-Some |HasV| instances (vector representations and conversions) are shown in \figref{HasV instances}.
+Some instances are shown in \figref{HasV instances}.
 Note that products are represented as functor products, and uses of existing functors such as length-typed vectors \citep{vector-sized} are represented by functor compositions.
 \begin{figure}
 \begin{minipage}[b]{0.31\textwidth}
@@ -1139,17 +1108,11 @@ instance (HasV s b, KnownNat n) => HasV s (Vector n b) where
 \caption{Some ``vector'' representations}
 \figlabel{HasV instances}
 \end{figure}
-Finally, one must define the standard functionality for linear maps in the form of instances of the following form, whose details are left as an exercise for the reader:\footnote{Hint: begin by defining |lfun :: LC s a b -> (a -+> b)| (using |toV| and |unV|), and a specification that |lfun| is a functor, monoidal functor, etc.
+Finally, one must define the standard functionality for linear maps in the form of instances of |Category|, |MonoidalPCat|, |ProductCat|, |CoproductPCat|, and |ScalarCat|.
+Details are left as an exercise for the reader.\footnote{Hint: begin by defining |lfun :: LC s a b -> (a -+> b)| (using |toV| and |unV|), and a specification that |lfun| is a functor, monoidal functor, etc.
 The operations of matrix/vector multiplication (representing linear map application) and matrix/matrix multiplication (representing linear map composition) are easily implemented in terms of standard functional programming maps, zips, and folds.}
-\begin{code}
-instance Category       (LC s)    where ...
-instance MonoidalPCat   (LC s)    where ...
-instance ProductCat     (LC s)    where ...
-instance CoproductPCat  (LC s)    where ...
-instance ScalarCat      (LC s) s  where ...
-\end{code}
 
-\mynote{Mention upcoming categorical generalizations, which rely on \emph{indexed} biproducts.}
+%% \mynote{Mention upcoming categorical generalizations, which rely on \emph{indexed} biproducts.}
 
 \sectionl{Efficiency of composition}
 
@@ -1263,7 +1226,7 @@ instance HasDot R R where dot = scale
 instance (HasDot s a, HasDot s b) => HasDot s (a :* b) where dot (u,v) = dot u ||| dot v
 \end{code}
 
-The |ContC k r| construction from \secref{reverse-mode AD} works for \emph{any} type/object |r|, so let's take |r| to be the scalar field |s|.
+The |ContC k r| construction from \secref{Reverse-mode AD} works for \emph{any} type/object |r|, so let's take |r| to be the scalar field |s|.
 The internal representation of |ContC ((:-*)) s a b| is |(b :-* s) -> (a :-* s)|, which is isomorphic to |b -> a|.\notefoot{Maybe I don't need this isomorphism, and it suffices to consider those linear maps that do correspond to |dot u| for some |u|.}
 Call this representation the \emph{dual} (or ``opposite'') of |k|:
 %% %format Dual = Op
@@ -1328,8 +1291,7 @@ The derived operations are also dualized:
 Recall from \secref{Matrices}, that |scale| forms $1 \times 1$ matrices, while |(###)| and |(&&&)| correspond to horizontal and vertical juxtaposition, respectively.
 Thus, from a matrix perspective, duality is \emph{transposition}, turning an $m \times n$ matrix into an $n \times m$ matrix.
 Note, however, that |DualC k| involves no actual matrix computations unless |k| does.
-In particular, we can simply use the category of linear functions |(-+>)|.%
-\notefoot{I don't think I've defined |a -+> b| yet.}
+In particular, we can simply use the category of linear functions |(-+>)|.
 
 \figreftwo{magSqr-gradr}{cos-xpytz-gradr} show the results of reverse-mode AD via |GD (DualC (-+>))|.
 Compare \figref{magSqr-gradr} with\out{ the same example in} \figreftwo{magSqr-adf}{magSqr-adr}.
@@ -1358,7 +1320,7 @@ Moreover, the specifications in this paper are simple enough that the various fo
 \begin{quotation}\noindent
 In this context, reverse-mode AD refers to a particular construction in which the primal data-flow graph is transformed to construct an adjoint graph that computes the sensitivity values. In the adjoint, the direction of the data-flow edges are reversed; addition nodes are replaced by fanout nodes; fanout nodes are replaced by addition nodes; and other nodes are replaced by multiplication by their linearizations. The main constructions of this paper can, in this context, be viewed as a method for constructing scaffolding that supports this adjoint computation.
 \end{quotation}
-The |Cont| and |Dual| category transformers described in \secreftwo{reverse-mode AD}{Gradients and duality} (shown in \figreftwo{cont}{asDual}) above explain this ``adjoint graph'' construction without involving graphs.
+The |Cont| and |Dual| category transformers described in \secreftwo{Reverse-mode AD}{Gradients and duality} (shown in \figreftwo{cont}{asDual}) above explain this ``adjoint graph'' construction without involving graphs.
 Data-flow edge reversal corresponds to the reversal of |(.)| (from |Category|), while fanout and addition correspond to |dup| and |jam| (from |ProductCat| and |CoproductPCat| respectively).
 \citet{Pearlmutter2008RAF} further remark:
 \begin{quotation}\noindent
@@ -1376,7 +1338,7 @@ Also sharing a categorical style is the work of \citep{Fong2017BackpropAF}, form
 That work, which also uses biproducts (in monoidal but not cartesian form), doesn't appear to be separable from the application to machine learning, and so would seem to complement this paper.
 Backpropagation is a specialization of AD to the context of machine learning made famous by \citet{Rumelhart1988backprop}, though discovered earlier by \citet{Linnainmaa1970MS}.
 
-The continuation transformation of \secref{reverse-mode AD} was inspired by Mitch Wand's work on continuation-based program transformation \citep{Wand80continuation-basedprogram}.
+The continuation transformation of \secref{Reverse-mode AD} was inspired by Mitch Wand's work on continuation-based program transformation \citep{Wand80continuation-basedprogram}.
 He derived a variety of algorithms based on a single elegant technique: transform a simple recursive program into continuation-passing form, examine the continuations that arise, and find a data (rather than function) representation for them.
 Each such representation is a monoid, with its identity and associative operation corresponding to identity and composition of the continuations.
 Monoids are categories with only one object, but the technique extends to general categories.
@@ -1391,6 +1353,8 @@ The most successful implementations appears to be in the \emph{ad} library \cite
 One RAD implementation there uses stable names \citep{PeytonJones99Stretching} and reification \citep{Gill2009TOS} to recover sharing information.
 Another maintains a Wengert list (or ``tape'') with the help of a reflection library \citep{Kiselyov2004FPI}.
 Both implementations rely on carefully crafted use of side effects.
+
+\mynote{Maybe relate the methodology of \secref{Programming as defining and solving algebra problems} to \citet{BirddeMoor96:Algebra} and \citet{Elliott2009-type-class-morphisms-TR}.}
 
 %if False
 \mynote{
@@ -1850,6 +1814,7 @@ Given the definitions in \figref{asDual},
 \item Possible title or subtitle: ``Differentiable functional programming made easy''.
 Note the two meanings: easy to implement correctly and efficiently, and easy to use.
 Perhaps save that title for another talk and paper (to write soon).
+A quick web search turns up \href{http://www.robots.ox.ac.uk/~gunes/assets/pdf/baydin-2016-slides-functionallondoners.pdf}{a use of this term}.
 \item Probably remove the |Additive| constraints in |Cocartesian|, along with the |Cocartesian (->)| instance.
       Otherwise, mention that the implementation does so.
       |CoterminalCat (->)| isn't what we need.
