@@ -135,8 +135,8 @@ Another instance of generalized AD is automatic incremental evaluation of functi
 
 \sectionl{Introduction}
 
-The accurate, efficient, and reliable computation of derivatives has become increasingly important over the last several years, thanks in large part to the successful use of \emph{backpropagation} in deep learning (multi-layer neural networks).
-Backpropagation is a specialization and independent invention of the \emph{reverse mode} of automatic differentiation (AD) and is used to automatically tune a parametric model to closely match observed data, using the more general \emph{gradient descent} (or \emph{stochastic} gradient descent) optimization algorithm \needcite.
+The accurate, efficient, and reliable computation of derivatives has become increasingly important over the last several years, thanks in large part to the successful use of \emph{backpropagation} in deep learning (multi-layer neural networks) \citep[Section 6.5]{Goodfellow2016DL}.
+Backpropagation is a specialization and independent invention of the \emph{reverse mode} of automatic differentiation (AD) and is used to automatically tune a parametric model to closely match observed data, using the more general \emph{gradient descent} (or \emph{stochastic} gradient descent) optimization algorithm.
 Deep learning and other gradient-based optimization problems typically rely on derivatives of functions with very high dimensional domains \needcite{} and a scalar codomain---exactly the conditions under which reverse-mode AD is much more efficient than forward-mode AD (by a factor proportional to the domain dimension).
 Unfortunately, while forward-mode AD (FAD) is easily understood and implemented \needcite, reverse-mode AD (FAD) and backpropagation have much more complicated explanations and implementations, involving mutation, graph construction and traversal, and ``tapes'' (sequences of reified assignments to be interpreted and also called ``traces'' or ``Wengert lists'') \needcite.
 The use of mutation, while motivated by efficiency concerns, makes parallel execution difficult and so undermines efficiency as well.
@@ -144,8 +144,8 @@ The construction and interpretation (or compilation) of graphs and tapes also ad
 The importance of the RAD algorithm makes its current complicated and bulky implementations especially problematic.
 The increasingly large machine learning (and other optimization) problems being solved with RAD (via backpropagation) suggest the need to find more streamlined, efficient implementations, especially with the massive hardware parallelism now readily and inexpensively available in the form of graphics processors (GPUs) and FPGAs.
 
-Another difficulty in the practical application of AD in deep learning (DL) comes from the nature of many currently popular DL frameworks, including TensorFlow, Keras, \ldots \needcite.
-These frameworks are typically designed around the notion of a ``graph'' or ``network'' of interconnected nodes, each of which is a mathematical operation---a sort of data flow graph.
+Another difficulty in the practical application of AD in deep learning (DL) comes from the nature of many currently popular DL frameworks, including Theano, TensorFlow, Keras, Torch, MXNet, \mynote{\ldots} \needcite.
+These frameworks are designed around the notion of a ``graph'' or ``network'' of interconnected nodes, each of which is a mathematical operation---a sort of data flow graph.
 Application programs construct these graphs \emph{explicitly}, creating nodes and connecting them to other nodes.
 After construction, the graphs must then be processed into a representation that is more efficient to execute, i.e., train and to evaluate.
 These graphs are essentially mathematical expressions with sharing, hence directed acyclic graphs (DAGs).
@@ -225,7 +225,7 @@ Since once can think of scalars as a special case of vectors, and scalar multipl
 When we turn our attention to higher derivatives (which are derivatives of derivatives), however, the situation get more complicated, and we need yet higher-dimensional representations, with correspondingly more complex chain rules.
 
 Fortunately, there is a single, elegant generalization of differentiation with a correspondingly simple chain rule.
-First, reword Definition \ref{eq:scalar-deriv} above to say that |f' x| is the unique |v :: Rn| such that\footnote{For clarity, throughout this paper we will use ``|A = B|'' to mean ``|A| is defined as |B|'' and ``|==|'' to mean (more broadly) that ``|A| is equal to |B|'', using the former to introduce |A|, and the latter to assert that a well-defined statement of equality is in fact true.}
+First, reword Definition \ref{eq:scalar-deriv} above to say that |f' x| is the unique |v :: Rn| such that\footnote{For clarity, throughout this paper we will use ``|A = B|'' to mean ``|A| is defined as |B|'' and ``|==|'' to mean (more broadly) that ``|A| is equal to |B|''. The former introduces |A|, while the latter asserts that a well-defined statement of equality is in fact true.}
 $$ |lim(eps -> 0)(frac(f (x+eps) - f x) eps) - v == 0| $$
 or (equivalently)
 $$ |lim(eps -> 0)(frac(f (x+eps) - (f x + eps *^ v)) eps) == 0|. $$
@@ -931,7 +931,7 @@ The results are rendered in \figreftwo{magSqr-adf}{cosSinProd-adf}.
 Some remarks:
 \begin{itemize}
 \item The derivatives are (linear) functions, as depicted in boxes.
-\item Work between the a function's result (the ``primal'') and its derivative in \figref{cosSinProd-adf}
+\item Work is shared between the a function's result (the ``primal'') and its derivative in \figref{cosSinProd-adf}
 \item The graphs shown here are used solely for visualizing functions before and after differentiation, playing no role in the programming interface or in the implementation of differentiation.
 \end{itemize}
 
@@ -1403,39 +1403,31 @@ Perhaps more about the following:
 \mynote{
 \begin{itemize}
 \item Analyze time and space performance, especially comparing the reverse-mode implementations in this paper (|GD (Cont s (-+>))| and |GD (DualC (-+>))|) with commonly used stateful implementations.
+\item Other applications of generalized AD besides differentiation (in the calculus sense).
+What does generalized AD mean in these cases?
+Recall that the original specification in \secref{Categories} was in terms of mathematical differentiation.
 \end{itemize}
 }
 
 \sectionl{Conclusions}
-
-%if False
-
-From my PEPM talk:
-\begin{itemize}
-\item Simple AD algorithm, specializing to forward, reverse, mixed.
-\item No graphs; no partial derivatives.
-\item One rule per combining form (|(.)| and |(***)|) and one for all linear operations (|id|, |exl|, |inlP|, etc).
-\item Reverse mode via simple, generally useful (beyond AD), categorical constructions.
-\item Generalizes to derivative categories other than linear maps.
-\item Differentiate regular Haskell code (via plugin).
-\end{itemize}
-
-%endif
 
 This paper develops a simple, mode-independent, AD algorithm (\secref{Putting the pieces together}), calculated from a simple, natural specification in terms of elementary category theory (functoriality).
 It then generalizes the algorithm, replacing linear maps (as derivatives) by an arbitrary biproduct category (\figref{GAD}).
 Specializing this general algorithm to two well-known categorical constructions (\figreftwo{cont}{asDual}), also calculated, yields reverse-mode AD (RAD) for general derivatives and for gradients.
 These RAD implementations are far simpler than any we have seen.
 In contrast to common approaches to AD, the algorithms described here involve no graphs, tapes, variables, partial derivatives, or mutation, and are usable directly from an existing programming language without the need for new data types or programming style (thanks to use of a compiler plugin that knows nothing about AD).
+Only the simple essence remains.
 
 AD is typically said to be about the chain rule for sequential composition (\thmRef{compose}) \needcite.
 This paper rounds out the story with two more rules: one for parallel composition and one for all linear operations (\thmRefTwo{cross}{linear}).
+Parallel composition is usually left implicit in the special-case treatment of a collection of non-unary operations, such as addition, multiplication, division, and dot products.
+With explicit, general support for parallel composition, all operations are on equal footing, regardless of arity (as illustrated in \figref{GAD}).
 
 AD is also typically presented in opposition to symbolic differentiation (SD), which is described as applying differentiation rules symbolically.
 The main criticism is that SD can blow up expressions, resulting a great deal of redundant work \needcite{}.
 Secondly, SD requires implementation of symbolic manipulation as in a computer algebra system.
 In contrast, AD is more of a numeric method and can retain the complexity of the original function (within a small constant factor) if carefully implemented, as in RAD.
-The approach explored in this paper suggests a different perspective: \emph{AD is SD done by a compiler.}
+The approach explored in this paper suggests a different perspective: \emph{automatic differentiation is symbolic differentiation done by a compiler.}
 Compilers already work symbolically and already take preserve sharing in computations.
 
 \mynote{Return to the theme of machine learning.}
@@ -1844,9 +1836,8 @@ Given the definitions in \figref{asDual},
  \begin{itemize}
  \item Indexed biproducts
  \item Incremental evaluation
- \item Future work
- \item Conclusions
  \end{itemize}
+\item Define and use |(-+>)|.
 \item Nested AD. I think the categorical approach in this paper can correctly handle nesting with ease and that the nesting problem indicates an unfortunate choice of abstraction together with non-rigorous specification and development.
 \item Possible title or subtitle: ``Differentiable functional programming made easy''.
 Note the two meanings: easy to implement correctly and efficiently, and easy to use.
