@@ -68,8 +68,9 @@
 
 %% \markboth{...}{...}
 
-%% \title{The simple essence of automatic differentiation \\ (differentiable functional programming made easy)}
-\title{Differentiable functional programming made easy}
+%% \title{The simple essence of automatic differentiation --- or \\ {Differentiable functional programming made easy}}
+%% \title{Differentiable functional programming made easy \\ or \\ The simple essence of automatic differentiation}
+%% \title{Differentiable functional programming made easy}
 \title{The simple essence of automatic differentiation}
 \date{Draft\footnote{In this draft, \mynote{red bracketed text} indicates notes to be addressed and eliminated as writing progresses.}~\ of \today}
 %% \institute[]{Target}
@@ -135,16 +136,16 @@ Another instance of generalized AD is automatic incremental evaluation of functi
 
 \sectionl{Introduction}
 
-The accurate, efficient, and reliable computation of derivatives has become increasingly important over the last several years, thanks in large part to the successful use of \emph{backpropagation} in deep learning (multi-layer neural networks) \citep[Section 6.5]{Goodfellow2016DL}.
+The accurate, efficient, and reliable computation of derivatives has become increasingly important over the last several years, thanks in large part to the successful use of \emph{backpropagation} in machine learning, including multi-layer neural networks (``deep learning'') \citep[Section 6.5]{Goodfellow2016DL}.
 Backpropagation is a specialization and independent invention of the \emph{reverse mode} of automatic differentiation (AD) and is used to automatically tune a parametric model to closely match observed data, using the more general \emph{gradient descent} (or \emph{stochastic} gradient descent) optimization algorithm.
-Deep learning and other gradient-based optimization problems typically rely on derivatives of functions with very high dimensional domains \needcite{} and a scalar codomain---exactly the conditions under which reverse-mode AD is much more efficient than forward-mode AD (by a factor proportional to the domain dimension).
-Unfortunately, while forward-mode AD (FAD) is easily understood and implemented \needcite, reverse-mode AD (FAD) and backpropagation have much more complicated explanations and implementations, involving mutation, graph construction and traversal, and ``tapes'' (sequences of reified assignments to be interpreted and also called ``traces'' or ``Wengert lists'') \needcite.
+Machine learning and other gradient-based optimization problems typically rely on derivatives of functions with very high dimensional domains \needcite{} and a scalar codomain---exactly the conditions under which reverse-mode AD is much more efficient than forward-mode AD (by a factor proportional to the domain dimension).
+Unfortunately, while forward-mode AD (FAD) is easily understood and implemented \needcite, reverse-mode AD (FAD) and backpropagation have had much more complicated explanations and implementations, involving mutation, graph construction and traversal, and ``tapes'' (sequences of reified assignments to be interpreted and also called ``traces'' or ``Wengert lists'') \needcite.
 The use of mutation, while motivated by efficiency concerns, makes parallel execution difficult and so undermines efficiency as well.
 The construction and interpretation (or compilation) of graphs and tapes also adds execution overhead.
 The importance of the RAD algorithm makes its current complicated and bulky implementations especially problematic.
 The increasingly large machine learning (and other optimization) problems being solved with RAD (via backpropagation) suggest the need to find more streamlined, efficient implementations, especially with the massive hardware parallelism now readily and inexpensively available in the form of graphics processors (GPUs) and FPGAs.
 
-Another difficulty in the practical application of AD in deep learning (DL) comes from the nature of many currently popular DL frameworks, including Theano, TensorFlow, Keras, Torch, MXNet, \mynote{\ldots} \needcite.
+Another difficulty in the practical application of AD in machine learning (ML) comes from the nature of many currently popular ML frameworks, including Theano, TensorFlow, Keras, Torch, MXNet, \mynote{\ldots} \needcite.
 These frameworks are designed around the notion of a ``graph'' or ``network'' of interconnected nodes, each of which is a mathematical operation---a sort of data flow graph.
 Application programs construct these graphs \emph{explicitly}, creating nodes and connecting them to other nodes.
 After construction, the graphs must then be processed into a representation that is more efficient to execute, i.e., train and to evaluate.
@@ -156,18 +157,19 @@ This paradigm of graph construction, compilation, and execution bears a striking
 \item The compiler back-end transforms the DAGs into a form efficient for execution.
 \item A human runs the result of compilation.
 \end{itemize}
-When using a typical DL framework, programmers experience this sequence of steps \emph{at two levels}: working (a) with their code and (b) with the graphs that their code generates.
+When using a typical ML framework, programmers experience this sequence of steps \emph{at two levels}: working (a) with their code and (b) with the graphs that their code generates.
 Both levels have notions of operations, variables, and information flow.
 Both have notions of values and types of those values.
 Both have notions of parametrization.
 Both have execution models that must be understood.
 
-\mynote{Relate traditional, graph-centered DL frameworks to deep DSELs.}
+\mynote{Relate traditional, graph-centered ML frameworks to deep DSELs.}
 
-A much simpler and cleaner foundation for DL would be to have just the programming language, omitting the graphs/networks altogether.
-Since DL is about (mathematical) functions, one would want to choose a programming language that supported functions well, i.e., a functional language, or at least a language with strong functional features.
+A much simpler and cleaner foundation for ML would be to have just the programming language, omitting the graphs/networks altogether.
+Since ML is about (mathematical) functions, one would want to choose a programming language that supported functions well, i.e., a functional language, or at least a language with strong functional features.
 One might call this alternative ``differentiable functional programming''.
-In this paradigm, programmers directly defines their functions of interest, using the standard tools of functional programming, with the addition of a differentiation operator, whose meaning is as in traditional calculus, thanks to the simple and precise mathematical semantics of (pure) functional programs.
+In this paradigm, programmers directly define their functions of interest, using the standard tools of functional programming, with the addition of a differentiation operator (a typed higher-order function).
+Assuming a \emph{purely} functional language or language subset (with simple and precise mathematical denotation), the meaning of differentiation is as in traditional calculus.
 (Since not all computable functions are differentiable, differentiation is partial.)
 
 How can we realize this vision of differentiable functional programming?
@@ -189,8 +191,8 @@ This paper makes the following specific contributions:
 \item
   Define several AD variations, all stemming from different representations of linear maps: functions (satisfying linearity), composed representable functors (``generalized matrices''), continuation-based transformations of any other linear map representation, and dualized version of any linear map representation.
   The latter two variations yield correct-by-construction implementations of reverse-mode AD that are much simpler than previously known and are composed from generally useful components.
-  In particular, the choice of dualized linear functions for gradient computations is particularly compelling in simplicity and efficiency.
-  It requires no matrix-level computation and is suitable for scalar codomains, as in the case of gradient-based optimization, e.g., for machine learning.
+  The choice of dualized linear functions for gradient computations is particularly compelling in simplicity and efficiency.
+  It requires no matrix-level representations or computation and is suitable for\out{ scalar codomains, as in the case of} gradient-based optimization, e.g., for machine learning.
 \end{itemize}
 
 \sectionl{What's a derivative?}
@@ -215,25 +217,25 @@ Extending to |R -> Rn| also works if we interpret the ratio as dividing a vector
 When we extend to |Rm -> Rn| (or even |Rm -> R|), however, this definition no longer makes sense, as it would rely on dividing \emph{by} a vector |eps :: Rm|.
 
 This difficulty of differentiation with non-scalar domains is usually addressed with the notion of ``partial derivatives'' with respect to the |m| scalar components of the domain |Rm|, often written ``$\partial f / \partial x_j$'' for $j \in \set{1,\ldots,m}$.
-When the codomain |Rn| is also non-scalar (i.e., |n > 1|), we have a \emph{matrix} $\mathbf J$ (the \emph{Jacobian}), with $\mathbf J_{ij} = \partial f_i / \partial x_j$ for $i \in \set{1,\ldots,n}$, where each $f_i$ projects out the |ith| scalar value from the result of $f$.
+When the codomain |Rn| is also non-scalar (i.e., |n > 1|), we have a \emph{matrix} $J$ (the \emph{Jacobian}), with $J_{ij} = \partial f_i / \partial x_j$ for $i \in \set{1,\ldots,n}$, where each $f_i$ projects out the |ith| scalar value from the result of $f$.
 
 So far, we've seen that the derivative of a function could be a single number (for |R -> R|), or a vector (for |R -> Rn|), or a matrix (for |Rm -> Rn|).
 Moreover, each of these situations has an accompanying chain rule, which says how to differentiate the composition of two functions.
 Where the scalar chain rule involves multiplying two scalar derivatives, the vector chain rule involves ``multiplying'' two \emph{matrices} $A$ and $B$ (the Jacobians), defined as follows:
-$$ (\mathbf{A} \cdot \mathbf{B})_{ij} = \sum_{k=1}^m A_{ik} \cdot B_{kj} $$
+$$ (A \cdot B)_{ij} = \sum_{k=1}^m A_{ik} \cdot B_{kj} $$
 Since once can think of scalars as a special case of vectors, and scalar multiplication as a special case of matrix multiplication, perhaps we've reached the needed generality.
 When we turn our attention to higher derivatives (which are derivatives of derivatives), however, the situation get more complicated, and we need yet higher-dimensional representations, with correspondingly more complex chain rules.
 
 Fortunately, there is a single, elegant generalization of differentiation with a correspondingly simple chain rule.
-First, reword Definition \ref{eq:scalar-deriv} above to say that |f' x| is the unique |v :: Rn| such that\footnote{For clarity, throughout this paper we will use ``|A = B|'' to mean ``|A| is defined as |B|'' and ``|==|'' to mean (more broadly) that ``|A| is equal to |B|''. The former introduces |A|, while the latter asserts that a well-defined statement of equality is in fact true.}
-$$ |lim(eps -> 0)(frac(f (x+eps) - f x) eps) - v == 0| $$
-or (equivalently)
-$$ |lim(eps -> 0)(frac(f (x+eps) - (f x + eps *^ v)) eps) == 0|. $$
-Notice that |v| is used to linearly transform |eps|.
-Next, generalize this condition to say that the derivative of |f| at |x| is the unique \emph{linear map} |T| such that
-$$|lim(eps -> 0)(frac(norm (f (x+eps) - (f x + T eps)))(norm eps)) == 0| .$$
-In other words, |T| is a \emph{local linear approximation} of |f| at |x|.
-This definition comes from \citet[chapter 2]{Spivak65}, along with a proof that |T| is indeed unique when it exists.
+First, reword Definition \ref{eq:scalar-deriv} above as follows:\footnote{For clarity, throughout this paper we will use ``|A = B|'' to mean ``|A| is defined as |B|'' and ``|==|'' to mean (more broadly) that ``|A| is equal to |B|''. The former introduces |A|, while the latter asserts that a well-defined statement of equality is in fact true.}
+$$ |lim(eps -> 0)(frac(f (x+eps) - f x) eps) - f' x == 0| $$
+Equivalently,
+$$ |lim(eps -> 0)(frac(f (x+eps) - (f x + eps *^ f' x)) eps) == 0| $$
+Notice that |f' x| is used to linearly transform |eps|.
+Next, generalize this condition to say that |f' x| is a \emph{linear map} such that
+$$|lim(eps -> 0)(frac(norm (f (x+eps) - (f x + f' x eps)))(norm eps)) == 0| .$$
+In other words, |f' x| is a \emph{local linear approximation} of |f| at |x|.
+When an |f' x| satisfying this condition exists, is indeed unique \citep[chapter 2]{Spivak65}
 
 The derivative of a function |f :: a -> b| at some value in |a| is thus not a number, vector, matrix, or higher-dimensional variant, but rather a \emph{linear map} (also called ``linear transformations'') from |a| to |b|, which we will write as ``|a :-* b|''.
 The numbers, vectors, matrices, etc mentioned above are all different \emph{representations} of linear maps; and the various forms of ``multiplication'' appearing in their associated chain rules are all implementations of linear map \emph{composition} for those representations.
@@ -320,7 +322,7 @@ ad (g . f) a == let { (b,f') = ad f a ; (c,g') = ad g b } in (c, g' . f')
 
 \subsectionl{Parallel composition}
 
-The chain rule, telling how to differentiate sequential compositions, gets a lot of attention in calculus classes and in automatic and symbolic differentiation.\notefoot{To do: introduce AD and SD early.}
+The chain rule, telling how to differentiate sequential compositions, gets a lot of attention in calculus classes and in automatic and symbolic differentiation.\out{\notefoot{To do: introduce AD and SD early.}}
 There are other important ways to combine functions, however, and examining them yields additional helpful tools.
 One other tool combines two functions in \emph{parallel}:\footnote{By ``parallel'', I simply mean without data dependencies. Operationally, the two functions can be applied simultaneously or not.}
 \begin{code}
@@ -462,7 +464,12 @@ class Category k where
   (.)  :: (b `k` c) -> (a `k` b) -> (a `k` c)
 \end{code}
 
-You are probably already familiar with at least one example of a category, namely functions, in which |id| and |(.)| are the identity function and function composition.
+You are probably already familiar with at least one example of a category, namely functions, in which |id| and |(.)| are the identity function and function composition:
+\begin{code}
+instance Category (->) where
+  id = \ a -> a
+  g . f = \ a -> g (f a)
+\end{code}
 Another example is the restriction to \emph{computable} functions.
 Another is \emph{linear} functions, which we've written ``|a :-* b|'' above.
 Still another example is \emph{differentiable} functions, which we can see by noting two facts:
@@ -494,7 +501,7 @@ They also point us to a new, easily implemented category, for which |ad| is in f
 This new category is simply the representation that |ad| produces: |a -> b :* (a :-* b)|, considered as having domain |a| and codomain |b|.
 The functor nature of |ad| will be exactly what we need to in order to program in a familiar and direct way in a pleasant functional language such as Haskell and have a compiler convert to differentiable functions automatically.
 
-To make the new category more explicit, package the result type of |ad| in a new data type:\notefoot{Maybe format |D a b| using an infix operator. Remember that I'll need another for generalized AD (|GD|).}
+To make the new category more explicit, package the result type of |ad| in a new data type:\out{\notefoot{Maybe format |D a b| using an infix operator. Remember that I'll need another for generalized AD (|GD|).}}
 \begin{code}
 newtype D a b = D (a -> b :* (a :-* b))
 \end{code}
@@ -560,7 +567,7 @@ Before getting too pleased with this definition, let's remember that for |D| to 
 These definitions must also satisfy the identity and composition laws.
 How might we go about proving that they do?
 Perhaps the most obvious route is take those laws, substitute our definitions of |id| and |(.)|, and reason equationally toward the desired conclusion.
-For instance, let's prove that |id . D f == D f| for all |D f :: D a b|:\footnote{Note that \emph{every} morphism in |D| has the form |D f| for some |f|, so it suffices to consider this form.} \notefoot{Maybe drop this proof.}
+For instance, let's prove that |id . D f == D f| for all |D f :: D a b|:\footnote{Note that \emph{every} morphism in |D| has the form |D f| for some |f|, so it suffices to consider this form.} \notefoot{Maybe remove this proof or move it to \appref{Proofs}.}
 \begin{code}
     id . D f
 ==  D (\ b -> (b,id)) . D f                                            -- definition of |id| for |D|
@@ -581,18 +588,18 @@ The slightly more specialized requirement of our first identity property is that
 \begin{code}
     id . adf f
 ==  adf id . adf f  -- functor law for |id| (specification of |adf|)
-==  adf (id . f)    -- functor law for |(.)| (specification of |adf|)
+==  adf (id . f)    -- functor law for |(.)|
 ==  adf f           -- category law
 \end{code}
 The other identity law is proved similarly.
 Associativity has a similar flavor as well:
 \begin{code}
     adf h . (adf g . adf f)
-==  adf h . adf (g . f)      -- functor law for |(.)| (specification of |adf|)
-==  adf (h . (g . f))        -- functor law for |(.)| (specification of |adf|)
+==  adf h . adf (g . f)      -- functor law for |(.)|
+==  adf (h . (g . f))        -- functor law for |(.)|
 ==  adf ((h . g) . f)        -- category law
-==  adf (h . g) . adf f      -- functor law for |(.)| (specification of |adf|)
-==  (adf h . adf g) . adf f  -- functor law for |(.)| (specification of |adf|)
+==  adf (h . g) . adf f      -- functor law for |(.)|
+==  (adf h . adf g) . adf f  -- functor law for |(.)|
 \end{code}
 
 Note how mechanical these proofs are.
@@ -667,7 +674,7 @@ class Category k => ProductCat k where
   exr  :: (Prod k a b) `k` b
   dup  :: a `k` (Prod k a a)
 \end{code}
-For functions,\notefoot{Give a similar instance for |Category (->)|, and don't bother repeating the definition of |(&&&)| just above.}
+For functions,
 \begin{code}
 instance ProductCat (->) where
   exl  = \ (a,b) -> a
@@ -1039,7 +1046,7 @@ The generalized form of AD in \secref{Generalizing automatic differentiation} al
 One simple choice is to use functions, as in \figreftwo{magSqr-adf}{cosSinProd-adf}.
 Although this choice is simple and reliable, sometimes we need a \emph{data} representation, e.g.,
 \begin{itemize}
-\item Gradient-based optimization (including deep learning) works by searching for local minima in the domain of a differentiable function |f :: a -> s|, where |a| is a vector space over the scalar field |s|.
+\item Gradient-based optimization (including in machine learning) works by searching for local minima in the domain of a differentiable function |f :: a -> s|, where |a| is a vector space over the scalar field |s|.
       Each step in the search is in the direction opposite of the gradient of |f|, which is a vector form of |der f|.
 \item Computer graphics shading models rely on normal vectors.
       For surfaces represented in parametric form, i.e., as |f :: R2 -> R3|, normal vectors are calculated from the partial derivatives of |f| as vectors, which are the rows of the $2 \times 3$ Jacobian matrix that represents the derivative of |f| at any given point |p :: R2|.
@@ -1157,7 +1164,7 @@ One can thus choose an optimal association at compile time rather than waiting f
 A more sophisticated version of this question is known as the ``optimal Jacobian accumulation'' problem and is NP-complete \citep {Naumann2008OptimalJA}.
 
 Alternatively, for some kinds of problems we might want to choose a particular association for sequential composition.
-For instance, gradient-based optimization (including its use in deep learning) uses ``reverse-mode'' automatic differentiation (RAD), which is to say fully left-associated compositions.\notefoot{Is RAD always optimal for gradient problems?}
+For instance, gradient-based optimization (including its use in machine learning) uses ``reverse-mode'' automatic differentiation (RAD), which is to say fully left-associated compositions.\notefoot{Is RAD always optimal for gradient problems?}
 (Dually, ``foward-mode'' AD fully right-associates.)
 Reverse mode (including its specialization, backpropagation) is much more efficient for these problems, but is also typically given much more complicated explanations and implementations, involving mutation, graph construction, and ``tapes'' \needcite.
 One the main purposes of this paper is to demonstrate that RAD can be accounted for quite simply, while retaining or improving its efficiency of implementation.
@@ -1171,16 +1178,16 @@ Let's now look at how to separate the associations used in formulating a differe
 A practical reason for making this separation is that we want to do gradient-based optimization (calling for left association), while modular program organization leads to a mixture of compositions.
 Fortunately, a fairly simple technique resolves the tension between program organization and efficient execution.
 
+%format (rcomp f) = (. SPC f)
+
 Given any category |U|, we can represent its morphisms by the intent to left-compose with some to-be-given morphism.
-That is, represent |f :: a `k` b| by the function |(\ h -> h . f) :: (b `k` r) -> (a `k` r)|, where |r| is any object in |U|.
+That is, represent |f :: a `k` b| by the function |(rcomp f) :: (b `k` r) -> (a `k` r)|, where |r| is any object in |U|.\footnote{Following Haskell notation for \emph{right sections}, ``|rcomp f|'' is shorthand for |\ h -> h . f|.}
 The morphism |h| will be a \emph{continuation}, finishing the journey from |f| all the way to the codomain of the overall function being assembled.
 Building a category around this idea results in turning \emph{all} patterns of composition into fully left-associated.
 
-%format (rcomp f) = (. SPC f)
-
 %format ContC (k) = Cont"_{"k"}"
 %format (ContC (k) (r)) = Cont"_{"k"}^{"r"}"
-First, package up the continuation representation as a transformation\footnote{Following Haskell notation, for \emph{right sections}, ``|rcomp f|'' is shorthand for |\ h -> h . f|.} from category |k| and codomain |r| to a new category, |ContC k r|:
+First, package up the continuation representation as a transformation from category |k| and codomain |r| to a new category, |ContC k r|:
 \begin{code}
 newtype ContC k r a b = Cont ((b `k` r) -> (a `k` r))
 
@@ -1191,7 +1198,7 @@ As usual, we can derive instances for our new category by homomorphic specificat
 \begin{theorem}[\provedIn{theorem:cont}]\thmLabel{cont}
 Given the definitions in \figref{cont}, |cont| is a homomorphism with respect to the instantiated classes.\notefoot{Missing numeric operations?}
 \end{theorem}
-Note the pleasant symmetries in these definitions.
+Note the pleasant symmetries in \figref{cont}.
 Each |ProductCat| or |CoproductPCat| operation on |ContC k r| is defined via the dual |CoproductPCat| or |ProductCat| operation, together with the |join|/|unjoin| isomorphism.
 
 \begin{figure}
@@ -1225,7 +1232,7 @@ instance ScalarCat k a => ScalarCat (ContC k r) a where
 \end{figure}
 
 \out{\mynote{Mention Cayley's Theorem: that any monoid is equivalent to a monoid of functions under composition.
-I think |ContC| is a generalization from |Monoid| to |Category|.
+I think |ContC k r| is a generalization from |Monoid| to |Category|.
 Also generalizes to the contravariant Yoneda lemma.}}
 
 The instances for |ContC k r| constitute a simple algorithm for reverse-mode automatic differentiation.
@@ -1234,7 +1241,7 @@ The instances for |ContC k r| constitute a simple algorithm for reverse-mode aut
 \mynote{Explain better how |ContC k r| performs full left-association. Also, how to use it by applying to |id|.}
 
 %format adr = adf
-\figreftwo{magSqr-adr}{cosSinProd-adr} show the results of reverse-mode AD via |ContC| corresponding to \figreftwo{magSqr}{cosSinProd} and \figreftwo{magSqr-adf}{cosSinProd-adf}
+\figreftwo{magSqr-adr}{cosSinProd-adr} show the results of reverse-mode AD via |ContC k r| corresponding to \figreftwo{magSqr}{cosSinProd} and \figreftwo{magSqr-adf}{cosSinProd-adf}
 \figp{
 \figoneW{0.40}{magSqr-adr}{|magSqr| in |GD (ContC ((-+>)) R)|}}{
 \figoneW{0.58}{cosSinProd-adr}{|cosSinProd| in |GD (ContC ((-+>)) R)|}}
@@ -1243,7 +1250,7 @@ The derivatives are represented as (linear) functions again, but reversed (mappi
 \sectionl{Gradients and duality}
 
 As a special case of reverse-mode automatic differentiation, let's consider its use to compute \emph{gradients}, i.e., derivatives of functions with a scalar codomain.
-This case is very important local minimization by means of gradient descent, e.g., as used in deep learning \needcite{}.
+This case is very important for gradient-based optimization.
 
 Given a vector space |A| over a scalar field |s|, the \emph{dual} of |A| is |A :-* s|, i.e., the linear maps to the underlying field.
 This dual space is also a vector space, and when |A| has finite dimension, it is isomorphic to its dual.
@@ -1345,7 +1352,7 @@ Compare \figref{magSqr-gradr} with\out{ the same example in} \figreftwo{magSqr-a
 The literature on automatic differentiation is vast, beginning with forward mode \citep{Wengert64} and later reverse mode \citep{Speelpenning:1980:CFP,Rall1981Automatic}, with many developments since \citep{Griewank89onAD,GriewankWalther2008EvalDerivs}.
 While most techniques and uses of AD have been directed at imperative programming, there are also variations for functional programs \citep{Karczmarczuk1999FunCoding,Karczmarczuk00adjointcodes,Karczmarczuk2001FunDif,Pearlmutter2007LMH,Pearlmutter2008RAF,Elliott2009-beautiful-differentiation}.
 The work in this paper differs in being phrased at the level of functions/morphisms and specified by functoriality without any allusion to or manipulation of graphs or other syntactic representations.\footnote{Of course the Haskell compiler itself manipulates syntax trees, and the compiler plugin that converts Haskell code to categorical form helps do so, but both are entirely domain-independent, with no any knowledge of or special support for differentiation or linear algebra \citep{Elliott-2017-compiling-to-categories}.}
-Moreover, the specifications in this paper are simple enough that the various forms of AD presented can be calculated into being (easily)\notefoot{In the conference version, add a citation here to \secref{Proofs}.}, and so are correct by construction.
+Moreover, the specifications in this paper are simple enough that the various forms of AD presented can be calculated into being (easily)\notefoot{In the conference version, add a citation here to \appref{Proofs}.}, and so are correct by construction.
 
 \citet{Pearlmutter2008RAF} make the following observation:
 \begin{quotation}\noindent
@@ -1430,7 +1437,8 @@ In contrast, AD is more of a numeric method and can retain the complexity of the
 The approach explored in this paper suggests a different perspective: \emph{automatic differentiation is symbolic differentiation done by a compiler.}
 Compilers already work symbolically and already take preserve sharing in computations.
 
-\mynote{Return to the theme of machine learning.}
+The specification and implementation of AD in a simple, correct-by-construction manner, together with its use from a typed functional language (here via a compiler plugin), makes a step toward the vision of differentiable functional programming for machine learning and other uses, as outlined in \secref{Introduction}.
+Programmers then define their functions just as they are used to, differentiating where desired, without the intrusion of operational notions such as graphs with questionably defined, extralinguistic semantics.
 
 \appendix
 
