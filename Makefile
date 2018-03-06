@@ -2,7 +2,13 @@ TARG = essence-of-ad
 
 .PRECIOUS: %.tex %.pdf %.web
 
-all: $(TARG).pdf
+# all: $(TARG).pdf
+
+# This target for a second view
+all: other.pdf
+
+other.pdf: $(TARG).pdf
+	cp $? $@
 
 see: $(TARG).see
 
