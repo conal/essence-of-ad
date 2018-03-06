@@ -1,8 +1,10 @@
 %% -*- latex -*-
 
+%% TODO: replace latex if with lhs2tex if
+
 \newif\ifacm
 
-%% \acmtrue
+\acmtrue
 
 \ifacm
 
@@ -78,9 +80,12 @@
 %% \setlength{\itemsep}{2ex}
 %% \setlength{\parskip}{1ex}
 %% \setlength{\blanklineskip}{1.5ex}
-%% \setlength\mathindent{4ex}
 
 %% \nc\wow\emph
+
+\ifacm
+\setlength\mathindent{3ex}
+\fi
 
 \newtheorem{theorem}{Theorem}%[section]
 \nc\thmLabel[1]{\label{theorem:#1}}
@@ -410,8 +415,10 @@ The category laws state that
 %% %format k = "(\leadsto)"
 
 Although Haskell's type system cannot capture the category laws explicitly, we can express the two required operations as a Haskell type class:%
-\notefoot{To save space, present each category class with the `(->)` to the right, as in \citet{Elliott-2017-compiling-to-categories}.}
+\notefoot{To save space, present each category class with the |(->)| to the right, as in \citet{Elliott-2017-compiling-to-categories}.}
 \out{\notefoot{Mention that Haskell doesn't really support infix type constructor variables like |(~>)|.}}
+\notefoot{Would the signatures in this paper be easier to read without using infix type variables?
+For instance, ``|(.)  :: k b c -> k a b -> k a c|''.}
 \begin{code}
 class Category k where
   id   :: a `k` a
@@ -690,7 +697,7 @@ class Category k => CoproductPCat k where
   inr  ::  Additive a => b `k` (Prod k a b)
   jam  ::  Additive c => (Prod k a a) `k` a
 \end{code}
-Unlike |Category| and |ProductCat|, we've had to add an additivity requirement (having a notion of addition and corresponding identity) to the types involved, in order to have an instance for functions:%
+Unlike |Category| and |ProductCat|, |CoproductPCat| introduces an additivity requirement (having a notion of addition and corresponding zero) to the types involved, in order to have an instance for functions:%
 %% \notefoot{Alternatively, skip the instance for |(->)| and instead begin in a category |(-+>)| of functions on additive types.\out{I guess I'll have to change the category used in |ContC k r| from |(->)| to |(-+>)|.}}
 %format zero = 0
 %format ^+^ = +
@@ -722,7 +729,8 @@ The actual implementation omits these constraints in the |CoproductPCat| class d
 Instead, there is a category |(-+>)| of additive functions, defined simply as a |newtype| wrapper around regular functions.
 The |CoproductPCat (-+>)| instance is a wrapped version of the |CoproductPCat (->)| instance shown above.
 The full |Category| class includes an associated constraint \cite{Bolingbroke2011CK} restricting the types involved in all categorical operations, and defines this constraint for |(-+>)| to be |Additive|.
-As a reminder of this distinction, ``|(-+>)|'' is used below where regular functions are used to represent linear (and hence additive) functions.
+As a reminder of this distinction, ``|(-+>)|'' is used below where regular functions are used to represent linear (and hence additive) functions.\notefoot{Reconsider this choice even for the conference paper.
+See how I'm doing on space.}
 
 \subsectionl{Derived operations}
 
@@ -731,19 +739,17 @@ With |dup|, we can define an alternative to |(***)| that takes two morphisms sha
 (&&&) :: Cartesian k => (a `k` c) -> (a `k` d) -> (a `k` (Prod k c d))
 f &&& g = (f *** g) . dup
 \end{code}
-The |(&&&)| operation is sometimes called ``fork'' \citep{Gibbons2002Calculating} and is particularly useful for translating from the $\lambda$-calculus to categorical form \citep[Section 3]{Elliott-2017-compiling-to-categories}.
+The |(&&&)| operation is particularly useful for translating from the $\lambda$-calculus to categorical form \citep[Section 3]{Elliott-2017-compiling-to-categories}.
 
 Dually, |jam| lets us define a second alternative to |(***)| for two morphisms sharing a \emph{codomain}:
 \begin{code}
 (|||) :: Cocartesian k => (c `k` a) -> (d `k` a) -> ((Prod k c d) `k` a)
 f ||| g = jam . (f +++ g)
 \end{code}
-The |(###)| operation is sometimes called ``join'' \citep{Gibbons2002Calculating}.
-
-In their uncurried form, these two operations are invertible:\notefoot{For proofs, cite \cite{Gibbons2002Calculating}.}
+The |(&&&)| and |(###)| (sometimes called ``fork'' and ``join'') are invertible in uncurried form \citep{Gibbons2002Calculating}:
 \begin{code}
 fork    :: Cartesian    k => (a `k` c) :* (a `k` d) -> (a `k` (Prod k c d))
-unfork  :: Cartesian    k => (a `k` ((Prod k c d))) -> (a `k` c) :* (a `k` d)
+unfork  :: Cartesian    k => (a `k` (Prod k c d)) -> (a `k` c) :* (a `k` d)
 
 join    :: Cocartesian  k => (c `k` a) :* (d `k` a) -> ((Prod k c d) `k` a)
 unjoin  :: Cocartesian  k => ((Prod k c d) `k` a) -> (c `k` a) :* (d `k` a)
@@ -759,25 +765,27 @@ unjoin h = (h . inl, h . inr)
 
 \subsectionl{Abelian categories}
 
+\mynote{Maybe merge this section into the previous one or replace with a remark and reference to \citet{MacedoOliveira2013Typing}. Better yet, move the content to \proofRef{theorem:cont}.}
+
 Another perspective on the operations we've considered is that morphisms of any particular domain and codomain form an abelian group.
-The zero for |a `k` b| results from the composition of initial and terminal morphisms\notefoot{Define |TerminalCat| and |CoterminalCat| earlier.}:
+The zero for |a `k` b| results from the composition of initial and terminal morphisms:\footnote{In this setting, the initial and terminal objects for (additive) functions is a canonical zero-dimensional vector space.}
 %format zeroC = 0
+%format `plusC` = +
+%format plusC = (+)
 %format zeroC = "\mathbf{0}"
 %format `plusC` = "\boldsymbol{+}"
 %format plusC = (`plusC`)
 \begin{code}
-type AbelianCat k = (ProductCat k, CoproductPCat k, TerminalCat k, CoterminalCat k)
-
-zeroC :: AbelianCat k => a `k` b
-zeroC = ti . it
-
-plusC :: AbelianCat k => Binop (a `k` b)
-f `plusC` g = jamP . (f *** g) . dup
+instance (ProductCat k, CoproductPCat k, TerminalCat k, InitialCat k) => Additive (a `k` b) where
+  zeroC = ti . it
+  f `plusC` g = jamP . (f *** g) . dup -- | == jamP . (f &&& g) == (f ### g) . dup|.
 \end{code}
-
-\mynote{Relate |zeroC| and |plusC| to existing vocabulary in other ways as well.}
-
-\mynote{Perhaps replace this section with a remark and reference to \citet{MacedoOliveira2013Typing}. Otherwise, introduce |TerminalCat| and |CoterminalCat|.}
+%% TODO: replace uses of |zeroC| and |plusC| by |zero| and |(+)|
+The following identities hold (with ``|.|'' binding more tightly than ``|+|'') \cite[Equations 16 and 17]{MacedoOliveira2013Typing}:
+\begin{code}
+u &&& v == u . exl `plusC` v . exr
+u ||| v == inl . u `plusC` inr . v
+\end{code}
 
 \subsectionl{Numeric operations}
 
@@ -1040,7 +1048,7 @@ Given a scalar field |s|, any free vector space has the form |p -> s| for some |
 The size of |p| is the dimension of the vector space.
 Scaling a vector |v :: p -> s| or adding two such vectors is defined in the usual was as for functions.
 Rather than using functions directly as a representation, one can instead use any representation isomorphic to such a function.
-In particular, we can represent vector spaces over a given field as a \emph{representable functor}, i.e., a functor |F| such that $\exists p \, \forall s$ |F s =~= p -> s| (where ``|=~=|'' denotes isomorphism)\notefoot{Relate this notion of \emph{functor} to the one used for specifying |adf|.}
+In particular, we can represent vector spaces over a given field as a \emph{representable functor}, i.e., a functor |F| such that $\exists p \, \forall s$ |F s =~= p -> s| (where ``|=~=|'' denotes isomorphism)\out{\notefoot{Relate this notion of \emph{functor} to the one used for specifying |adf|.}}
 This method is convenient in a richly typed functional language like Haskell, which comes with libraries of functor-level building blocks.
 Four such building blocks are functor product, functor composition, and their corresponding identities, which are the unit functor (containing no elements) and the identity functor (containing one element) \citep{Magalhaes:2010,HaskellWikiGhcGenerics}.
 \begin{code}
@@ -1198,17 +1206,16 @@ instance ScalarCat k a => ScalarCat (ContC k r) a where
 I think |ContC k r| is a generalization from |Monoid| to |Category|.
 Also generalizes to the contravariant Yoneda lemma.}}
 
-The instances for |ContC k r| constitute a simple algorithm for reverse-mode automatic differentiation.
-\mynote{Contrast with other presentations.}
-
-\mynote{Explain better how |ContC k r| performs full left-association. Also, how to use it by applying to |id|.}
-
+The instances for |ContC k r| constitute a simple algorithm for reverse-mode AD.
+\out{\mynote{Contrast with other presentations.}}
 %format adr = adf
-\figreftwo{magSqr-adr}{cosSinProd-adr} show the results of reverse-mode AD via |ContC k r| corresponding to \figreftwo{magSqr}{cosSinProd} and \figreftwo{magSqr-adf}{cosSinProd-adf}
+\figreftwo{magSqr-adr}{cosSinProd-adr} show the results of |ContC k r| corresponding to \figreftwo{magSqr}{cosSinProd} and \figreftwo{magSqr-adf}{cosSinProd-adf}.
 \figp{
 \figoneW{0.40}{magSqr-adr}{|magSqr| in |GD (ContC ((-+>)) R)|}}{
 \figoneW{0.58}{cosSinProd-adr}{|cosSinProd| in |GD (ContC ((-+>)) R)|}}
 The derivatives are represented as (linear) functions again, but reversed (mapping from codomain to domain).
+
+\mynote{Explain better how |ContC k r| performs full left-association. Also, how to use it by applying to |id|.}
 
 \sectionl{Gradients and duality}
 
@@ -1556,7 +1563,7 @@ For |dup :: a `k` (a :* a)|, we'll have |h :: (a :* a) ~> r|, so we can split |h
 ==  Cont (\ h -> h . dup)                                          -- definition of |cont|
 ==  Cont (\ h -> join (unjoin h) . dup)                            -- |join . unjoin == id|
 ==  Cont (\ h -> let (ha,hb) = unjoin h in (ha ||| hb) . dup)      -- refactor; definition of |join|
-==  Cont (\ h -> let (ha,hb) = unjoin h in ha `plusC` hb)          -- \secref{Abelian categories}
+==  Cont (\ h -> let (ha,hb) = unjoin h in ha `plusC` hb)          -- definition of |(+)| on morphisms (\secref{Abelian categories})
 ==  Cont (\ h -> let (ha,hb) = unjoin h in uncurry plusC (ha,hb))  -- definition of |uncurry|
 ==  Cont (\ h -> uncurry plusC (unjoin h))                         -- eliminate the |let|
 ==  Cont (uncurry plusC . unjoin)                                  -- definition of |(.)| on functions
@@ -1817,7 +1824,7 @@ Perhaps save that title for another talk and paper (to write soon).
 A quick web search turns up \href{http://www.robots.ox.ac.uk/~gunes/assets/pdf/baydin-2016-slides-functionallondoners.pdf}{a use of this term}.
 \item Probably remove the |Additive| constraints in |Cocartesian|, along with the |Cocartesian (->)| instance.
       Otherwise, mention that the implementation does so.
-      |CoterminalCat (->)| isn't what we need.
+      |InitialCat (->)| isn't what we need.
 \item Consider moving the current examples into a single section after gradients and duality.
       For each example, show the function, |andDerivF|, |andDerivR|, and |andGradR|.
 \item Mention graph optimization and maybe show one or more un-optimized graphs.
