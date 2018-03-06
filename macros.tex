@@ -41,8 +41,10 @@
 \nc\needcite{\mynote{ref}}
 
 \nc\seclabel[1]{\label{sec:#1}}
-\nc\secref[1]{Section~\ref{sec:#1}}
-\nc\secreftwo[2]{Sections~\ref{sec:#1} and~\ref{sec:#2}}
+\nc\secref[1]{Section \ref{sec:#1}}
+\nc\secreftwo[2]{Sections \ref{sec:#1} and \ref{sec:#2}}
+
+\nc\appref[1]{Appendix \ref{sec:#1}}
 
 \nc\sectionl[1]{\section{#1}\seclabel{#1}}
 \nc\subsectionl[1]{\subsection{#1}\seclabel{#1}}
@@ -52,9 +54,9 @@
 \usepackage{subcaption}
 
 \nc\figlabel[1]{\label{fig:#1}}
-\nc\figref[1]{Figure~\ref{fig:#1}}
-\nc\figreftwo[2]{Figures~\ref{fig:#1} and \ref{fig:#2}}
-\nc\figrefthree[3]{Figures~\ref{fig:#1}, \ref{fig:#2}, and \ref{fig:#3}}
+\nc\figref[1]{Figure \ref{fig:#1}}
+\nc\figreftwo[2]{Figures \ref{fig:#1} and \ref{fig:#2}}
+\nc\figrefthree[3]{Figures \ref{fig:#1}, \ref{fig:#2}, and \ref{fig:#3}}
 
 \nc\incpic[1]{\includegraphics[width=\linewidth]{Figures/#1}}
 
