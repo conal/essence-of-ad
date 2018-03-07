@@ -1301,7 +1301,29 @@ Then choose |r| to be the scalar field |s|, as in \secref{Gradients and duality}
 
 \sectionl{Indexed biproducts}
 
-\mynote{If I keep this section, add it to the contributions and maybe abstract.}
+%if True
+\mynote{Writing in progress. When finished, add to the contributions and maybe abstract.}
+%else
+So far, we have considered binary products.
+Practical applications, including machine learning and other optimization problems, often involve very high-dimensional spaces.
+While those spaces can be encoded as nested binary products, doing so would result in unwieldy representations and long compilation and execution times.
+A more practical approach is to consider $n$-ary products, for which we can again use representable functors.
+Replace the two arguments to |(***)| by a (representable) functor |h| of morphisms:
+%format IxMonoidalPCat = MonoidalN
+\begin{code}
+class Category k => IxMonoidalPCat k h where
+  crossF :: h (a `k` b) -> (h a `k` h b)
+
+instance Zip h => IxMonoidalPCat (->) h where
+  crossF = zipWith id
+\end{code}
+Note that the combined morphisms are restricted have the same types, due to type system limitation.
+
+\begin{code}
+instance (Zip h, IxMonoidalPCat k h) => IxMonoidalPCat (GD k) h where
+  crossF fs = D (second crossF . unzip . crossF (fmap unD fs))
+\end{code}
+%endif
 
 \sectionl{Related work}
 
@@ -1864,13 +1886,14 @@ Given the definitions in \figref{asDual},
 
 \sectionl{To do}
 \begin{itemize}
+\item Future work
 \item Indexed biproducts
 \item Maybe define and use |(-+>)|.
 \item Nested AD. I think the categorical approach in this paper can correctly handle nesting with ease and that the nesting problem indicates an unfortunate choice of abstraction together with non-rigorous specification and development.
 \item Possible title or subtitle: ``Differentiable functional programming made easy''.
 Note the two meanings: easy to implement correctly and efficiently, and easy to use.
 Perhaps save that title for another talk and paper.
-A quick web search turns up \href{http://www.robots.ox.ac.uk/~gunes/assets/pdf/baydin-2016-slides-functionallondoners.pdf}{a use of this DFP term}.
+A quick web search turns up a few uses of ``differentiable functional programming''.
 \item Probably remove the |Additive| constraints in |Cocartesian|, along with the |Cocartesian (->)| instance.
       Otherwise, mention that the implementation does so.
       |InitialCat (->)| isn't what we need.
@@ -1883,11 +1906,6 @@ A quick web search turns up \href{http://www.robots.ox.ac.uk/~gunes/assets/pdf/b
 \item |ConstCat| for |DualC k| and for linear arrows in general.
 \item What is ``generalized AD''?
       Is it AD at all or something else?
-\item Formatting issues:
- \begin{itemize}
- \item Fix two-column (minipage) spacing and separation bars for ACM style.
- \item Footnotes before or after colons?
- \end{itemize}
 \end{itemize}
 
 \end{document}
