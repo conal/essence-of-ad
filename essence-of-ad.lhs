@@ -126,12 +126,14 @@
 Automatic differentiation (AD) is often presented in two forms: forward mode and reverse mode.
 Forward mode is quite simple to implement and package via operator overloading but is inefficient for many problems of practical interest such as deep learning and other uses of gradient-based optimization.
 Reverse mode (including its specialization, backpropagation) is much more efficient for these problems, but is also typically given much more complicated explanations and implementations.
-This talk develops a very simple specification and Haskell implementation for mode-independent AD based on the vocabulary of categories (generalized functions).
+This talk develops a very simple specification and Haskell implementation for mode-independent AD based on the vocabulary of categories (``generalized functions'').
 Although the categorical vocabulary would be difficult to write in directly, one can instead write regular Haskell programs to be converted to this vocabulary automatically (via a compiler plugin) and then interpreted as differentiable functions.
 The result is direct, exact, and efficient differentiation with no notational overhead.
 The specification and implementation are then generalized considerably by parameterizing over an underlying category.
-This generalization is then easily specialized to forward and reverse modes, with the latter resulting from a simple dual construction for categories.
-Another instance of generalized AD is automatic incremental evaluation of functional programs, again with no notational impact to the programmer.
+This generalization is then easily specialized to two variations of reverse-mode AD.
+These reverse-mode implementations are much simpler than previously known and are composed from two generally useful category transformers: continuation-passing and dualization.
+All of the implementations are calculated from simple, homomorphic specifications and so are correct by construction.
+The dualized variant is suitable for gradient-based optimization and is particularly compelling in simplicity and efficiency, requiring no matrix-level representations or computation.
 
 \end{abstract}
 
@@ -185,19 +187,15 @@ The present paper embodies the latter choice, augmenting the popular Haskell com
 This paper makes the following specific contributions:
 \begin{itemize}
 \item
-  Recast AD in categorical terms, defining a category of derivative-augmented functions, and specifying AD simply and precisely by requiring this augmentation to be a cartesian functor.
+  Given a simple category of derivative-augmented functions, specify AD simply and precisely by requiring this augmentation (relative to regular functions) to be homomorphic with respect to a handful of standard categorical abstractions as well as for primitive mathematical operations.
 \item
   Calculate a correct-by-construction AD implementation from the functor specification.
 \item
-  Define derivatives abstractly as \emph{linear maps} rather than concretely as numbers, vectors, covectors, matrices, etc, handling higher-dimensional AD without the complexity of partial derivatives or indexing.
-\item
-  Generalize AD by replacing linear maps with an arbitrary cartesian category.
-  One application is automatic incrementalization of functional programs.
-\item
-  Define several AD variations, all stemming from different representations of linear maps: functions (satisfying linearity), composed representable functors (``generalized matrices''), continuation-based transformations of any other linear map representation, and dualized version of any linear map representation.
+  Generalizing AD by replacing linear maps (general derivative values) with an arbitrary cartesian category \citep{Elliott-2017-compiling-to-categories}, define several AD variations, all stemming from different representations of linear maps: functions (satisfying linearity), composed representable functors (``generalized matrices''), continuation-based transformations of any other linear map representation, and dualized version of any linear map representation.
   The latter two variations yield correct-by-construction implementations of reverse-mode AD that are much simpler than previously known and are composed from generally useful components.
   The choice of dualized linear functions for gradient computations is particularly compelling in simplicity and efficiency.
   It requires no matrix-level representations or computation and is suitable for\out{ scalar codomains, as in the case of} gradient-based optimization, e.g., for machine learning.
+  (Related techniques yield forward-mode AD.)
 \end{itemize}
 
 \sectionl{What's a derivative?}
@@ -449,7 +447,7 @@ To bridge between these worlds, there are \emph{functors} that connect a categor
 Such a functor |F| maps objects in |CU| to objects in |CV|, \emph{and} morphisms in |CU| to morphisms in |CV|.
 If |f :: u ~> v <- CU| is a morphism, then a \emph{functor} |F| from |CU| to |CV| transforms |f <- CU| to a morphism |F f :: F u --> F v <- CV|, i.e., the domain and codomain of the transformed morphism |F f <- CV| must be the transformed versions of the domain and codomain of |f <- CU|.
 The categories in this paper use types as objects, while the functors in this paper map these types to themselves.%
-\footnote{In contrast, Haskell's functors stay within the same category and can do change types.}
+\footnote{In contrast, Haskell's functors stay within the same category and do change types.}
 The functor must also preserve ``categorical'' structure:\footnote{Making the categories explicit, |F (id <- CU) == id <- CV| and |F (g . f <- CU) == F g . F f <- CV|.}
 \begin{closerCodePars}
 \begin{code}
@@ -619,7 +617,7 @@ instance MonoidalPCat D where
 \subsectionl{Cartesian categories}
 
 %format TerminalCat = Terminal
-%format CoterminalCat = Coterminal
+%format CoterminalCat = Initial
 
 %format ProductCat = Cartesian
 %format CoproductCat = Cocartesian
@@ -763,30 +761,6 @@ unfork h = (exl . h, exr . h)
 
 join (f,g) = f ||| g
 unjoin h = (h . inl, h . inr)
-\end{code}
-
-\subsectionl{Abelian categories}
-
-\mynote{Maybe merge this section into the previous one or replace with a remark and reference to \citet{MacedoOliveira2013Typing}. Better yet, move the content to \proofRef{theorem:cont}.}
-
-Another perspective on the operations we've considered is that morphisms of any particular domain and codomain form an abelian group.
-The zero for |a `k` b| results from the composition of initial and terminal morphisms:\footnote{In this setting, the initial and terminal objects for (additive) functions is a canonical zero-dimensional vector space.}
-%format zeroC = 0
-%format `plusC` = +
-%format plusC = (+)
-%format zeroC = "\mathbf{0}"
-%format `plusC` = "\boldsymbol{+}"
-%format plusC = (`plusC`)
-\begin{code}
-instance (ProductCat k, CoproductPCat k, TerminalCat k, InitialCat k) => Additive (a `k` b) where
-  zeroC = ti . it
-  f `plusC` g = jamP . (f *** g) . dup -- | == jamP . (f &&& g) == (f ### g) . dup|.
-\end{code}
-%% TODO: replace uses of |zeroC| and |plusC| by |zero| and |(+)|
-The following identities hold (with ``|.|'' binding more tightly than ``|+|'') \cite[Equations 16 and 17]{MacedoOliveira2013Typing}:
-\begin{code}
-u &&& v == u . exl `plusC` v . exr
-u ||| v == inl . u `plusC` inr . v
 \end{code}
 
 \subsectionl{Numeric operations}
@@ -1126,12 +1100,6 @@ instance (HasV s b, KnownNat n) => HasV s (Vector n b) where
 \end{figure}
 Finally, one must define the standard functionality for linear maps in the form of instances of |Category|, |MonoidalPCat|, |ProductCat|, |CoproductPCat|, and |ScalarCat|.
 Details are spelled out by \citet[Section 7.4 and Appendix A]{Elliott-2017-compiling-to-categories}.\notefoot{Maybe remove most of the detail from this section in favor of this citation.}
-%if False
-Details are left as an exercise for the reader.\footnote{Hint: begin by defining |lfun :: LC s a b -> (a -+> b)| (using |toV| and |unV|), and a specification that |lfun| is a functor, monoidal functor, etc.
-The operations of matrix/vector multiplication (representing linear map application) and matrix/matrix multiplication (representing linear map composition) are easily implemented in terms of standard functional programming maps, zips, and folds.}
-%endif
-
-%% \mynote{Mention upcoming categorical generalizations, which rely on \emph{indexed} biproducts.}
 
 \sectionl{Efficiency of composition}
 
@@ -1323,10 +1291,24 @@ Compare \figref{magSqr-gradr} with\out{ the same example in} \figreftwo{magSqr-a
 \figoneW{0.40}{magSqr-gradr}{|magSqr| in |GD (DualC (-+>))|}}{
 \figoneW{0.56}{cos-xpytz-gradr}{|\ ((x,y),z) -> cos (x + y * z)| in |GD (DualC (-+>))|}}
 
+\sectionl{Forward-mode AD}
+
+It may be interesting to note that we can turn the |Cont| and |Dual| techniques around to yield category transformers that perform full \emph{right-} instead of left-association, converting the general, mode-independent algorithm into forward mode, yielding an algorithm preferable for low-dimensional domains (rather than codomains):
+%format Cont' = Begin
+%format (ContC' (k) (r)) = Cont'"_{"k"}^{"r"}"
+%format (lcomp f) = (f SPC .)
+\begin{code}
+newtype ContC' k r a b = Cont' ((r `k` a) -> (r `k` b))
+
+cont' :: Category k => (a `k` b) -> ContC' k r a b
+cont' f = Cont' (lcomp f)
+\end{code}
+As usual, we can derive instances for our new category by homomorphic specification.
+Next, choose |r| to be the scalar field |s|, as in \secref{Gradients and duality}, and note that |(s :-* a) =~= a|.
 
 \sectionl{Indexed biproducts}
 
-\sectionl{Incremental evaluation}
+%% \sectionl{Incremental evaluation}
 
 \mynote{If I drop this section, remove also from the abstract.}
 
@@ -1377,6 +1359,7 @@ Both implementations rely on carefully crafted use of side effects.
 
 This paper builds on a compiler plugin that translates Haskell programs into categorical form to be specialized to various specific categories, including differentiable functions \citep{Elliott-2017-compiling-to-categories}.
 (The plugin knows nothing about any specific category, including differentiable functions.)
+Another instance of generalized AD given there is automatic incremental evaluation of functional programs.
 Relative to that work, the new contributions are the |ContC k r| and |DualC k| categories, their use to succinctly implement reverse-mode AD (by instantiating the generalized differentiation category |GD k|), the precise specification of |D|, |GD k|, |ContC k r|, and |DualC k| via functoriality, and the calculation of implementations given from these specifications.
 
 \mynote{Maybe relate the methodology of \secref{Programming as defining and solving algebra problems} to \citet{BirddeMoor96:Algebra} and \citet{Elliott2009-type-class-morphisms-TR}.}
@@ -1430,6 +1413,35 @@ The specification and implementation of AD in a simple, correct-by-construction 
 Programmers then define their functions just as they are used to, differentiating where desired, without the intrusion of operational notions such as graphs with questionably defined, extralinguistic semantics.
 
 \appendix
+
+\sectionl{Terminal and initial objects}
+
+In the biproduct setting of this paper, terminal and initial objects coincide and may be take to be any singleton type.
+We may as well choose the unit type, having exactly one element, representing a canonical zero-dimensional vector space, and written ``|()|'' in Haskell:\footnote{In a more general categorical setting, terminal and initial objects need not coincide and are defined per category.}\footnote{As with |CoproductPCat|,  in the actual implementation, the |CoterminalCat| definition has no |Additive| constraint or |CoterminalCat (->)| instance, and instead has a |CoterminalCat| instance for additive functions.}
+\begin{code}
+class TerminalCat k    where it ::                 a `k` ()
+class CoterminalCat k  where ti :: Additive  a =>  () `k` a
+
+instance TerminalCat (->)    where it = \ _ -> ()
+instance CoterminalCat (->)  where ti = \ () -> zero
+\end{code}
+Since |it| and |ti| on functions are both linear, differentiation is trivial.
+
+\sectionl{Abelian categories}
+
+Another perspective on the operations we've considered is that morphisms of any particular domain and codomain form an abelian group.
+The zero for |a `k` b| results from the composition of initial and terminal morphisms:\footnote{In this setting, the initial and terminal objects for (additive) functions is a canonical zero-dimensional vector space.}
+\begin{code}
+instance (ProductCat k, CoproductPCat k, TerminalCat k, InitialCat k) => Additive (a `k` b) where
+  zero = ti . it
+  f ^+^ g = jamP . (f *** g) . dup -- | == jamP . (f &&& g) == (f ### g) . dup|.
+\end{code}
+%% TODO: replace uses of |zero| and |(^+^)| by |zero| and |(+)|
+The following identities hold (with ``|.|'' binding more tightly than ``|+|'') \cite[Equations 16 and 17]{MacedoOliveira2013Typing}:
+\begin{code}
+u &&& v == u . exl ^+^ v . exr
+u ||| v == inl . u ^+^ inr . v
+\end{code}
 
 \sectionl{Proofs}
 
@@ -1568,11 +1580,11 @@ While these definitions are correct, they can be made more efficient.
 For instance,
 \begin{code}
     cont exl
-==  Cont (\ h -> h . exl)         -- definition of |cont|
-==  Cont (\ h -> h ||| zeroC)     -- \secref{Abelian categories}
-==  Cont (\ h -> join (h,zeroC))  -- definition of |join|
-==  Cont (\ h -> join (inl h))    -- definition of |inl| for functions
-==  Cont (join . inl)             -- definition of |(.)| for functions
+==  Cont (\ h -> h . exl)        -- definition of |cont|
+==  Cont (\ h -> h ||| zero)     -- \appref{Abelian categories}
+==  Cont (\ h -> join (h,zero))  -- definition of |join|
+==  Cont (\ h -> join (inl h))   -- definition of |inl| for functions
+==  Cont (join . inl)            -- definition of |(.)| for functions
 \end{code}
 Similarly, |cont exr == Cont (join . inr)|.
 For |dup :: a `k` (a :* a)|, we'll have |h :: (a :* a) ~> r|, so we can split |h| with |unjoin|:
@@ -1581,10 +1593,10 @@ For |dup :: a `k` (a :* a)|, we'll have |h :: (a :* a) ~> r|, so we can split |h
 ==  Cont (\ h -> h . dup)                                          -- definition of |cont|
 ==  Cont (\ h -> join (unjoin h) . dup)                            -- |join . unjoin == id|
 ==  Cont (\ h -> let (ha,hb) = unjoin h in (ha ||| hb) . dup)      -- refactor; definition of |join|
-==  Cont (\ h -> let (ha,hb) = unjoin h in ha `plusC` hb)          -- definition of |(+)| on morphisms (\secref{Abelian categories})
-==  Cont (\ h -> let (ha,hb) = unjoin h in uncurry plusC (ha,hb))  -- definition of |uncurry|
-==  Cont (\ h -> uncurry plusC (unjoin h))                         -- eliminate the |let|
-==  Cont (uncurry plusC . unjoin)                                  -- definition of |(.)| on functions
+==  Cont (\ h -> let (ha,hb) = unjoin h in ha ^+^ hb)              -- definition of |(+)| on morphisms (\appref{Abelian categories})
+==  Cont (\ h -> let (ha,hb) = unjoin h in uncurry (^+^) (ha,hb))  -- definition of |uncurry|
+==  Cont (\ h -> uncurry (^+^) (unjoin h))                         -- eliminate the |let|
+==  Cont (uncurry (^+^) . unjoin)                                  -- definition of |(.)| on functions
 ==  Cont (jamP . unjoin)                                           -- definition of |jamP| for functions
 \end{code}
 
@@ -1636,7 +1648,7 @@ The following properties hold:
 \item |unjoin . dot == dot *** dot| \label{unjoin-dot}
 \item |unDot . join == unDot *** unDot| \label{unDot-join}
 \item |dot u ### dot v == dot (u,v)| \label{dot-dot-join}
-\item |dot zeroV == zeroC| (zero vector vs zero morphism) \label{dot-zeroV}
+\item |dot zeroV == zero| (zero vector vs zero morphism) \label{dot-zeroV}
 \end{enumerate}
 \end{lemma}
 \emph{Proof:}
@@ -1688,7 +1700,7 @@ The following properties hold:
 ==  \ (x,y) -> dot (u,v) (x,y)                 -- definition of |dot| for pairs\notefoot{Not exactly. Revisit.}
 ==  dot (u,v)                                  -- $\eta$-reduction
 \end{code}
-\item Immediate from linearity and the definition of |zeroC| for functions.
+\item Immediate from linearity and the definition of |zero| for functions.
 \end{enumerate}
 \emph{End of proof of \lemRef{dot-properties}}.\\
 
@@ -1742,8 +1754,8 @@ For |ProductCat|,
 ==  Dual (onDot (join . inl))                            -- definition of |asDual|
 ==  Dual (unDot . join . inl . dot)                      -- definition of |onDot|, and associativity of |(.)|
 ==  Dual (\ u -> unDot (join (inl (dot u))))             -- definition of |(.)| for functions
-==  Dual (\ u -> unDot (join (dot u, zeroC)))            -- definition of |inl| for functions
-==  Dual (\ u -> unDot (dot u ||| zeroC))                -- definition of |join|
+==  Dual (\ u -> unDot (join (dot u, zero)))            -- definition of |inl| for functions
+==  Dual (\ u -> unDot (dot u ||| zero))                -- definition of |join|
 ==  Dual (\ u -> unDot (dot u ||| dot zeroV))            -- \lemDot{dot-zeroV}
 ==  Dual (\ u -> unDot (dot (u,zeroV)))                  -- \lemDot{dot-dot-join}
 ==  Dual (\ u -> (u,zeroV))                              -- |unDot . dot == id|
@@ -1856,6 +1868,7 @@ A quick web search turns up \href{http://www.robots.ox.ac.uk/~gunes/assets/pdf/b
  \begin{itemize}
  \item Fix two-column (minipage) spacing and separation bars for ACM style.
  \item Code indentation for ACM style.
+ \item Footnotes before or after colons?
  \end{itemize}
 \end{itemize}
 
