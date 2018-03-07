@@ -501,8 +501,7 @@ keywords = "Linear algebra, Categories of matrices, Algebra of programming"
 
 @inproceedings{PeytonJones99Stretching,
   author       = "Simon L. Peyton Jones and Simon Marlow and Conal Elliott",
-  title        = {Stretching the Storage Manager: Weak Pointers and Stable Names in Haskell},
-  url          = {http://citeseer.ist.psu.edu/peytonjones99stretching.html},
+  title        = {\href{http://citeseer.ist.psu.edu/peytonjones99stretching.html}{Stretching the storage manager: Weak pointers and stable names in Haskell}},
   booktitle    = "Implementation of Functional Languages",
   year         = "1999"
 }
@@ -569,17 +568,31 @@ keywords = "Linear algebra, Categories of matrices, Algebra of programming"
   note =      {\url{http://colah.github.io/posts/2015-09-NN-Types-FP/}}
 }
 
-@inproceedings{Chakravarty2005AST,
-  title = {Associated type synonyms},
-  author = {Chakravarty, Manuel  M. T.  and Keller, Gabriele   and Peyton-Jones, Simon  },
-  booktitle = {ICFP '05: Proceedings of the tenth ACM SIGPLAN international conference on Functional programming},
-  keywords = {associated-types},
+@inproceedings{Chakravarty05AssociatedSynonyms,
+    author = {Manuel M. T. Chakravarty and Gabriele Keller and Simon Peyton Jones},
+    title = {\href{http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.646.7233}{Associated type synonyms}},
+    booktitle = {{ICFP}},
+    Qbooktitle = {In Proceedings of the Tenth ACM SIGPLAN International Conference on Functional Programming},
+    year = {2005},
+    Qpages = {241--253},
+    Qpublisher = {ACM}
+}
+
+@book{Appel2007CC,
+ author = {Appel, Andrew W.},
+ title = {Compiling with Continuations},
+ year = {2007},
+ Qisbn = {052103311X},
+ publisher = {Cambridge University Press},
+ Qaddress = {New York, NY, USA},
+} 
+
+@inproceedings{Kennedy2007ContCont,
+  author = {Kennedy, Andrew},
+  title = {\href{https://www.microsoft.com/en-us/research/publication/compiling-with-continuations-continued/}{Compiling with Continuations, Continued}},
+  booktitle = {ACM SIGPLAN International Conference on Functional Programming},
+  year = 2007,
+  month = {October},
+  abstract = {We present a series of CPS-based intermediate languages suitable for functional language compilation, arguing that they have practical benefits over direct-style languages based on A-normal form (ANF) or monads. Inlining of functions demonstrates the benefits most clearly: in ANF-based languages, inlining involves a re-normalization step that rearranges let expressions and possibly introduces a new `join point' function, and in monadic languages, commuting conversions must be applied; in contrast, inlining in our CPS language is a simple substitution of variables for variables. We present a contification transformation implemented by simple rewrites on the intermediate language. Exceptions are modelled using so-called `double-barrelled' CPS. Subtyping on exception constructors then gives a very straightforward effect analysis for exceptions. We also show how a graph-based representation of CPS terms can be implemented extremely efficiently, with linear-time term simplification.},
   Qpublisher = {ACM Press},
-  year = 2005
-  abstract = {Haskell programmers often use a multi-parameter type class in which one or more type parameters are functionally dependent on the first. Although such functional dependencies have proved quite popular in practice, they express the programmer's intent somewhat indirectly. Developing earlier work on associated data types, we propose to add functionally dependent types as type synonyms to type-class bodies. These associated type synonyms constitute an interesting new alternative to explicit functional dependencies.},
-  Qpages = {241--253},
-  Qaddress = {New York, NY, USA},
-  Qurl = {http://dx.doi.org/10.1145/1086365.1086397},
-  Qdoi = {http://dx.doi.org/10.1145/1086365.1086397},
-  Qisbn = 1595930647,
 }
