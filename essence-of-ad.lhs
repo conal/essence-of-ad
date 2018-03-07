@@ -2,11 +2,9 @@
 
 %% TODO: replace latex if with lhs2tex if
 
-\newif\ifacm
+%% %let acm = True
 
-\acmtrue
-
-\ifacm
+%if acm
 
 %% \documentclass[acmsmall,screen]{acmart} % ,authorversion=true,
 
@@ -44,7 +42,7 @@
 %\setcopyright{rightsretained}
 %\copyrightyear{2018}           %% If different from \acmYear
 
-\else
+%else
 
 %% While editing/previewing, use 12pt and tiny margin.
 \documentclass[12]{article}  % fleqn,
@@ -54,7 +52,7 @@
 \bibliographystyle{plainnat}
 \author{Conal Elliott\\[1ex]Target}
 
-\fi
+%endif
 
 \input{macros}
 
@@ -83,9 +81,9 @@
 
 %% \nc\wow\emph
 
-\ifacm
+%if acm
 \setlength\mathindent{3ex}
-\fi
+%endif
 
 \newtheorem{theorem}{Theorem}%[section]
 \nc\thmLabel[1]{\label{theorem:#1}}
@@ -119,7 +117,9 @@
 
 \begin{document}
 
-\ifacm \else \maketitle \fi
+%if not acm
+\maketitle
+%endif
 
 \begin{abstract}
 
@@ -135,7 +135,9 @@ Another instance of generalized AD is automatic incremental evaluation of functi
 
 \end{abstract}
 
-\ifacm \maketitle \else \fi
+%if acm
+\maketitle
+%endif
 
 \sectionl{Introduction}
 
@@ -1043,7 +1045,7 @@ In particular, many useful problems involve gradient-based optimization over ver
 Rather than representing derivatives as functions and then extracting a (Jacobian) matrix, a more conventional alternative is to construct and combine matrices in the first place.
 These matrices are usually rectangular arrays, representing |Rm -> Rn|, which interferes with the composability we get from  organizing around binary cartesian products, as in the |Cartesian| and |Cocartesian| categorical interfaces.
 
-There is an especially perspective on linear algebra, known as \emph{free vector spaces}.
+There is an especially convenient perspective on linear algebra, known as \emph{free vector spaces}.
 Given a scalar field |s|, any free vector space has the form |p -> s| for some |p|.
 The size of |p| is the dimension of the vector space.
 Scaling a vector |v :: p -> s| or adding two such vectors is defined in the usual was as for functions.
@@ -1060,13 +1062,19 @@ newtype  Par1         a = Par1 a                    -- identity
 \end{code}
 Use of these functors gives data representation of functions that saves recomputation over a native function representation, as a form of functional memoization \cite{Hinze00memofunctions}.
 
+%if acm
+%format toV = to"_"V
+%format unV = un"_"V
+%else
 %format toV = to"\!_"V
 %format unV = un"\!_"V
+%endif
+
 %format Type = "\ast"
 %format V (s) = V"\!_{"s"}"
 %format (HasV (s)) = HasV"\!_{"s"}"
 
-One way to relate these representable functors to the types that appear in our categorical operations is to use associated types \needcite, associating a functor representation to various types.
+One way to relate these representable functors to the types that appear in our categorical operations is to use associated types, associating a functor representation to various types \citep{Chakravarty05AssociatedSynonyms}.
 Given a scalar field |s| and type |a| of values, presumably built up from a scalar type |s|, the associated |V s a| is a functor such that |V s a s =~= a|.
 In other words, the type |a| is modeled as a structure of |s| values, where the structure is given by the associated functor |V s a|.
 A ``generalized matrix'' for the linear map type |a :-* b| is the composition of two functors, an outer functor for |b| and an inner functor for |a|, together containing elements from the underlying scalar field |s|:
@@ -1117,8 +1125,11 @@ instance (HasV s b, KnownNat n) => HasV s (Vector n b) where
 \figlabel{HasV instances}
 \end{figure}
 Finally, one must define the standard functionality for linear maps in the form of instances of |Category|, |MonoidalPCat|, |ProductCat|, |CoproductPCat|, and |ScalarCat|.
+Details are spelled out by \citet[Section 7.4 and Appendix A]{Elliott-2017-compiling-to-categories}.\notefoot{Maybe remove most of the detail from this section in favor of this citation.}
+%if False
 Details are left as an exercise for the reader.\footnote{Hint: begin by defining |lfun :: LC s a b -> (a -+> b)| (using |toV| and |unV|), and a specification that |lfun| is a functor, monoidal functor, etc.
 The operations of matrix/vector multiplication (representing linear map application) and matrix/matrix multiplication (representing linear map composition) are easily implemented in terms of standard functional programming maps, zips, and folds.}
+%endif
 
 %% \mynote{Mention upcoming categorical generalizations, which rely on \emph{indexed} biproducts.}
 
@@ -1155,6 +1166,11 @@ Given any category |U|, we can represent its morphisms by the intent to left-com
 That is, represent |f :: a `k` b| by the function |(rcomp f) :: (b `k` r) -> (a `k` r)|, where |r| is any object in |U|.\footnote{Following Haskell notation for \emph{right sections}, ``|rcomp f|'' is shorthand for |\ h -> h . f|.}
 The morphism |h| will be a \emph{continuation}, finishing the journey from |f| all the way to the codomain of the overall function being assembled.
 Building a category around this idea results in turning \emph{all} patterns of composition into fully left-associated.
+This trick is as with conversion to continuation-passing style \citep{Appel2007CC,Kennedy2007ContCont}.
+%% Give each computation a continuation saying how the result will ultimately be consumed.
+Compositions in the computation become compositions in the continuation\out{ which is post-/left-composed with the main computation}.
+For instance, |g . f| with a continuation |k| (i.e., |k . (g . f)|) becomes |f| with a continuation |k . g| (i.e., |(k . g) . f|).
+The initial continuation is |id| (because |id . f == f|).
 
 %format ContC (k) = Cont"_{"k"}"
 %format (ContC (k) (r)) = Cont"_{"k"}^{"r"}"
@@ -1197,7 +1213,7 @@ instance CoproductCat k => CoproductCat (ContC k r) where
 instance ScalarCat k a => ScalarCat (ContC k r) a where
    scale s = Cont (scale s)
 \end{code}
-\caption{Continuation category transformer}
+\caption{Continuation category transformer (specified by functoriality of |cont|)}
 \figlabel{cont}
 \end{center}
 \end{figure}
@@ -1214,8 +1230,6 @@ The instances for |ContC k r| constitute a simple algorithm for reverse-mode AD.
 \figoneW{0.40}{magSqr-adr}{|magSqr| in |GD (ContC ((-+>)) R)|}}{
 \figoneW{0.58}{cosSinProd-adr}{|cosSinProd| in |GD (ContC ((-+>)) R)|}}
 The derivatives are represented as (linear) functions again, but reversed (mapping from codomain to domain).
-
-\mynote{Explain better how |ContC k r| performs full left-association. Also, how to use it by applying to |id|.}
 
 \sectionl{Gradients and duality}
 
@@ -1283,7 +1297,7 @@ instance CoproductCat k => CoproductCat (DualC k) where
 instance ScalarCat k => ScalarCat (DualC k) where
    scale s = Dual (scale s)
 \end{code}
-\caption{Dual category}
+\caption{Dual category transformer (specified by functoriality of |asDual|)}
 \figlabel{asDual}
 \end{center}
 \end{figure}
@@ -1360,6 +1374,10 @@ The most successful implementations appears to be in the \emph{ad} library \cite
 One RAD implementation there uses stable names \citep{PeytonJones99Stretching} and reification \citep{Gill2009TOS} to recover sharing information.
 Another maintains a Wengert list (or ``tape'') with the help of a reflection library \citep{Kiselyov2004FPI}.
 Both implementations rely on carefully crafted use of side effects.
+
+This paper builds on a compiler plugin that translates Haskell programs into categorical form to be specialized to various specific categories, including differentiable functions \citep{Elliott-2017-compiling-to-categories}.
+(The plugin knows nothing about any specific category, including differentiable functions.)
+Relative to that work, the new contributions are the |ContC k r| and |DualC k| categories, their use to succinctly implement reverse-mode AD (by instantiating the generalized differentiation category |GD k|), the precise specification of |D|, |GD k|, |ContC k r|, and |DualC k| via functoriality, and the calculation of implementations given from these specifications.
 
 \mynote{Maybe relate the methodology of \secref{Programming as defining and solving algebra problems} to \citet{BirddeMoor96:Algebra} and \citet{Elliott2009-type-class-morphisms-TR}.}
 
