@@ -75,7 +75,7 @@
 \end{minipage}
 }
 }
-\nc\figone{\figoneW{0.49}}
+\nc\figone{\figoneW{0.48}}
 
 \nc\workingHere{
 \vspace{1ex}
@@ -87,13 +87,10 @@
 \vspace{1ex}
 }
 
-%% %% Incompatible with hyperref
-%% \usepackage[multiple]{footmisc}
-%% 
+%% \usepackage[multiple]{footmisc}  %% Incompatible with hyperref
+
 %% https://tex.stackexchange.com/questions/40072/incompatibility-between-footmisc-option-multiple-and-hyperref/62091#62091
 \let\oldFootnote\footnote
-\newcommand\nextToken\relax
-\renewcommand\footnote[1]{%
-    \oldFootnote{#1}\futurelet\nextToken\isFootnote}
-\newcommand\isFootnote{%
-    \ifx\footnote\nextToken\textsuperscript{,}\fi}
+\nc\nextToken\relax
+\rnc\footnote[1]{\oldFootnote{#1}\futurelet\nextToken\isFootnote}
+\nc\isFootnote{\ifx\footnote\nextToken\textsuperscript{,}\fi}
