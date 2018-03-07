@@ -255,7 +255,7 @@ der :: (a -> b) -> (a -> (a :-* b))
 
 %format der2 = der "^2"
 
-From the type of |der|, it follows that differentiating twice has the following type\footnote{As with ``|->|'', we will take ``|:-*|'' to associate rightward, so |u :-* v :-* w| is equivalent to |u :-* (v :-* w)|.}:
+From the type of |der|, it follows that differentiating twice has the following type:\footnote{As with ``|->|'', we will take ``|:-*|'' to associate rightward, so |u :-* v :-* w| is equivalent to |u :-* (v :-* w)|.}
 
 \begin{code}
 der2 = der . der :: NOP (a -> b) -> (a -> (a :-* a :-* b))
@@ -310,7 +310,7 @@ Moreover, the chain rule itself requires applying a function and its derivative 
 Since the chain rule gets applied recursively to nested compositions, this redundant work multiplies greatly, resulting in an impractically expensive algorithm.
 
 Fortunately, this efficiency problem is easily fixed.
-Instead of pairing |f| and |der f|, \emph{combine} them into a single function\footnote{The precedence of ``|:*|'' is tighter than that of ``|->|'' and ``|:-*|'', so |a -> b :* (a :-* b)| is equivalent to |a -> (b :* (a :-* b))|.}:
+Instead of pairing |f| and |der f|, \emph{combine} them into a single function:\footnote{The precedence of ``|:*|'' is tighter than that of ``|->|'' and ``|:-*|'', so |a -> b :* (a :-* b)| is equivalent to |a -> (b :* (a :-* b))|.}
 \begin{code}
 ad :: (a -> b) -> (a -> b :* (a :-* b))   -- better!
 ad f a = (f a, der f a)
@@ -358,7 +358,7 @@ f (s *^ a)  == s *^ f a
 \end{code}
 for all |a,a' :: v| and |s| taken from the scalar field underlying |u| and |v|.
 
-In addition to the derivative rules for |(.)| and |(***)|, there is one more broadly useful tool to be added to our collection: \emph{the derivative of every linear function is itself, everywhere}:
+In addition to the derivative rules for |(.)| and |(***)|, there is one more broadly useful tool to be added to our collection: \emph{the derivative of every linear function is itself, everywhere}.
 \begin{theorem}[linear rule] \thmLabel{linear}
 For all linear functions |f|, |der f a == f|.
 \end{theorem}
@@ -1841,17 +1841,13 @@ Given the definitions in \figref{asDual},
 
 \sectionl{To do}
 \begin{itemize}
-\item Paper sections:
- \begin{itemize}
- \item Indexed biproducts
- \item Incremental evaluation
- \end{itemize}
-\item Define and use |(-+>)|.
+\item Indexed biproducts
+\item Maybe define and use |(-+>)|.
 \item Nested AD. I think the categorical approach in this paper can correctly handle nesting with ease and that the nesting problem indicates an unfortunate choice of abstraction together with non-rigorous specification and development.
 \item Possible title or subtitle: ``Differentiable functional programming made easy''.
 Note the two meanings: easy to implement correctly and efficiently, and easy to use.
-Perhaps save that title for another talk and paper (to write soon).
-A quick web search turns up \href{http://www.robots.ox.ac.uk/~gunes/assets/pdf/baydin-2016-slides-functionallondoners.pdf}{a use of this term}.
+Perhaps save that title for another talk and paper.
+A quick web search turns up \href{http://www.robots.ox.ac.uk/~gunes/assets/pdf/baydin-2016-slides-functionallondoners.pdf}{a use of this DFP term}.
 \item Probably remove the |Additive| constraints in |Cocartesian|, along with the |Cocartesian (->)| instance.
       Otherwise, mention that the implementation does so.
       |InitialCat (->)| isn't what we need.
@@ -1867,7 +1863,6 @@ A quick web search turns up \href{http://www.robots.ox.ac.uk/~gunes/assets/pdf/b
 \item Formatting issues:
  \begin{itemize}
  \item Fix two-column (minipage) spacing and separation bars for ACM style.
- \item Code indentation for ACM style.
  \item Footnotes before or after colons?
  \end{itemize}
 \end{itemize}
