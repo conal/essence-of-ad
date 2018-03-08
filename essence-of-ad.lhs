@@ -4,6 +4,8 @@
 
 %% %let acm = True
 
+%% %let indexed = True
+
 %if acm
 
 %% \documentclass[acmsmall,screen]{acmart} % ,authorversion=true,
@@ -67,8 +69,12 @@
 %endif
 
 \input{macros}
+\citestyle{acmauthoryear}
 
 \usepackage{scalerel}
+
+\usepackage{datetime}
+\usdate
 
 %include polycode.fmt
 %include forall.fmt
@@ -76,16 +82,14 @@
 %include formatting.fmt
 
 \nc\tit{The simple essence of automatic differentiation}
-\nc\alttit{(or, Differentiable functional programming made easy)}
-\date{Draft\footnote{In this draft, \mynote{red bracketed text} indicates notes to be addressed and eliminated as writing progresses.}~\ of \today{} (\emph{comments requested})}
+\nc\alttit{Differentiable functional programming made easy}
+\date{Draft\footnote{In this draft, \mynote{red bracketed text} indicates notes to be addressed and eliminated as writing progresses.}~\ of \today{} \currenttime \out{\\[1ex] For submission to ICFP 2018 ---} \emph{(comments requested)}}
 
 %if acm
-\title{\tit}
-\subtitle{\alttit}
+\title{\tit} \subtitle{\alttit}
 %else
 \title{\tit \\[1ex] \large \alttit}
 %endif
-\setlength\mathindent{3ex}
 
 \newtheorem{theorem}{Theorem}%[section]
 \nc\thmLabel[1]{\label{theorem:#1}}
@@ -110,6 +114,7 @@
 \nc\provedIn[1]{\textnormal{Proved in \proofRef{#1}}}
 
 \setlength{\blanklineskip}{2ex}
+\setlength\mathindent{3ex}
 
 %% Needs a "%"after \end{closerCodePars} to avoid a blank space. Fixable?
 \newenvironment{closerCodePars}{\setlength{\blanklineskip}{1.3ex}}{}
@@ -129,7 +134,7 @@ Automatic differentiation (AD) is often presented in two forms: forward mode and
 Forward mode is quite simple to implement and package via operator overloading, but is inefficient for many problems of practical interest such as deep learning and other uses of gradient-based optimization.
 Reverse mode (including its specialization, backpropagation) is much more efficient for these problems, but is also typically given much more complicated explanations and implementations.
 This paper develops a very simple specification and implementation for mode-independent AD based on the vocabulary of categories (``generalized functions'').
-Although the categorical vocabulary would be difficult to write in directly, one can instead write regular Haskell programs to be converted to this vocabulary automatically (via a compiler plugin) and then interpreted as differentiable functions.
+Although the categorical vocabulary would be awkward to write in directly, one can instead write regular Haskell programs to be converted to this vocabulary automatically (via a compiler plugin) and then interpreted as differentiable functions.
 The result is direct, exact, and efficient differentiation with no notational overhead.
 The specification and implementation are generalized considerably by parameterizing over an underlying category.
 This generalization is then easily specialized to two variations of reverse-mode AD.
@@ -158,7 +163,7 @@ Construction and interpretation (or compilation) of graphs and tapes also adds e
 The importance of the RAD algorithm makes its current complicated and bulky implementations especially problematic.
 The increasingly large machine learning (and other optimization) problems being solved with RAD (usually via backpropagation) suggest the need to find more streamlined, efficient implementations, especially with the massive hardware parallelism now readily and inexpensively available in the form of graphics processors (GPUs) and FPGAs.
 
-Another difficulty in the practical application of AD in machine learning (ML) comes from the nature of many currently popular ML frameworks, including Theano, TensorFlow, Keras, and Torch, \mynote{others?} \needcite.
+Another difficulty in the practical application of AD in machine learning (ML) comes from the nature of many currently popular ML frameworks, including\out{ Theano \citep{Bergstra10theano}\notefoot{Theano doesn't seem to expose graphs.},} Caffee \citep{Jia2014Caffe}, TensorFlow \citep{Abadi2016TensorFlow}, and Keras \citep{Chollet2016KerasResources}.
 These frameworks are designed around the notion of a ``graph'' (or ``network'') of interconnected nodes, each of which is a mathematical operation---a sort of data flow graph.
 Application programs construct these graphs \emph{explicitly}, creating nodes and connecting them to other nodes.
 After construction, the graphs must then be processed into a representation that is more efficient to execute, i.e., train and to evaluate.
@@ -185,7 +190,7 @@ Assuming a \emph{purely} functional language or language subset (with simple and
 How can we realize this vision of differentiable functional programming?
 One way is to create new languages, but doing so requires enormous effort to define and implement efficiently, and perhaps still more effort to evangelize.
 Alternatively, we might choose a suitable purely functional language like Haskell and then figure out how to add differentiation.
-The present paper embodies the latter choice, augmenting the popular Haskell compiler GHC \needcite{} with a plugin that converts standard Haskell code into categorical form to then be instantiated in any of a variety of categories, including differentiable functions \citep{Elliott-2017-compiling-to-categories}.
+The present paper embodies the latter choice, augmenting the popular Haskell compiler GHC with a plugin that converts standard Haskell code into categorical form to then be instantiated in any of a variety of categories, including differentiable functions \citep{Elliott-2017-compiling-to-categories}.
 
 This paper makes the following specific contributions:
 \begin{itemize}
@@ -1299,17 +1304,26 @@ begin f = Begin (lcomp f)
 As usual, we can derive instances for our new category by homomorphic specification (for |begin|).
 Then choose |r| to be the scalar field |s|, as in \secref{Gradients and duality}, noting that |(s :-* a) =~= a|.
 
+%if indexed
+
 \sectionl{Indexed biproducts}
 
-%if True
 \mynote{Writing in progress. When finished, add to the contributions and maybe abstract.}
-%else
+
 So far, we have considered binary products.
 Practical applications, including machine learning and other optimization problems, often involve very high-dimensional spaces.
 While those spaces can be encoded as nested binary products, doing so would result in unwieldy representations and long compilation and execution times.
 A more practical approach is to consider $n$-ary products, for which we can again use representable functors.
-Replace the two arguments to |(***)| by a (representable) functor |h| of morphisms:
-%format IxMonoidalPCat = MonoidalN
+To construct and consume these ``indexed'' (bi)products, we'll need an indexed variant of |Monoidal|, replacing the two arguments to |(***)| by a (representable) functor |h| of morphisms:
+%format IxMonoidalPCat = MonoidalI
+%format IxProductCat = CartesianI
+%format crossF = crossI
+%format exF = exI
+%format replF = replI
+%format inPF = inI
+%format jamPF = jamI
+%format forkF = forkI
+%format joinPF = joinI
 \begin{code}
 class Category k => IxMonoidalPCat k h where
   crossF :: h (a `k` b) -> (h a `k` h b)
@@ -1317,12 +1331,81 @@ class Category k => IxMonoidalPCat k h where
 instance Zip h => IxMonoidalPCat (->) h where
   crossF = zipWith id
 \end{code}
-Note that the combined morphisms are restricted have the same types, due to type system limitation.
+Note that the packaged morphisms must all agree in domain and codomain.
+This restriction is due to fit into Haskell's type system and is not inherent in the categorical notion of general products.
 
+Where the |ProductCat| class has two projection methods and a duplication method, the indexed counterpart has a collection of projections and one replication.
 \begin{code}
-instance (Zip h, IxMonoidalPCat k h) => IxMonoidalPCat (GD k) h where
-  crossF fs = D (second crossF . unzip . crossF (fmap unD fs))
+class IxMonoidalPCat k h => IxProductCat k h where
+  exF    :: h (h a `k` a)
+  replF  :: a `k` h a
+
+instance (Representable h, Zip h, Pointed h) => IxProductCat (->) h where
+  exF    = tabulate (flip index)
+  replF  = point
 \end{code}
+Dually, where the |CoproductCat| class has two injection methods and a binary combination method, the indexed counterpart has a collection of injections and one collection-combining method:
+%format sumA = sum
+%format Summable = Foldable
+\begin{code}
+class IxMonoidalPCat k h => IxCoproductPCat k h where
+  inPF   :: Additive a => h (a `k` h a)
+  jamPF  :: Additive a => h a `k` a
+
+instance Summable h => IxCoproductPCat (->) h where
+  inPF      = tabulate (\ i a -> tabulate (\ j -> if i == j then a else zero))
+  jamPF     = sumA
+\end{code}
+There are also indexed variants of the derived operations |(&&&)| and |(###)| from \secref{Derived operations}:
+\begin{code}
+forkF :: IxProductCat k h => h (a `k` b) -> (a `k` h b)
+forkF fs = crossF fs . replF
+
+joinPF :: (IxProductCat k h, Additive a) => h (b `k` a) -> (h b `k` a)
+joinPF fs = jamPF . plusPF fs
+\end{code}
+As usual, we can derive instances for our new category by homomorphic specification:
+\begin{theorem}[\provedIn{theorem:indexed}]\thmLabel{indexed}
+Given the definitions in \figref{indexed}, |adf| is a homomorphism with respect to the instantiated classes.
+\end{theorem}
+\figref{indexed} assumes the following definitions:
+\begin{code}
+unD :: D a b -> (a -> (b :* (a :-* b)))
+unD (D f) = f
+
+unzip :: Functor h => h (a :* b) -> h a :* h b
+unzip ps = (fmap exl ps, fmap exr ps)
+
+second :: (b `k` d) -> ((a :* b) `k` (a :* d))
+second g = id *** g
+
+class Zip h where zipWith :: (a -> b -> c) -> h a -> h b -> h c
+\end{code}
+\begin{figure}
+\begin{center}
+\begin{code}
+instance (IxMonoidalPCat k h, Zip h) => IxMonoidalPCat (GD k) h where
+  crossF fs = D (second crossF . unzip . crossF (fmap unD fs))
+
+instance (IxProductCat (->) h, IxProductCat k h, Zip h) => IxProductCat (GD k) h where
+  exF = linearD exF exF
+  replF = zipWith linearD replF replF
+
+instance (IxCoproductPCat k h, Zip h) => IxCoproductPCat (GD k) h where
+  inF = zipWith linearD inF inF
+  jamPF = linearD jamPF jamPF
+\end{code}
+\caption{AD for indexed biproducts}
+\figlabel{indexed}
+\end{center}
+\end{figure}
+
+\workingHere
+
+\mynote{Indexed products and linearity, along with |Cont| and |Dual|.}
+
+\mynote{Discuss other bulk operations: |fmap|, |zipWith|, etc.}
+
 %endif
 
 \sectionl{Related work}
@@ -1330,7 +1413,7 @@ instance (Zip h, IxMonoidalPCat k h) => IxMonoidalPCat (GD k) h where
 The literature on automatic differentiation is vast, beginning with forward mode \citep{Wengert64} and later reverse mode \citep{Speelpenning:1980:CFP,Rall1981Automatic}, with many developments since \citep{Griewank89onAD,GriewankWalther2008EvalDerivs}.
 While most techniques and uses of AD have been directed at imperative programming, there are also variations for functional programs \citep{Karczmarczuk1999FunCoding,Karczmarczuk00adjointcodes,Karczmarczuk2001FunDif,Pearlmutter2007LMH,Pearlmutter2008RAF,Elliott2009-beautiful-differentiation}.
 The work in this paper differs in being phrased at the level of functions/morphisms and specified by functoriality without any allusion to or manipulation of graphs or other syntactic representations.\footnote{Of course the Haskell compiler itself manipulates syntax trees, and the compiler plugin that converts Haskell code to categorical form helps do so, but both are entirely domain-independent, with no any knowledge of or special support for differentiation or linear algebra \citep{Elliott-2017-compiling-to-categories}.}
-Moreover, the specifications in this paper are simple enough that the various forms of AD presented can be calculated into being (easily)\notefoot{In the conference version, add a citation here to \appref{Proofs} in (this) extended version.}, and so are correct by construction.
+Moreover, the specifications in this paper are simple enough that the various forms of AD presented can be calculated into being (easily)\notefoot{In the conference version, add a citation here to \appref{Proofs} in the extended version.}, and so are correct by construction.
 
 \citet{Pearlmutter2008RAF} make the following observation:
 \begin{quotation}\noindent
@@ -1350,7 +1433,7 @@ That work uses natural numbers as categorical objects to capture the dimensions 
 The difference is perhaps minor, however, since natural numbers can be thought of as representing finite sets (or corresponding cardinality), which are \emph{bases} of finite-dimensional free vector spaces (as in \secref{Generalized matrices}).
 On the other hand, the duality-based gradient algorithm of \secref{Gradients and duality} involves no matrices at all in their traditional representation (arrays of numbers) or generalized sense of \secref{Generalized matrices} (representable functors).
 
-Also sharing a categorical style is the work of \citep{Fong2017BackpropAF}, formulating the ``backpropropagation'' algorithm as a functor.
+Also sharing a categorical style is the work of \citet{Fong2017BackpropAF}, formulating the backpropropagation algorithm as a functor.
 That work, which also uses biproducts (in monoidal but not cartesian form), does not appear to be separable from the application to machine learning, and so would seem to complement this paper.
 Backpropagation is a specialization of AD to the context of machine learning made famous by \citet{Rumelhart1988backprop}, though discovered earlier by \citet{Linnainmaa1970MS}.
 
@@ -1373,7 +1456,7 @@ Both implementations rely on hidden, carefully crafted use of side effects.
 This paper builds on a compiler plugin that translates Haskell programs into categorical form to be specialized to various specific categories, including differentiable functions \citep{Elliott-2017-compiling-to-categories}.
 (The plugin knows nothing about any specific category, including differentiable functions.)
 Another instance of generalized AD given there is automatic incremental evaluation of functional programs.
-Relative to that work, the new contributions are the |ContC k r| and |DualC k| categories, their use to succinctly implement reverse-mode AD (by instantiating the generalized differentiation category), the precise specification of instances for |D|, |GD k|, |ContC k r|, and |DualC k| via functoriality, and the calculation of implementations given from these specifications.
+Relative to that work, the new contributions are the |ContC k r| and |DualC k| categories, their use to succinctly implement reverse-mode AD (by instantiating the generalized differentiation category), the precise specification of instances for |D|, |ContC k r|, and |DualC k| via functoriality, and the calculation of implementations from these specifications.
 
 \mynote{Maybe relate the methodology of \secref{Programming as defining and solving algebra problems} to \citet{BirddeMoor96:Algebra} and \citet{Elliott2009-type-class-morphisms-TR}.}
 
@@ -1863,7 +1946,6 @@ Finally, scaling:
 ==  Dual (scale s)                -- |unDot . dot == id|
 \end{code}
 
-
 \subsection{\corRef{dual-derived}}\proofLabel{corollary:dual-derived}
 Given the definitions in \figref{asDual},
 \begin{code}
@@ -1882,12 +1964,59 @@ Given the definitions in \figref{asDual},
 ==  Dual (f &&& g)              -- definition of |(&&&)|
 \end{code}
 
+%if indexed
+
+\subsection{\thmRef{indexed}}\proofLabel{theorem:indexed}
+
+%% Given the definitions in \figref{indexed},
+
+We will need an indexed counterpart to \thmRef{cross}, which says
+
+$$|der (f *** g) (a,b) == der f a *** der g b|$$
+
+Letting `cross = uncurry (***)`, we can rephrase this theorem:
+\begin{code}
+    der (f *** g)
+==  \ (a,b) -> der f a *** der g b              -- \thmRef{cross}
+==  \ (a,b) -> cross (der f a, der g b)         -- definition of |cross|
+==  \ (a,b) -> cross ((der f *** der g) (a,b))  -- definition of |(***)| on functions
+==  cross . (der f *** der g)                   -- definition of |(.)| on functions
+\end{code}
+Likewise, extend from binary to $n$-ary:
+\begin{theorem}[indexed cross rule] \thmLabel{crossF}
+$$|der (crossF fs) == crossF . crossF (fmap der fs)|$$
+\end{theorem}
+If |fs :: h (a -> b)|, then both sides of this equation have type |h a -> (h a :-* h b)|.
+The proof is similar to \thmRef{cross} \citep[variant of Theorem 2-3 (3)]{Spivak65}.
+
+\thmRef{crossF} gives us what we need to construct |ad (crossF fs)| compositionally:
+\begin{corollary} \corLabel{crossF}
+|ad| is compositional with respect to |crossF|. Specifically,
+$$|ad (crossF fs) == second crossF . unzip . crossF (fmap ad fs)|$$
+\end{corollary}
+The proof is analogous to \corRef{cross}:
+\begin{code}
+    ad (crossF fs) as
+==  (crossF fs as, der (crossF fs) as)                                          -- definition of |ad|
+==  (crossF fs as, crossF (crossF (fmap der fs) as))                            -- \thmRef{crossF}
+==  let (bs,fs') = (crossF fs as, crossF (fmap der fs) as) in (bs, crossF fs')  -- refactor
+==  let (bs,fs') = unzip (crossF (fmap ad fs) as) in (bs, crossF fs')           -- |unzip| ...
+==  second crossF (unzip (crossF (fmap ad fs) as))                              -- def'n of |second|
+==  (second crossF . unzip . crossF (fmap ad fs)) as                            -- def'n of |(.)| on |(->)|
+\end{code}
+
+\mynote{...}
+
+\workingHere
+
+%endif
+
 \bibliography{bib}
 
 \sectionl{To do}
 \begin{itemize}
 \item Future work
-\item Indexed biproducts
+\item Indexed biproducts (in progress)
 \item Maybe define and use |(-+>)|.
 \item Nested AD. I think the categorical approach in this paper can correctly handle nesting with ease and that the nesting problem indicates an unfortunate choice of abstraction together with non-rigorous specification and development.
 \item Possible title or subtitle: ``Differentiable functional programming made easy''.
@@ -1901,7 +2030,7 @@ A quick web search turns up a few uses of ``differentiable functional programmin
       For each example, show the function, |andDerivF|, |andDerivR|, and |andGradR|.
 \item Mention graph optimization and maybe show one or more un-optimized graphs.
 \item Examples with generalized matrices.
-\item Mention flaw in the compose/chain and cross rules: the decomposed pieces may not be differentiable.
+\item Mention flaw in the customary compose/chain and cross rules: the decomposed pieces may not be differentiable.
 \item Sub-differentiation. 
 \item |ConstCat| for |DualC k| and for linear arrows in general.
 \item What is ``generalized AD''?
