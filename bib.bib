@@ -509,7 +509,7 @@ keywords = "Linear algebra, Categories of matrices, Algebra of programming"
 @inproceedings{Gill2009TOS,
  author = {Andy Gill},
  title = {\href{http://ku-fpg.github.io/papers/Gill-09-TypeSafeReification/}{Type-safe observable sharing in Haskell}},
- booktitle = {Proceedings of the 2Nd ACM SIGPLAN Symposium on Haskell},
+ booktitle = {Proceedings of the 2nd ACM SIGPLAN Symposium on Haskell},
  series = {Haskell '09},
  year = {2009},
  Qpages = {117--128},
@@ -554,7 +554,7 @@ keywords = "Linear algebra, Categories of matrices, Algebra of programming"
   author =    {Max Bolingbroke},
   title =     {Constraint kinds for {GHC}},
   howpublished = {blog post},
-  month =     {sep},
+  month =     sep,
   year =      2011,
   note =    {\url{http://blog.omega-prime.co.uk/2011/09/10/constraint-kinds-for-ghc/}}
 }
@@ -595,4 +595,49 @@ keywords = "Linear algebra, Categories of matrices, Algebra of programming"
   month = {October},
   abstract = {We present a series of CPS-based intermediate languages suitable for functional language compilation, arguing that they have practical benefits over direct-style languages based on A-normal form (ANF) or monads. Inlining of functions demonstrates the benefits most clearly: in ANF-based languages, inlining involves a re-normalization step that rearranges let expressions and possibly introduces a new `join point' function, and in monadic languages, commuting conversions must be applied; in contrast, inlining in our CPS language is a simple substitution of variables for variables. We present a contification transformation implemented by simple rewrites on the intermediate language. Exceptions are modelled using so-called `double-barrelled' CPS. Subtyping on exception constructors then gives a very straightforward effect analysis for exceptions. We also show how a graph-based representation of CPS terms can be implemented extremely efficiently, with linear-time term simplification.},
   Qpublisher = {ACM Press},
+}
+
+@inproceedings{Bergstra10theano,
+    author = {James Bergstra and Olivier Breuleux and Frédéric Bastien and Pascal Lamblin and Razvan Pascanu and Guillaume Desjardins and Joseph Turian and David Warde-farley and Yoshua Bengio},
+    title = {Theano: A CPU and GPU math compiler in python},
+    booktitle = {Proceedings of the 9th Python in Science Conference},
+    year = {2010},
+    Qpages = {3--10}
+}
+
+@inproceedings{Abadi2016TensorFlow,
+  title = {TensorFlow: A system for large-scale machine learning},
+  author  = {Martin Abadi and Paul Barham and Jianmin Chen and Zhifeng Chen and Andy Davis and Jeffrey Dean and Matthieu Devin and Sanjay Ghemawat and Geoffrey Irving and Michael Isard and Manjunath Kudlur and Josh Levenberg and Rajat Monga and Sherry Moore and Derek G. Murray and Benoit Steiner and Paul Tucker and Vijay Vasudevan and Pete Warden and Martin Wicke and Yuan Yu and Xiaoqiang Zheng},
+  year  = {2016},
+  url = {https://www.usenix.org/system/files/conference/osdi16/osdi16-abadi.pdf},
+  booktitle = {12th USENIX Symposium on Operating Systems Design and Implementation (OSDI 16)},
+  pages = {265--283}
+}
+
+@Misc{Chollet2016KerasResources,
+  author =    {François Chollet},
+  title =     {Keras resources},
+  howpublished = {GitHub repository},
+  year =      2016,
+  url = {https://github.com/fchollet}}
+
+@article{Jia2014Caffe,
+  author    = {Yangqing Jia and
+               Evan Shelhamer and
+               Jeff Donahue and
+               Sergey Karayev and
+               Jonathan Long and
+               Ross B. Girshick and
+               Sergio Guadarrama and
+               Trevor Darrell},
+  title     = {Caffe: Convolutional Architecture for Fast Feature Embedding},
+  journal   = {CoRR},
+  volume    = {abs/1408.5093},
+  year      = {2014},
+  url       = {http://arxiv.org/abs/1408.5093},
+  archivePrefix = {arXiv},
+  eprint    = {1408.5093},
+  timestamp = {Wed, 07 Jun 2017 14:40:16 +0200},
+  biburl    = {https://dblp.org/rec/bib/journals/corr/JiaSDKLGGD14},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
 }
