@@ -40,9 +40,9 @@ clean:
 
 web: web-token
 
-STASH=conal@conal.net:/home/conal/web/talks
+STASH=conal@conal.net:/home/conal/web/papers/essence-of-ad
 web: web-token
 
 web-token: $(TARG).pdf
-	scp $? $(STASH)/simple-essence-of-automatic-differentiation.pdf
+	scp $? $(STASH)/essence-of-ad.pdf
 	touch $@
