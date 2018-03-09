@@ -154,9 +154,9 @@ The dualized variant is suitable for gradient-based optimization and is particul
 
 \sectionl{Introduction}
 
-Accurate, efficient, and reliable computation of derivatives has become increasingly important over the last several years, thanks in large part to the successful use of \emph{backpropagation} in machine learning, including multi-layer neural networks (``deep learning'') \citep[Section 6.5]{Goodfellow2016DL}.
+Accurate, efficient, and reliable computation of derivatives has become increasingly important over the last several years, thanks in large part to the successful use of \emph{backpropagation} in machine learning, including multi-layer neural networks, also known as ``deep learning'' \citep{LecunBengioHinton2015DLNature,Goodfellow2016DL}.
 Backpropagation is a specialization and independent invention of the \emph{reverse mode} of automatic differentiation (AD) and is used to tune a parametric model to closely match observed data, using the \emph{gradient descent} (or \emph{stochastic} gradient descent) optimization algorithm.
-Machine learning and other gradient-based optimization problems typically rely on derivatives of functions with very high dimensional domains \needcite{} and a scalar codomain---exactly the conditions under which reverse-mode AD is much more efficient than forward-mode AD (by a factor proportional to the domain dimension).
+Machine learning and other gradient-based optimization problems typically rely on derivatives of functions with very high dimensional domains\out{---often in the hundreds of millions \citep{LecunBengioHinton2015DLNature}---} and a scalar codomain---exactly the conditions under which reverse-mode AD is much more efficient than forward-mode AD (by a factor proportional to the domain dimension).
 Unfortunately, while forward-mode AD (FAD) is easily understood and implemented \needcite, reverse-mode AD (FAD) and backpropagation have had much more complicated explanations and implementations, involving mutation, graph construction and traversal, and ``tapes'' (sequences of reified, interpretable assignments, also called ``traces'' or ``Wengert lists'') \needcite.
 The use of mutation, while motivated by efficiency concerns, makes parallel execution difficult and so undermines efficiency as well.
 Construction and interpretation (or compilation) of graphs and tapes also adds execution overhead.
@@ -1202,7 +1202,7 @@ The derivatives are represented as (linear) functions again, but reversed (mappi
 As a special case of reverse-mode automatic differentiation, let's consider its use to compute \emph{gradients}, i.e., derivatives of functions with a scalar codomain (e.g., for optimization).
 %% This case is very important for gradient-based optimization.
 
-Given a vector space |A| over a scalar field |s|, the \emph{dual} of |A| is |A :-* s|, i.e., the linear maps to the underlying field \needcite.
+Given a vector space |A| over a scalar field |s|, the \emph{dual} of |A| is |A :-* s|, i.e., the linear maps to the underlying field \citep[]{Lang1987LinearAlgebra}.\footnote{These linear maps are variously known as ``linear functionals'', ``linear forms'', ``one-forms'', and ``covectors''.}
 This dual space is also a vector space, and when |A| has finite dimension, it is isomorphic to its dual.
 In particular, every linear map in |A :-* s| has the form |dot u| for some |u :: A|, where |dot| is the curried dot product:\notefoot{Maybe I don't need this isomorphism, and it suffices to consider those linear maps that do correspond to |dot u| for some |u|.}
 \begin{code}
@@ -1412,7 +1412,7 @@ instance (IxCoproductPCat k h, Zip h) => IxCoproductPCat (GD k) h where
 
 The literature on automatic differentiation is vast, beginning with forward mode \citep{Wengert64} and later reverse mode \citep{Speelpenning:1980:CFP,Rall1981Automatic}, with many developments since \citep{Griewank89onAD,GriewankWalther2008EvalDerivs}.
 While most techniques and uses of AD have been directed at imperative programming, there are also variations for functional programs \citep{Karczmarczuk1999FunCoding,Karczmarczuk00adjointcodes,Karczmarczuk2001FunDif,Pearlmutter2007LMH,Pearlmutter2008RAF,Elliott2009-beautiful-differentiation}.
-The work in this paper differs in being phrased at the level of functions/morphisms and specified by functoriality without any allusion to or manipulation of graphs or other syntactic representations.\footnote{Of course the Haskell compiler itself manipulates syntax trees, and the compiler plugin that converts Haskell code to categorical form helps do so, but both are entirely domain-independent, with no any knowledge of or special support for differentiation or linear algebra \citep{Elliott-2017-compiling-to-categories}.}
+The work in this paper differs in being phrased at the level of functions/morphisms and specified by functoriality without any allusion to or manipulation of graphs or other syntactic representations.\footnote{Of course the Haskell compiler itself manipulates syntax trees, and the compiler plugin that converts Haskell code to categorical form helps do so, but both are entirely domain-independent, with no knowledge of or special support for differentiation or linear algebra \citep{Elliott-2017-compiling-to-categories}.}
 Moreover, the specifications in this paper are simple enough that the various forms of AD presented can be calculated into being (easily)\notefoot{In the conference version, add a citation here to \appref{Proofs} in the extended version.}, and so are correct by construction.
 
 \citet{Pearlmutter2008RAF} make the following observation:
@@ -1435,7 +1435,7 @@ On the other hand, the duality-based gradient algorithm of \secref{Gradients and
 
 Also sharing a categorical style is the work of \citet{Fong2017BackpropAF}, formulating the backpropropagation algorithm as a functor.
 That work, which also uses biproducts (in monoidal but not cartesian form), does not appear to be separable from the application to machine learning, and so would seem to complement this paper.
-Backpropagation is a specialization of AD to the context of machine learning made famous by \citet{Rumelhart1988backprop}, though discovered earlier by \citet{Linnainmaa1970MS}.
+Backpropagation is a specialization of reverse-mode AD to the context of machine learning, discovered by \citet{Linnainmaa1970MS} and famous by \citet{Rumelhart1988backprop}.
 
 The continuation transformation of \secref{Reverse-mode AD} was inspired by Mitch Wand's work on continuation-based program transformation \citep{Wand80continuation-basedprogram}.
 He derived a variety of algorithms based on a single elegant technique: transform a simple recursive program into continuation-passing form, examine the continuations that arise, and find a data (rather than function) representation for them.
@@ -1452,6 +1452,13 @@ The most successful implementation appears to be in the \emph{ad} library \citep
 One RAD implementation in that library uses stable names \citep{PeytonJones99Stretching} and reification \citep{Gill2009TOS} to recover sharing information.
 Another maintains a Wengert list (or ``tape'') with the help of a reflection library \citep{Kiselyov2004FPI}.
 Both implementations rely on hidden, carefully crafted use of side effects.
+
+Chris \citet{Olah2015NNTFP} shared a vision for ``differentiable functional programming'' similar to that in \secref{Introduction}.
+He pointed out that most of the patterns now used in machine learning are already found in functional programming:
+\begin{quotation}
+These neural network patterns are just higher order functions---that is, functions which take functions as arguments. Things like that have been studied extensively in functional programming. In fact, many of these network patterns correspond to extremely common functions, like fold. The only unusual thing is that, instead of receiving normal functions as arguments, they receive chunks of neural network.
+\end{quotation}
+The current paper carries this perspective further, suggesting that the that the essence is \emph{differentiable functions}, with ``networks'' (graphs) being an unnecessary (and unwise) operational choice.
 
 This paper builds on a compiler plugin that translates Haskell programs into categorical form to be specialized to various specific categories, including differentiable functions \citep{Elliott-2017-compiling-to-categories}.
 (The plugin knows nothing about any specific category, including differentiable functions.)
@@ -1477,7 +1484,7 @@ Perhaps more about the following:
 
 \mynote{
 \begin{itemize}
-\item Analyze time and space performance, especially comparing the reverse-mode implementations in this paper (|GD (Cont s (-+>))| and |GD (DualC (-+>))|) with commonly used stateful implementations.
+\item Analyze time and space performance, especially comparing the reverse-mode implementations in this paper (|GD (ContC s (-+>))| and |GD (DualC (-+>))|) with commonly used stateful implementations.
 \item Other applications of generalized AD besides differentiation (in the calculus sense).
 What does generalized AD mean in these cases?
 Recall that the original specification in \secref{Categories} was in terms of mathematical differentiation.
@@ -2018,8 +2025,9 @@ The proof is analogous to \corRef{cross}:
 \item Future work
 \item Indexed biproducts (in progress)
 \item Maybe define and use |(-+>)|.
+\item Return to comparison with TensorFlow etc in the related work and/or conclusions section.
 \item Nested AD. I think the categorical approach in this paper can correctly handle nesting with ease and that the nesting problem indicates an unfortunate choice of abstraction together with non-rigorous specification and development.
-\item Possible title or subtitle: ``Differentiable functional programming made easy''.
+\item Resolve possible title or subtitle: ``Differentiable functional programming made easy''.
 Note the two meanings: easy to implement correctly and efficiently, and easy to use.
 Perhaps save that title for another talk and paper.
 A quick web search turns up a few uses of ``differentiable functional programming''.
@@ -2030,9 +2038,9 @@ A quick web search turns up a few uses of ``differentiable functional programmin
       For each example, show the function, |andDerivF|, |andDerivR|, and |andGradR|.
 \item Mention graph optimization and maybe show one or more un-optimized graphs.
 \item Examples with generalized matrices.
-\item Mention flaw in the customary compose/chain and cross rules: the decomposed pieces may not be differentiable.
+\item Mention flaw in the customary chain rule: the decomposed pieces may not be differentiable.
 \item Sub-differentiation. 
-\item |ConstCat| for |DualC k| and for linear arrows in general.
+%% \item |ConstCat| for |DualC k| and for linear arrows in general.
 \item What is ``generalized AD''?
       Is it AD at all or something else?
 \end{itemize}
