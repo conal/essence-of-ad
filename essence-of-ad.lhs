@@ -2,7 +2,11 @@
 
 %% TODO: replace latex if with lhs2tex if
 
-%% %let acm = True
+%let acm = True
+
+%let extended = not acm
+
+%let draft = not acm %% for now
 
 %% %let indexed = True
 
@@ -71,6 +75,10 @@
 \input{macros}
 \citestyle{acmauthoryear}
 
+%if not draft
+\rnc\indraft[1]{}
+%endif
+
 \usepackage{scalerel}
 
 \usepackage{datetime}
@@ -110,8 +118,8 @@
 \nc\lemRefs[2]{Lemma \ref{lemma:#1} through \ref{lemma:#2}}
 
 \nc\proofLabel[1]{\label{proof:#1}}
-\nc\proofRef[1]{Appendix \ref{proof:#1}}
 \nc\provedIn[1]{\textnormal{Proved in \proofRef{#1}}}
+\nc\proofRef[1]{Appendix \ref{proof:#1}}
 
 \setlength{\blanklineskip}{2ex}
 \setlength\mathindent{3ex}
@@ -140,7 +148,7 @@ The specification and implementation are generalized considerably by parameteriz
 This generalization is then easily specialized to two variations of reverse-mode AD.
 These reverse-mode implementations are much simpler than previously known and are composed from two generally useful category transformers: continuation-passing and dualization.
 All of the implementations are calculated from simple, homomorphic specifications and so are correct by construction.
-The dualized variant is suitable for gradient-based optimization and is particularly compelling in simplicity and efficiency, requiring no matrix-level representations or computation.
+The dualized variant is suitable for gradient-based optimization and is particularly compelling in simplicity and efficiency, requiring no matrix-level representations or computations.
 
 \end{abstract}
 
@@ -149,15 +157,15 @@ The dualized variant is suitable for gradient-based optimization and is particul
 %endif
 
 %format Type = "\ast"
-%format V (s) = V"\!_{"s"}"
-%format (HasV (s)) = HasV QQ"_{"s"}"
+%format Vec (s) = V"\!_{"s"}"
+%format (HasV (s)) = HasV "\!_{"s"}"
 
 \sectionl{Introduction}
 
 Accurate, efficient, and reliable computation of derivatives has become increasingly important over the last several years, thanks in large part to the successful use of \emph{backpropagation} in machine learning, including multi-layer neural networks, also known as ``deep learning'' \citep{LecunBengioHinton2015DLNature,Goodfellow2016DL}.
 Backpropagation is a specialization and independent invention of the \emph{reverse mode} of automatic differentiation (AD) and is used to tune a parametric model to closely match observed data, using the \emph{gradient descent} (or \emph{stochastic} gradient descent) optimization algorithm.
 Machine learning and other gradient-based optimization problems typically rely on derivatives of functions with very high dimensional domains\out{---often in the hundreds of millions \citep{LecunBengioHinton2015DLNature}---} and a scalar codomain---exactly the conditions under which reverse-mode AD is much more efficient than forward-mode AD (by a factor proportional to the domain dimension).
-Unfortunately, while forward-mode AD (FAD) is easily understood and implemented \needcite, reverse-mode AD (FAD) and backpropagation have had much more complicated explanations and implementations, involving mutation, graph construction and traversal, and ``tapes'' (sequences of reified, interpretable assignments, also called ``traces'' or ``Wengert lists'') \needcite.
+Unfortunately, while forward-mode AD (FAD) is easily understood and implemented\needcite, reverse-mode AD (RAD) and backpropagation have had much more complicated explanations and implementations, involving mutation, graph construction and traversal, and ``tapes'' (sequences of reified, interpretable assignments, also called ``traces'' or ``Wengert lists'')\needcite.
 The use of mutation, while motivated by efficiency concerns, makes parallel execution difficult and so undermines efficiency as well.
 Construction and interpretation (or compilation) of graphs and tapes also adds execution overhead.
 The importance of the RAD algorithm makes its current complicated and bulky implementations especially problematic.
@@ -236,7 +244,7 @@ So far, we've seen that the derivative of a function could be a single number (f
 Moreover, each of these situations has an accompanying chain rule, which says how to differentiate the composition of two functions.
 Where the scalar chain rule involves multiplying two scalar derivatives, the vector chain rule involves ``multiplying'' two \emph{matrices} $\A$ and $\B$ (the Jacobians), defined as follows:
 $$ (\A \cdot \B)_{ij} = \sum_{k=1}^m \A_{ik} \cdot \B_{kj} $$
-Since once can think of scalars as a special case of vectors, and scalar multiplication as a special case of matrix multiplication, perhaps we've reached the needed generality.
+Since one can think of scalars as a special case of vectors, and scalar multiplication as a special case of matrix multiplication, perhaps we've reached the needed generality.
 When we turn our attention to higher derivatives (which are derivatives of derivatives), however, the situation gets more complicated, and we need yet higher-dimensional representations, with correspondingly more complex chain rules.
 
 Fortunately, there is a single, elegant generalization of differentiation with a correspondingly simple chain rule.
@@ -383,7 +391,7 @@ When expressed in terms of typical \emph{representations} of linear maps, this p
 
 As another example, consider the (linear) function |fst (a,b) = a|, for which the linearity rule says |der fst (a,b) == fst|.
 This property, when expressed in terms of typical \emph{representations} of linear maps, would appear as saying that |der fst a| comprises the partial derivatives one and zero if |a, b :: R|.
-More generally, if |a :: Rm| and |b :: Rn|, then the Jacobian matrix representation has shape |m :* (m+n)| (i.e., |m| rows and |m + n| columns) and is formed by the horizontal abutment of an |m :* m| identity matrix on the left with an |m :* n| zero matrix on the right.
+More generally, if |a :: Rm| and |b :: Rn|, then the Jacobian matrix representation has shape |m :* (m+n)| (i.e., |m| rows and |m + n| columns) and is formed by the horizontal juxtaposition of an |m :* m| identity matrix on the left with an |m :* n| zero matrix on the right.
 This |m :* (m+n)| matrix, however, represents |fst :: Rm :* Rn :-* Rm|.
 Note how much simpler it is to say |der fst (a,b) == fst|, and with no loss of precision!
 
@@ -774,7 +782,7 @@ unjoin h = (h . inl, h . inr)
 So far, the vocabulary we've considered comprises linear functions and combining forms (|(.)| and |(***)|) that preserve linearity.
 To make differentiation interesting, we'll need some non-linear primitives as well.
 Let's now add these primitives, while continuing to derive correct implementations from simple, regular specifications in terms of homomorphisms (structure-preserving transformations).
-We'll define a collection of interfaces for numeric operations, roughly imitating Haskell's numeric type class hierarchy \needcite.
+We'll define a collection of interfaces for numeric operations, roughly imitating Haskell's numeric type class hierarchy.
 
 Haskell provides the following basic class:
 \begin{code}
@@ -1012,11 +1020,11 @@ For instance,
       For surfaces represented in parametric form, i.e., as |f :: R2 -> R3|, normal vectors are calculated from the partial derivatives of |f| as vectors, which are the rows of the $3 \times 2$ Jacobian matrix that represents the derivative of |f| at any given point |p :: R2|.
 \end{itemize}
 
-Given a linear map |f' :: U :-* V| represented as a function, it is possible to extract a Jacobian matrix from (including the special case of a gradient vector), by applying |f'| to every vector in a basis of |U|.
+Given a linear map |f' :: U :-* V| represented as a function, it is possible to extract a Jacobian matrix (including the special case of a gradient vector) by applying |f'| to every vector in a basis of |U|.
 A particularly convenient basis is the sequence of column vectors of an identity matrix, where the |ith| such vector has a one in the |ith| position and zeros elsewhere.
 If |U| has dimension |m| (e.g., |U = Rm|), this sampling requires |m| passes.
 Considering the nature of the sparse vectors used as arguments, each pass likely computes inefficiently.
-Alternatively, the computations can be done using a sparse vector representation, but such an implementation involves considerable complexity and poses difficulties for efficient, massively parallel, SIMD implementations, such as graphics processors \needcite.
+Alternatively, the computations can be done using a sparse vector representation, but such an implementation involves considerable complexity and poses difficulties for efficient, massively parallel, SIMD implementations, such as graphics processors\needcite.
 
 If |U| has very low dimension, then this method of extracting a Jacobian is tolerably efficient, but as dimension grows, it becomes quite expensive.
 In particular, many useful problems involve gradient-based optimization over very high-dimensional spaces, which is the worst case for this technique.
@@ -1026,8 +1034,8 @@ In particular, many useful problems involve gradient-based optimization over ver
 Rather than representing derivatives as functions and then extracting a (Jacobian) matrix, a more conventional alternative is to construct and combine matrices in the first place.
 These matrices are usually rectangular arrays, representing |Rm :-* Rn|, which interferes with the composability we get from  organizing around binary cartesian products, as in the |MonoidalPCat|, |Cartesian|, and |Cocartesian| categorical interfaces.
 
-There is, however, an especially convenient perspective on linear algebra, known as \emph{free vector spaces} \needcite.
-Given a scalar field |s|, any free vector space has the form |p -> s| for some |p|, where the cardinality of |p| is the dimension of the vector space.
+There is, however, an especially convenient perspective on linear algebra, known as \emph{free vector spaces}\needcite\out{FreeVectorSpaceOverASet}.
+Given a scalar field |s|, any free vector space has the form |p -> s| for some |p|, where the cardinality of |p| is the dimension of the vector space (and only finitely many |p| values can have non-zero images).
 Scaling a vector |v :: p -> s| or adding two such vectors is defined in the usual way for functions.
 Rather than using functions directly as a representation, one can instead use any representation isomorphic to such a function.
 In particular, we can represent vector spaces over a given field as a \emph{representable functor}, i.e., a functor |F| such that $\exists p \, \forall s$ |F s =~= p -> s| (where ``|=~=|'' denotes isomorphism)\out{\notefoot{Relate this notion of \emph{functor} to the one used for specifying |adf|.}}
@@ -1047,19 +1055,19 @@ They also provide a composable, type-safe alternative to the more commonly used 
 %format unV = un QQ"_"V
 
 One way to relate these representable functors to the types that appear in our categorical operations is to use associated types, associating a functor representation to various types \citep{Chakravarty05AssociatedSynonyms}.
-Given a scalar field |s| and type |a| of values, presumably built up from a scalar type |s|, the associated |V s a| is a functor such that |V s a s =~= a|.
-In other words, the type |a| is modeled as a structure of |s| values, where the structure is given by the associated functor |V s a|.
+Given a scalar field |s| and type |a| of values, presumably built up from a scalar type |s|, the associated |Vec s a| is a functor such that |Vec s a s =~= a|.
+In other words, the type |a| is modeled as a structure of |s| values, where the structure is given by the associated functor |Vec s a|.
 A ``generalized matrix'' for the linear map type |a :-* b| is the composition of two functors---an outer functor for |b| and an inner functor for |a|, together containing elements from the underlying scalar field |s|:
 %format (LC (s)) = L"_{"s"}"
 \begin{code}
-newtype LC s a b = L (V s b (V s a s))
+newtype LC s a b = L (Vec s b (Vec s a s))
 \end{code}
-For a given type |t|, in addition to the choice of functor |V s t|, there must be functions to convert from |t| to |V s t s| and back:
+For a given type |t|, in addition to the choice of functor |Vec s t|, there must be functions to convert from |t| to |Vec s t s| and back:
 \begin{code}
 class HasV s t where
-  type V s t :: Type -> Type
-  toV  :: t -> V s t s
-  unV  :: V s t s -> t
+  type Vec s t :: Type -> Type
+  toV  :: t -> Vec s t s
+  unV  :: Vec s t s -> t
 \end{code}
 %format Double = R
 Some instances are shown in \figref{HasV instances}.
@@ -1068,12 +1076,12 @@ Note that products are represented as functor products, and uses of existing fun
 \begin{minipage}[b]{0.31\textwidth}
 \begin{code}
 instance HasV s () where
-  type V s () = U1
+  type Vec s () = U1
   toV () = U1
   unV U1 = ()
 
 instance HasV Double Double where
-  type V Double Double = Par1
+  type Vec Double Double = Par1
   toV x = Par1 x
   unV (Par1 x) = x
 \end{code}
@@ -1083,12 +1091,12 @@ instance HasV Double Double where
 \mathindent1em
 \begin{code}
 instance (HasV s a, HasV s b) => HasV s (a :* b) where
-  type V s (a :* b) = V s a :*: V s b
+  type Vec s (a :* b) = Vec s a :*: Vec s b
   toV (a,b) = toV a :*: toV b
   unV (f :*: g) = (unV f,unV g)
 
 instance (HasV s b, KnownNat n) => HasV s (Vector n b) where
-  type V s (Vector n b) = Vector n :.: V s b
+  type Vec s (Vector n b) = Vector n :.: Vec s b
   toV bs = Comp1 (fmap toV bs)
   unV (Comp1 vs) = fmap unV vs
 \end{code}
@@ -1114,7 +1122,7 @@ A more sophisticated version of this question is known as the ``optimal Jacobian
 Alternatively, for some kinds of problems we might want to choose a particular association for sequential composition.
 For instance, gradient-based optimization (including its use in machine learning) uses ``reverse-mode'' automatic differentiation (RAD), which is to say fully left-associated compositions.\notefoot{Is RAD always optimal for gradient problems?}
 (Dually, ``foward-mode'' AD fully right-associates.)
-Reverse mode (including its specialization, backpropagation) is much more efficient for these problems, but is also typically given much more complicated explanations and implementations, involving mutation, graph construction, and ``tapes'' \needcite.
+Reverse mode (including its specialization, backpropagation) is much more efficient for these problems, but is also typically given much more complicated explanations and implementations, involving mutation, graph construction, and ``tapes''\needcite.
 One the main purposes of this paper is to demonstrate that RAD can be accounted for quite simply, while retaining or improving its efficiency of implementation.
 
 \sectionl{Reverse-mode AD}
@@ -1318,6 +1326,7 @@ To construct and consume these ``indexed'' (bi)products, we'll need an indexed v
 %format IxMonoidalPCat = MonoidalI
 %format IxProductCat = CartesianI
 %format crossF = crossI
+%format plusPF = crossI
 %format exF = exI
 %format replF = replI
 %format inPF = inI
@@ -1334,7 +1343,14 @@ instance Zip h => IxMonoidalPCat (->) h where
 Note that the packaged morphisms must all agree in domain and codomain.
 This restriction is due to fit into Haskell's type system and is not inherent in the categorical notion of general products.
 
-Where the |ProductCat| class has two projection methods and a duplication method, the indexed counterpart has a collection of projections and one replication.
+Where the |ProductCat| class has two projection methods and a duplication method, the indexed counterpart has a collection of projections and one replication.\footnote{Assume the following interface for representable functors \citep{Kmett2011Adj}:
+\begin{code}
+class Distributive f => Representable f where
+  type Rep f :: Type
+  tabulate  :: (Rep f -> a) -> f a
+  index     :: f a -> Rep f -> a
+\end{code}
+}
 \begin{code}
 class IxMonoidalPCat k h => IxProductCat k h where
   exF    :: h (h a `k` a)
@@ -1480,6 +1496,10 @@ Perhaps more about the following:
 }
 %endif
 
+%if draft
+
+%% TODO: write this section. Then move out of draft-only
+
 \sectionl{Future work}
 
 \mynote{
@@ -1488,8 +1508,11 @@ Perhaps more about the following:
 \item Other applications of generalized AD besides differentiation (in the calculus sense).
 What does generalized AD mean in these cases?
 Recall that the original specification in \secref{Categories} was in terms of mathematical differentiation.
+\item Optimal-mode AD.
 \end{itemize}
 }
+
+%endif
 
 \sectionl{Conclusions}
 
@@ -1500,13 +1523,13 @@ These RAD implementations are far simpler than previously known.
 In contrast to common approaches to AD, the algorithms described here involve no graphs, tapes, variables, partial derivatives, or mutation, and are usable directly from an existing programming language without the need for new data types or programming style (thanks to use of an AD-agnostic compiler plugin).
 Only the simple essence remains.
 
-AD is typically said to be about the chain rule for sequential composition (\thmRef{compose}) \needcite.
+AD is typically said to be about the chain rule for sequential composition (\thmRef{compose})\needcite.
 This paper rounds out the story with two more rules: one for parallel composition and one for all linear operations (\thmRefTwo{cross}{linear}).
 Parallel composition is usually left implicit in the special-case treatment of a collection of non-unary operations, such as addition, multiplication, division, and dot products.
 With explicit, general support for parallel composition, all operations come to be on equal footing, regardless of arity (as illustrated in \figref{GAD}).
 
 AD is also typically presented in opposition to symbolic differentiation (SD), which is described as applying differentiation rules symbolically.
-The main criticism is that SD can blow up expressions, resulting a great deal of redundant work \needcite{}.
+The main criticism is that SD can blow up expressions, resulting a great deal of redundant work\needcite.
 Secondly, SD requires implementation of symbolic manipulation as in a computer algebra system.
 In contrast, AD is described as a numeric method and can retain the complexity of the original function (within a small constant factor) if carefully implemented, as in RAD.
 The approach explored in this paper suggests a different perspective: automatic differentiation \emph{is} symbolic differentiation done by a compiler.
@@ -1514,6 +1537,8 @@ Compilers already work symbolically and already take care to preserve sharing in
 
 The specification and implementation of AD in a simple, efficient, and correct-by-construction manner, together with its use from a typed functional language (here via a compiler plugin), make a step toward the vision of differentiable functional programming for machine learning and other uses, as outlined in \secref{Introduction}.
 Programmers then define their functions just as they are accustomed, differentiating where desired, without the intrusion of operational notions such as graphs with questionably defined, extralinguistic semantics.
+
+%if extended
 
 \appendix
 
@@ -1978,10 +2003,8 @@ Given the definitions in \figref{asDual},
 %% Given the definitions in \figref{indexed},
 
 We will need an indexed counterpart to \thmRef{cross}, which says
-
 $$|der (f *** g) (a,b) == der f a *** der g b|$$
-
-Letting `cross = uncurry (***)`, we can rephrase this theorem:
+Letting |cross = uncurry (***)|, we can rephrase this theorem:
 \begin{code}
     der (f *** g)
 ==  \ (a,b) -> der f a *** der g b              -- \thmRef{cross}
@@ -2004,12 +2027,11 @@ $$|ad (crossF fs) == second crossF . unzip . crossF (fmap ad fs)|$$
 The proof is analogous to \corRef{cross}:
 \begin{code}
     ad (crossF fs) as
-==  (crossF fs as, der (crossF fs) as)                                          -- definition of |ad|
-==  (crossF fs as, crossF (crossF (fmap der fs) as))                            -- \thmRef{crossF}
-==  let (bs,fs') = (crossF fs as, crossF (fmap der fs) as) in (bs, crossF fs')  -- refactor
-==  let (bs,fs') = unzip (crossF (fmap ad fs) as) in (bs, crossF fs')           -- |unzip| ...
-==  second crossF (unzip (crossF (fmap ad fs) as))                              -- def'n of |second|
-==  (second crossF . unzip . crossF (fmap ad fs)) as                            -- def'n of |(.)| on |(->)|
+==  (crossF fs as, der (crossF fs) as)                     -- definition of |ad|
+==  (crossF fs as, crossF (crossF (fmap der fs) as))       -- \thmRef{crossF}
+==  second crossF (crossF fs as, crossF (fmap der fs) as)  -- definition of |second| from \secref{Indexed biproducts}
+==  second crossF (unzip (crossF (fmap ad fs) as))         -- |unzip| ...
+==  (second crossF . unzip . crossF (fmap ad fs)) as       -- definition of |(.)| on |(->)|
 \end{code}
 
 \mynote{...}
@@ -2018,7 +2040,11 @@ The proof is analogous to \corRef{cross}:
 
 %endif
 
+%endif %% appendices
+
 \bibliography{bib}
+
+%if draft
 
 \sectionl{To do}
 \begin{itemize}
@@ -2044,5 +2070,7 @@ A quick web search turns up a few uses of ``differentiable functional programmin
 \item What is ``generalized AD''?
       Is it AD at all or something else?
 \end{itemize}
+
+%endif
 
 \end{document}
