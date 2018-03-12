@@ -24,21 +24,21 @@
 
 \nc\out[1]{}
 
+%% To redefine for a non-draft
+\nc\indraft[1]{#1}
+
 %% \nc\mynoteOut[2]{\mynote{#1}\out{#2}}
 
 % While working, use these defs
 % \nc\mynote[1]{{\em [#1]}}
-\nc\mynote[1]{\textcolor{red}{[#1]}}
-\nc\mynotefoot[1]{\footnote{\mynote{#1}}}
-%% % But for the submission, use these
-%% \nc\mynote\out
-%% \nc\mynotefoot\out
+\nc\mynote[1]{\indraft{\textcolor{red}{[#1]}}}
 
-\nc\notefoot[1]{\footnote{\mynote{#1}}}
+\nc\notefoot[1]{\indraft{\footnote{\mynote{#1}}}}
 
 \nc\todo{\mynote{To do.}}
 
-\nc\needcite{\mynote{ref}}
+%% Provides its own initial space.
+\nc\needcite{\indraft{ \mynote{ref}}}
 
 \nc\seclabel[1]{\label{sec:#1}}
 \nc\secref[1]{Section \ref{sec:#1}}
