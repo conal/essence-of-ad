@@ -2,15 +2,15 @@
 
 %% TODO: replace latex if with lhs2tex if
 
-%let acm = True
+%% %let extended = False
 
-%let extended = not acm
+%let icfp = not extended
 
-%let draft = not acm %% for now
+%let draft = not icfp %% for now
 
 %% %let indexed = True
 
-%if acm
+%if icfp
 
 %% \documentclass[acmsmall,screen]{acmart} % ,authorversion=true,
 
@@ -58,7 +58,7 @@
 
 \usepackage{natbib}
 \bibliographystyle{plainnat}
-\author{Conal Elliott\\[1.5ex]Target}
+\author{Conal Elliott \\[1.5ex]Target\\conal@@conal.net}
 
 \newcommand\subtitle\footnote
 
@@ -66,7 +66,7 @@
 
 %% With the article (non-ACM) font, I sometimes need a small negative space
 %% before sub- or super-scripts.
-%if acm
+%if icfp
 %format QQ = "{}"
 %else
 %format QQ = "\!"
@@ -93,7 +93,7 @@
 \nc\alttit{Differentiable functional programming made easy}
 \date{Draft\footnote{In this draft, \mynote{red bracketed text} indicates notes to be addressed and eliminated as writing progresses.}~\ of \today{} \currenttime \out{\\[1ex] For submission to ICFP 2018 ---} \emph{(comments requested)}}
 
-%if acm
+%if icfp
 \title{\tit} \subtitle{\alttit}
 %else
 \title{\tit \\[1ex] \large \alttit}
@@ -118,8 +118,13 @@
 \nc\lemRefs[2]{Lemma \ref{lemma:#1} through \ref{lemma:#2}}
 
 \nc\proofLabel[1]{\label{proof:#1}}
-\nc\provedIn[1]{\textnormal{Proved in \proofRef{#1}}}
+%if icfp
+\nc\provedIn[1]{\textnormal{See proof \citep{Elliott-2018-ad-extended}}}
+%else
 \nc\proofRef[1]{Appendix \ref{proof:#1}}
+\nc\provedIn[1]{\textnormal{Proved in \proofRef{#1}}}
+%endif
+
 
 \setlength{\blanklineskip}{2ex}
 \setlength\mathindent{3ex}
@@ -132,7 +137,7 @@
 
 \begin{document}
 
-%if not acm
+%if not icfp
 \maketitle
 %endif
 
@@ -152,7 +157,7 @@ The dualized variant is suitable for gradient-based optimization and is particul
 
 \end{abstract}
 
-%if acm
+%if icfp
 \maketitle
 %endif
 
@@ -1537,6 +1542,14 @@ Compilers already work symbolically and already take care to preserve sharing in
 
 The specification and implementation of AD in a simple, efficient, and correct-by-construction manner, together with its use from a typed functional language (here via a compiler plugin), make a step toward the vision of differentiable functional programming for machine learning and other uses, as outlined in \secref{Introduction}.
 Programmers then define their functions just as they are accustomed, differentiating where desired, without the intrusion of operational notions such as graphs with questionably defined, extralinguistic semantics.
+
+%if False
+
+\sectionl{Acknowledgments}
+
+Putonlalla (IRC)
+
+%endif
 
 %if extended
 

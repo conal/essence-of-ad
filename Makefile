@@ -4,11 +4,16 @@ TARG = essence-of-ad
 
 # all: $(TARG).pdf
 
-# This target for a second view
-all: other.pdf
+# # This target for a second view
+# all: other.pdf
+
+all: $(TARG)-extended.pdf $(TARG).pdf
 
 other.pdf: $(TARG).pdf
 	cp $? $@
+
+$(TARG)-extended.tex: $(TARG).lhs macros.tex formatting.fmt Makefile
+	lhs2TeX --set=extended -o $*.tex $(TARG).lhs
 
 see: $(TARG).see
 
