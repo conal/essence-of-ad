@@ -19,9 +19,6 @@
 %% %% lhs2tex messes with verbatim, and I lose spacing.
 %% \usepackage{fancyvrb}
 
-%% Load late. See http://texblog.net/hyperref/
-\usepackage{hyperref}
-
 \nc\out[1]{}
 
 %% To redefine for a non-draft
@@ -89,8 +86,14 @@
 
 %% \usepackage[multiple]{footmisc}  %% Incompatible with hyperref
 
+\nc\notefootsep{\indraft{\textsuperscript{,}}}
+
 %% https://tex.stackexchange.com/questions/40072/incompatibility-between-footmisc-option-multiple-and-hyperref/62091#62091
 \let\oldFootnote\footnote
 \nc\nextToken\relax
 \rnc\footnote[1]{\oldFootnote{#1}\futurelet\nextToken\isFootnote}
-\nc\isFootnote{\ifx\footnote\nextToken\textsuperscript{,}\fi}
+\nc\isFootnote{\ifx\footnote\nextToken\notefootsep{}\fi}
+
+
+%% Load late. See http://texblog.net/hyperref/
+\usepackage{hyperref}
