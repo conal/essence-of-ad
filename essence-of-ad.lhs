@@ -1,21 +1,26 @@
 %% -*- latex -*-
 
+%% %let anonymous = True
+
 %% TODO: replace latex if with lhs2tex if
 
 %% %let extended = False
 
 %let icfp = not extended
 
-%let draft = not icfp %% for now
+%% %let draft = True
 
-%% %let indexed = True
+%let indexed = True
 
 %if icfp
 
 %% \documentclass[acmsmall,screen]{acmart} % ,authorversion=true,
 
-\documentclass[acmsmall=true,authorversion]{acmart}
-%% ,anonymous,review
+\documentclass[acmsmall=true,authorversion
+%if icfp
+,anonymous,review
+%endif
+]{acmart}
 %% \settopmatter{printfolios=true,printccs=false,printacmref=false}
 
 \author{Conal Elliott}
@@ -58,7 +63,11 @@
 
 \usepackage{natbib}
 \bibliographystyle{plainnat}
+%if anonymous
+\author{Anonymous \\[1.5ex](supplement to ICFP submission)}
+%else
 \author{Conal Elliott \\[1.5ex]Target\\conal@@conal.net}
+%endif
 
 \newcommand\subtitle\footnote
 
@@ -72,17 +81,17 @@
 %format QQ = "\!"
 %endif
 
+\usepackage{scalerel}
+
+\usepackage{datetime}
+\usdate
+
 \input{macros}
 \citestyle{acmauthoryear}
 
 %if not draft
 \rnc\indraft[1]{}
 %endif
-
-\usepackage{scalerel}
-
-\usepackage{datetime}
-\usdate
 
 %include polycode.fmt
 %include forall.fmt
@@ -91,7 +100,9 @@
 
 \nc\tit{The simple essence of automatic differentiation}
 \nc\alttit{Differentiable functional programming made easy}
+%if not anonymous
 \date{Draft\footnote{In this draft, \mynote{red bracketed text} indicates notes to be addressed and eliminated as writing progresses.}~\ of \today{} \currenttime \out{\\[1ex] For submission to ICFP 2018 ---} \emph{(comments requested)}}
+%endif
 
 %if icfp
 \title{\tit} \subtitle{\alttit}
@@ -119,7 +130,7 @@
 
 \nc\proofLabel[1]{\label{proof:#1}}
 %if icfp
-\nc\provedIn[1]{\textnormal{See proof \citep{Elliott-2018-ad-extended}}}
+\nc\provedIn[1]{\textnormal{See proof \citep[Appendix]{Elliott-2018-ad-extended-anon}}}
 %else
 \nc\proofRef[1]{Appendix \ref{proof:#1}}
 \nc\provedIn[1]{\textnormal{Proved in \proofRef{#1}}}
@@ -309,7 +320,7 @@ $$|der (g . f) a == der g (f a) . der f a|$$
 If |f :: a -> b| and |g :: b -> c|\out{, and |a :: a|}, then |der f a :: a :-* b|, and |der g (f a) :: b :-* c|, so both sides of this equation have type |a :-* c|.\footnote{I adopt the common, if sometimes confusing, Haskell convention of sharing names between type and value variables, e.g., with |a| (a value variable) having type |a| (a type variable).
 Haskell value and type variable names live in different name spaces and are distinguished by syntactic context.}
 
-Strictly speaking, \thmRef{compose} is not a compositional recipe for differentiating compositions, i.e., it is \emph{not} the case |der (g . f)| can be constructed solely from |der g| and |der f|.
+Strictly speaking, \thmRef{compose} is not a compositional recipe for differentiating sequential compositions, i.e., it is \emph{not} the case |der (g . f)| can be constructed solely from |der g| and |der f|.
 Instead, it also needs |f| itself.
 Fortunately, there is a simple way to restore compositionality.
 Instead of constructing just the derivative of a function |f|, suppose we \emph{augment} |f| with its derivative:
@@ -328,7 +339,7 @@ As desired, this altered specification is compositional:
 ==  (g . f, \ a -> der g (f a) . der f a)  -- \thmRef{compose}
 \end{code}
 
-Note that |ad0 (g . f)| is assembled entirely components of |ad0 g| and |ad0 f|, which is to say from |g|, |der g|, |f|, and |der f|.
+Note that |ad0 (g . f)| is assembled entirely from components of |ad0 g| and |ad0 f|, which is to say from |g|, |der g|, |f|, and |der f|.
 Writing out |g . f| as |\ a -> g (f a)| underscores that the two parts of |ad0 (g . f)| when applied to |a| both involve |f a|.
 Computing these parts independently thus requires redundant work.
 Moreover, the chain rule itself requires applying a function and its derivative (namely |f| and |der f|) to the same |a|.
@@ -438,8 +449,7 @@ The category laws state that
 %% %format `k` = "\leadsto"
 %% %format k = "(\leadsto)"
 
-Although Haskell's type system cannot capture the category laws explicitly, we can express the two required operations as a Haskell type class:%
-\notefoot{To save space, present each category class with the |(->)| to the right, as in \citet{Elliott-2017-compiling-to-categories}.}\textsuperscript{,}\notefoot{Would the signatures in this paper be easier to read without using infix type variables?
+Although Haskell's type system cannot capture the category laws explicitly, we can express the two required operations as a Haskell type class:\notefoot{To save space, present each category class with the |(->)| to the right, as in \citet{Elliott-2017-compiling-to-categories}.}\notefootsep{}\notefoot{Would the signatures in this paper be easier to read without using infix type variables?
 For instance, ``|(.)  :: k b c -> k a b -> k a c|''.}
 \begin{code}
 class Category k where
@@ -549,7 +559,7 @@ Before we get too pleased with this definition, let's remember that for |D| to b
 These definitions must also satisfy the identity and composition laws.
 How might we go about proving that they do?
 Perhaps the most obvious route is take those laws, substitute our definitions of |id| and |(.)|, and reason equationally toward the desired conclusion.
-For instance, let's prove that |id . D f == D f| for all |D f :: D a b|:\footnote{Note that \emph{every} morphism in |D| has the form |D f| for some |f|, so it suffices to consider this form.}\textsuperscript{,}\notefoot{If pinched for space, remove this proof or move it to \appref{Proofs}.}
+For instance, let's prove that |id . D f == D f| for all |D f :: D a b|:\footnote{Note that \emph{every} morphism in |D| has the form |D f| for some |f|, so it suffices to consider this form.}\notefootsep{}\notefoot{If pinched for space, remove this proof or move it to \out{\appref{Proofs}}Appendix \ref{sec:Proofs}.}
 \begin{code}
     id . D f
 ==  D (\ b -> (b,id)) . D f                                            -- definition of |id| for |D|
@@ -614,7 +624,7 @@ That is, a monoidal functor |F| from monoidal category |CU| to monoidal category
 \begin{code}
 F (f *** g) == F f *** F g
 \end{code}
-Just as \corRefTwo{compose}{linear} were key to deriving a correct-by-construction |Category| instance from the specification that |adf| is a functor, \corRef{cross} guides correct-by-construction of a |MonoidalPCat| instance from the specification that |adf| is a monoidal functor, as we'll now see.
+Just as \corRefTwo{compose}{linear} were key to deriving a correct-by-construction |Category| instance from the specification that |adf| is a functor, \corRef{cross} leads to a correct |MonoidalPCat| instance from the specification that |adf| is a monoidal functor, as we'll now see.
 
 Let |F| be |adf| in the reversed form of the monoidal functor equation above, and expand |adf| to its definition as |D . ad|:
 \begin{code}
@@ -672,7 +682,7 @@ F exl  == exl
 F exr  == exr
 F dup  == dup
 \end{code}
-Just as \corRefs{compose}{linear} were key to deriving a correct-by-construction |Category| and |MonoidalPCat| instances from the specification that |adf| is a functor and a monoidal functor respectively, \corRef{linear} also guides correct-by-construction |ProductCat| instance from the specification that |adf| is a cartesian functor.
+Just as \corRefs{compose}{linear} were key to deriving a correct-by-construction |Category| and |MonoidalPCat| instances from the specification that |adf| is a functor and a monoidal functor respectively, \corRef{linear} enables a correct-by-construction |ProductCat| instance from the specification that |adf| is a cartesian functor.
 Let |F| be |adf| in the reversed forms of cartesian functor equations above, and expand |adf| to its definition as |D . ad|:
 \begin{code}
 exl  == D (ad exl)
@@ -715,7 +725,7 @@ In this paper, however, all coproducts will be pairs (cartesian \emph{products},
 class Monoidal k => CoproductPCat k where
   inl  ::  Additive b => a `k` (Prod k a b)
   inr  ::  Additive a => b `k` (Prod k a b)
-  jam  ::  Additive c => (Prod k a a) `k` a
+  jam  ::  Additive a => (Prod k a a) `k` a
 \end{code}
 Unlike |Category| and |ProductCat|, |CoproductPCat| introduces an additivity requirement (having a notion of addition and corresponding zero) to the types involved, in order to have an instance for functions:%
 %format zero = 0
@@ -940,7 +950,8 @@ These properties make for a pleasantly poetic theory, but they also have a power
 
 %format (GD (k)) = D"_{"k"}"
 %% %format GD (k) a b = a "\leadsto_{"k"}" b
-The generalized AD definitions shown in \figref{GAD} result from making a few small changes to the non-generalized definitions derived in \secref{Putting the pieces together}:
+
+A few small changes to the non-generalized definitions derived in \secref{Putting the pieces together} result in the generalized AD definitions shown in \figref{GAD}:
 \begin{itemize}
 \item The new category takes as parameter a category |k| that replaces |(:-*)| in |D|.
 \item The |linearD| function takes two arrows, previously identified.\notefoot{Alternatively, posit an embedding function |lin :: (a :-* b) -> (a -> b)|, write \thmRef{linear} as |der (lin f) a = f|, and change to |linearD :: (a :-* b) -> D a b|.
@@ -1028,9 +1039,8 @@ For instance,
 Given a linear map |f' :: U :-* V| represented as a function, it is possible to extract a Jacobian matrix (including the special case of a gradient vector) by applying |f'| to every vector in a basis of |U|.
 A particularly convenient basis is the sequence of column vectors of an identity matrix, where the |ith| such vector has a one in the |ith| position and zeros elsewhere.
 If |U| has dimension |m| (e.g., |U = Rm|), this sampling requires |m| passes.
-Considering the nature of the sparse vectors used as arguments, each pass likely computes inefficiently.
-Alternatively, the computations can be done using a sparse vector representation, but such an implementation involves considerable complexity and poses difficulties for efficient, massively parallel, SIMD implementations, such as graphics processors\needcite.
-
+\out{Considering the nature of the sparse vectors used as arguments, each pass likely computes inefficiently.
+Alternatively, the computations can be done using a sparse vector representation, but such an implementation involves considerable complexity and poses difficulties for efficient, massively parallel, SIMD implementations, such as graphics processors\needcite.}
 If |U| has very low dimension, then this method of extracting a Jacobian is tolerably efficient, but as dimension grows, it becomes quite expensive.
 In particular, many useful problems involve gradient-based optimization over very high-dimensional spaces, which is the worst case for this technique.
 
@@ -1128,7 +1138,7 @@ Alternatively, for some kinds of problems we might want to choose a particular a
 For instance, gradient-based optimization (including its use in machine learning) uses ``reverse-mode'' automatic differentiation (RAD), which is to say fully left-associated compositions.\notefoot{Is RAD always optimal for gradient problems?}
 (Dually, ``foward-mode'' AD fully right-associates.)
 Reverse mode (including its specialization, backpropagation) is much more efficient for these problems, but is also typically given much more complicated explanations and implementations, involving mutation, graph construction, and ``tapes''\needcite.
-One the main purposes of this paper is to demonstrate that RAD can be accounted for quite simply, while retaining or improving its efficiency of implementation.
+One the main purposes of this paper is to demonstrate that RAD can be implemented quite simply, with performance equal to or better than conventionally complex implementations.
 
 \sectionl{Reverse-mode AD}
 
@@ -1319,17 +1329,18 @@ Then choose |r| to be the scalar field |s|, as in \secref{Gradients and duality}
 
 %if indexed
 
-\sectionl{Indexed biproducts}
+\sectionl{Scaling up}
 
 \mynote{Writing in progress. When finished, add to the contributions and maybe abstract.}
 
 So far, we have considered binary products.
 Practical applications, including machine learning and other optimization problems, often involve very high-dimensional spaces.
-While those spaces can be encoded as nested binary products, doing so would result in unwieldy representations and long compilation and execution times.
-A more practical approach is to consider $n$-ary products, for which we can again use representable functors.
+While those spaces can be encoded as nested binary products, doing so would result in unwieldy representations and prohibitively long compilation and execution times.
+A practical alternative is to consider $n$-ary products, for which we can again use representable functors.
 To construct and consume these ``indexed'' (bi)products, we'll need an indexed variant of |Monoidal|, replacing the two arguments to |(***)| by a (representable) functor |h| of morphisms:
 %format IxMonoidalPCat = MonoidalI
 %format IxProductCat = CartesianI
+%format IxCoproductPCat = CocartesianI
 %format crossF = crossI
 %format plusPF = crossI
 %format exF = exI
@@ -1346,14 +1357,14 @@ instance Zip h => IxMonoidalPCat (->) h where
   crossF = zipWith id
 \end{code}
 Note that the packaged morphisms must all agree in domain and codomain.
-This restriction is due to fit into Haskell's type system and is not inherent in the categorical notion of general products.
+While not required for the general categorical notion of products, this restriction accommodates Haskell's type system and seems adequate in practice (so far).
 
-Where the |ProductCat| class has two projection methods and a duplication method, the indexed counterpart has a collection of projections and one replication.\footnote{Assume the following interface for representable functors \citep{Kmett2011Adj}:
+Where the |ProductCat| class has two projection methods and a duplication method, the indexed counterpart has a collection of projections and one replication method.\footnote{Assume the following interface for representable functors \citep{Kmett2011Adj}:
 \begin{code}
 class Distributive f => Representable f where
   type Rep f :: Type
   tabulate  :: (Rep f -> a) -> f a
-  index     :: f a -> Rep f -> a
+  index     :: f a -> (Rep f -> a)
 \end{code}
 }
 \begin{code}
@@ -1385,23 +1396,13 @@ forkF fs = crossF fs . replF
 joinPF :: (IxProductCat k h, Additive a) => h (b `k` a) -> (h b `k` a)
 joinPF fs = jamPF . plusPF fs
 \end{code}
-As usual, we can derive instances for our new category by homomorphic specification:
+As usual, we can derive instances by homomorphic specification:
 \begin{theorem}[\provedIn{theorem:indexed}]\thmLabel{indexed}
 Given the definitions in \figref{indexed}, |adf| is a homomorphism with respect to the instantiated classes.
 \end{theorem}
-\figref{indexed} assumes the following definitions:
-\begin{code}
-unD :: D a b -> (a -> (b :* (a :-* b)))
-unD (D f) = f
-
-unzip :: Functor h => h (a :* b) -> h a :* h b
-unzip ps = (fmap exl ps, fmap exr ps)
-
-second :: (b `k` d) -> ((a :* b) `k` (a :* d))
-second g = id *** g
-
-class Zip h where zipWith :: (a -> b -> c) -> h a -> h b -> h c
-\end{code}
+%% \figref{indexed} assumes the following definitions:
+%% \begin{code}
+%% \end{code}
 \begin{figure}
 \begin{center}
 \begin{code}
@@ -1415,17 +1416,38 @@ instance (IxProductCat (->) h, IxProductCat k h, Zip h) => IxProductCat (GD k) h
 instance (IxCoproductPCat k h, Zip h) => IxCoproductPCat (GD k) h where
   inF = zipWith linearD inF inF
   jamPF = linearD jamPF jamPF
+
+-- Auxiliary definitions:
+
+unD :: D a b -> (a -> (b :* (a :-* b)))
+unD (D f) = f
+
+unzip :: Functor h => h (a :* b) -> h a :* h b
+unzip = fmap exl &&& fmap exr
+
+second :: MonoidalPCat k => (b `k` d) -> ((a :* b) `k` (a :* d))
+second g = id *** g
+
+class Zip h where zipWith :: (a -> b -> c) -> h a -> h b -> h c
 \end{code}
 \caption{AD for indexed biproducts}
 \figlabel{indexed}
 \end{center}
 \end{figure}
 
-\workingHere
+These indexed operations are useful in themselves but can be used to derive other operations.
+For instance, note the similarity between the types of |crossF| and |fmap|:
+\begin{code}
+crossF  :: MonoidalPCat  h => h  (a -> b) -> (h a -> h b)
+fmap    :: Functor       h =>    (a -> b) -> (h a -> h b)
+\end{code}
+In fact, the following relationship holds: |fmap == crossF . replF|.
+This equation, together with the differentiation rules for |crossF|, |replF|, and |(.)| determines differentiation for |fmap|.
 
-\mynote{Indexed products and linearity, along with |Cont| and |Dual|.}
+As with \figref{GAD}, the operations defined in \figref{indexed} rely on corresponding operations for the category parameter |k|.
+Fortunately, all of those operations are linear or preserve linearity, so they can all be defined on the various representations of derivatives (linear maps) used for AD in this paper, including |Cont k r| and |Dual s|.
 
-\mynote{Discuss other bulk operations: |fmap|, |zipWith|, etc.}
+\mynote{Discuss other bulk operations? |zipWith|, etc.}
 
 %endif
 
@@ -1486,6 +1508,13 @@ This paper builds on a compiler plugin that translates Haskell programs into cat
 Another instance of generalized AD given there is automatic incremental evaluation of functional programs.
 Relative to that work, the new contributions are the |ContC k r| and |DualC k| categories, their use to succinctly implement reverse-mode AD (by instantiating the generalized differentiation category), the precise specification of instances for |D|, |ContC k r|, and |DualC k| via functoriality, and the calculation of implementations from these specifications.
 
+The implementations in this paper are quite simple and would appear to be efficient as well.
+For instance, the duality-based version (\secref{Gradients and duality}) involves no matrices.
+Moreover, typical reverse-mode AD (RAD) implementations use mutation to incrementally update derivative contributions from each \emph{use} of a variable or intermediate computation, holding onto all of these accumulators until the very end of the derivative computation.
+For this reason, such implementations tend to use considerable memory\needcite.
+In contrast, the implementations in this paper (\secreftwo{Reverse-mode AD}{Gradients and duality}) are free of mutation and can easily free (reuse) memory as they go, keeping memory use low.
+Given the prominent use of AD, particularly with large data, performance is crucial, so will be worthwhile to examine and compare time and space use in detail.
+
 \mynote{Maybe relate the methodology of \secref{Programming as defining and solving algebra problems} to \citet{BirddeMoor96:Algebra} and \citet{Elliott2009-type-class-morphisms-TR}.}
 
 %if False
@@ -1499,24 +1528,6 @@ Perhaps more about the following:
 \item \emph{Algebra of programming} \citep{BirddeMoor96:Algebra}.
 \end{itemize}
 }
-%endif
-
-%if draft
-
-%% TODO: write this section. Then move out of draft-only
-
-\sectionl{Future work}
-
-\mynote{
-\begin{itemize}
-\item Analyze time and space performance, especially comparing the reverse-mode implementations in this paper (|GD (ContC s (-+>))| and |GD (DualC (-+>))|) with commonly used stateful implementations.
-\item Other applications of generalized AD besides differentiation (in the calculus sense).
-What does generalized AD mean in these cases?
-Recall that the original specification in \secref{Categories} was in terms of mathematical differentiation.
-\item Optimal-mode AD.
-\end{itemize}
-}
-
 %endif
 
 \sectionl{Conclusions}
@@ -2040,16 +2051,53 @@ $$|ad (crossF fs) == second crossF . unzip . crossF (fmap ad fs)|$$
 The proof is analogous to \corRef{cross}:
 \begin{code}
     ad (crossF fs) as
-==  (crossF fs as, der (crossF fs) as)                     -- definition of |ad|
-==  (crossF fs as, crossF (crossF (fmap der fs) as))       -- \thmRef{crossF}
-==  second crossF (crossF fs as, crossF (fmap der fs) as)  -- definition of |second| from \secref{Indexed biproducts}
-==  second crossF (unzip (crossF (fmap ad fs) as))         -- |unzip| ...
-==  (second crossF . unzip . crossF (fmap ad fs)) as       -- definition of |(.)| on |(->)|
+==  (crossF fs as, der (crossF fs) as)                                  -- definition of |ad|
+==  (crossF fs as, crossF (crossF (fmap der fs) as))                    -- \thmRef{crossF}
+==  second crossF (crossF fs as, crossF (fmap der fs) as)               -- definition of |second| (\figref{indexed})
+==  second crossF ((crossF fs &&& crossF (fmap der fs)) as)             -- definition of |(&&&)| on functions
+==  second crossF (unzip (crossF (zipWith (&&&) fs (fmap der fs)) as))  -- \lemRef{crossZip} below
+==  (second crossF . unzip . crossF (fmap ad fs)) as                    -- definition of |(.)| on |(->)|
+\end{code}
+For the second-to-last step,
+\begin{lemma}\lemLabel{crossZip}
+|(crossF fs &&& crossF gs) == unzip (crossF (zipWith (&&&) fs gs))|.
+\end{lemma}
+For now, let's prove just the binary version of this lemma, namely
+$$ |(f *** f') &&& (g *** g') == transpose ((f &&& g) *** (g' &&& g'))| $$
+where
+\begin{code}
+transpose :: ((a :* b) :* (c :* d)) -> ((a :* c) :* (b :* d))
+transpose ((a,b),(c,d)) = ((a,c),(b,d))
+\end{code}
+\out{For general cartesian categories, |transpose = (exl.exl &&& exl.exr) &&& (exr.exl &&& exr.exr)|.}
+Proof:
+\begin{code}
+    (f *** f') &&& (g *** g')
+==  (inl . f ||| inr . f') &&& (inl . g ||| inr . g')               -- \citep[Equation (17)]{MacedoOliveira2013Typing}
+==  (inl . f &&& inl . g) ||| (inr . f' &&& inr . g')               -- exchange law \citep[Section 1.5.4]{Gibbons2002Calculating}
+==  transpose . inl . (f &&& g) ||| transpose . inr . (f' &&& g')   -- \lemRef{inlFork} below
+==  transpose . (f *** g) ||| transpose . (f' *** g')               -- \citep[Equation (17)]{MacedoOliveira2013Typing}
+==  transpose ((f *** g) ||| (f' *** g'))                           -- \citep[Section 1.5.2]{Gibbons2002Calculating}
 \end{code}
 
-\mynote{...}
-
-\workingHere
+For the third step, we need two more properties.
+\begin{lemma}\lemLabel{inlFork}
+|(inl . f &&& inl . g) == transpose . inl . (f &&& g)|.
+|(inr . f &&& inr . g) == transpose . inr . (f &&& g)|.
+\end{lemma}
+Below is a proof in the |(->)| category, which suffice for our purpose.
+(To do: does the property hold for general biproduct categories?)
+\begin{code}
+    inl . f &&& inl . g
+==  \ a -> (inl . f &&& inl . g) a               -- $\eta$-expand
+==  \ a -> (inl (f a), inl (g a))                -- definition of |(&&&)| for functions
+==  \ a -> ((f a, zero), (g a, zero))            -- definition of |inl| for functions
+==  \ a -> transpose ((f a, g a), (zero, zero))  -- definition of |transpose|
+==  \ a -> transpose ((f a, g a), zero)          -- definition of |zero| for pairs
+==  \ a -> transpose (inl (f a, g a))            -- definition of |inl| for functions
+==  transpose . inl . (f &&& g)                  -- definition of |(.)| for functions
+\end{code}
+Similarly for the second property (with |inr|).
 
 %endif
 
@@ -2061,10 +2109,10 @@ The proof is analogous to \corRef{cross}:
 
 \sectionl{To do}
 \begin{itemize}
-\item Future work
 \item Indexed biproducts (in progress)
 \item Maybe define and use |(-+>)|.
 \item Return to comparison with TensorFlow etc in the related work and/or conclusions section.
+\item Maybe more future work
 \item Nested AD. I think the categorical approach in this paper can correctly handle nesting with ease and that the nesting problem indicates an unfortunate choice of abstraction together with non-rigorous specification and development.
 \item Resolve possible title or subtitle: ``Differentiable functional programming made easy''.
 Note the two meanings: easy to implement correctly and efficiently, and easy to use.
