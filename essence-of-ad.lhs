@@ -1,6 +1,6 @@
 %% -*- latex -*-
 
-%% %let anonymous = True
+%let anonymous = True
 
 %% TODO: replace latex if with lhs2tex if
 
@@ -8,7 +8,7 @@
 
 %let icfp = not extended
 
-%% %let draft = True
+%let draft = True
 
 %let indexed = True
 
@@ -971,7 +971,7 @@ The results are rendered in \figreftwo{magSqr-adf}{cosSinProd-adf}.
 Some remarks:
 \begin{itemize}
 \item The derivatives are (linear) functions, as depicted in boxes.
-\item Work is shared between the a function's result (the ``primal'') and its derivative in \figref{cosSinProd-adf}
+\item Work is shared between the function's result (the ``primal'') and its derivative in \figref{cosSinProd-adf}
 \item The graphs shown here are used \emph{solely} for visualizing functions before and after differentiation, playing no role in the programming interface or in the implementation of differentiation.
 \end{itemize}
 
@@ -2160,19 +2160,20 @@ $$|ad (crossF fs) == second crossF . unzip . crossF (fmap ad fs)|$$
 The proof is analogous to that of \corRef{cross}:
 \begin{code}
     ad (crossF fs) as
-==  (crossF fs as, der (crossF fs) as)                                  -- definition of |ad|
-==  (crossF fs as, crossF (crossF (fmap der fs) as))                    -- \thmRef{crossF}
-==  second crossF (crossF fs as, crossF (fmap der fs) as)               -- def'n of |second| (\figref{indexed})
-==  second crossF ((crossF fs &&& crossF (fmap der fs)) as)             -- def'n of |(&&&)| on functions
-==  second crossF (unzip (crossF (zipWith (&&&) fs (fmap der fs)) as))  -- \lemRef{crossZip} below
-==  (second crossF . unzip . crossF (fmap ad fs)) as                    -- definition of |(.)| on |(->)|
+==  (crossF fs as, der (crossF fs) as)                                    -- definition of |ad|
+==  (crossF fs as, crossF (crossF (fmap der fs) as))                      -- \thmRef{crossF}
+==  second crossF (crossF fs as, crossF (fmap der fs) as)                 -- definition of |second| (\figref{indexed})
+==  second crossF ((crossF fs &&& crossF (fmap der fs)) as)               -- definition of |(&&&)| on functions
+==  (second crossF . (crossF fs &&& crossF (fmap der fs))) as             -- definition of |(.)| on functions
+==  (second crossF . unzip . crossF (zipWith (&&&) fs (fmap der fs))) as  -- \lemRef{crossZip} below
+==  (second crossF . unzip . crossF (fmap ad fs)) as                      -- definition of |ad|
 \end{code}
 For the second-to-last step,
 \begin{lemma}\lemLabel{crossZip}
-|crossF fs &&& crossF gs == unzip (crossF (zipWith (&&&) fs gs))|.
+|crossF fs &&& crossF gs == unzip . crossF (zipWith (&&&) fs gs)|.
 \end{lemma}
 For now, let's prove just the binary version of this lemma, namely
-$$ |(f *** f') &&& (g *** g') == transpose ((f &&& g) *** (g' &&& g'))| $$
+$$ |(f *** f') &&& (g *** g') == transpose . ((f &&& g) *** (g' &&& g'))| $$
 where
 \begin{code}
 transpose :: ((a :* b) :* (c :* d)) -> ((a :* c) :* (b :* d))
@@ -2185,8 +2186,8 @@ Proof:
 ==  (inl . f ||| inr . f') &&& (inl . g ||| inr . g')               -- \citep[Equation (17)]{MacedoOliveira2013Typing}
 ==  (inl . f &&& inl . g) ||| (inr . f' &&& inr . g')               -- exchange law \citep[Section 1.5.4]{Gibbons2002Calculating}
 ==  transpose . inl . (f &&& g) ||| transpose . inr . (f' &&& g')   -- \lemRef{inlFork} below
-==  transpose . (f *** g) ||| transpose . (f' *** g')               -- \citep[Equation (17)]{MacedoOliveira2013Typing}
-==  transpose ((f *** g) ||| (f' *** g'))                           -- \citep[Section 1.5.2]{Gibbons2002Calculating}
+==  transpose . (inl . (f &&& g) ||| inr . (f' &&& g'))             -- \citep[Section 1.5.2]{Gibbons2002Calculating}
+==  transpose . ((f &&& g) *** (f' &&& g'))                         -- \citep[Equation (17)]{MacedoOliveira2013Typing}
 \end{code}
 
 For the third step, we need two more properties.
@@ -2206,7 +2207,7 @@ Below is a proof in the |(->)| category, which suffice for our purpose.
 ==  \ a -> transpose (inl (f a, g a))            -- definition of |inl| for functions
 ==  transpose . inl . (f &&& g)                  -- definition of |(.)| for functions
 \end{code}
-Similarly for the second property (with |inr|).
+Similarly for the second property (with |inr|), noting that |((zero, f a), (zero, g a)) == transpose ((zero, zero), (f a, g a))|.
 
 %endif
 
@@ -2222,13 +2223,12 @@ Similarly for the second property (with |inr|).
       If so, merge the decimated section into the previous one (``Extracting a data representation'').
 \item Maybe define and use |(-+>)|.
 \item Return to comparison with TensorFlow etc in the related work and/or conclusions section.
-\item Maybe more future work
+\item Maybe more future work, including sub-differentiation.
 \item Nested AD. I think the categorical approach in this paper can correctly handle nesting with ease and that the nesting problem indicates an unfortunate choice of abstraction together with non-rigorous specification and development.
 \item Resolve possible title or subtitle: ``Differentiable functional programming made easy''.
 Note the two meanings: easy to implement correctly and efficiently, and easy to use.
 Perhaps save that title for another talk and paper.
 A quick web search turns up a few uses of ``differentiable functional programming''.
-\item Sub-differentiation. 
 \item Probably remove the |Additive| constraints in |Cocartesian|, along with the |Cocartesian (->)| instance.
       Otherwise, mention that the implementation does so.
       |InitialCat (->)| isn't what we need.
