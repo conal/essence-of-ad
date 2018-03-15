@@ -1,5 +1,7 @@
 TARG = essence-of-ad
 
+EXTENDED = $(TARG)-extended
+
 .PRECIOUS: %.tex %.pdf %.web
 
 # all: $(TARG).pdf
@@ -7,12 +9,13 @@ TARG = essence-of-ad
 # # This target for a second view
 # all: other.pdf
 
-all: $(TARG)-extended.pdf $(TARG).pdf
+all: $(TARG).pdf
+all: $(EXTENDED).pdf
 
 other.pdf: $(TARG).pdf
 	cp $? $@
 
-$(TARG)-extended.tex: $(TARG).lhs macros.tex formatting.fmt Makefile
+$(EXTENDED).tex: $(TARG).lhs macros.tex formatting.fmt Makefile
 	lhs2TeX --set=extended -o $*.tex $(TARG).lhs
 
 see: $(TARG).see
@@ -41,13 +44,13 @@ showpdf = open -a Skim.app
 pdfs: $(pdfs)
 
 clean:
-	rm -f $(TARG).{tex,pdf,aux,nav,snm,ptb,log,out,toc,bbl,blg,fdb_latexmk,fls}
+	rm -f $(TARG)*.{tex,pdf,aux,nav,snm,ptb,log,out,toc,bbl,blg,fdb_latexmk,fls}
 
 web: web-token
 
 STASH=conal@conal.net:/home/conal/web/papers/essence-of-ad
 web: web-token
 
-web-token: $(TARG).pdf
-	scp $? $(STASH)/essence-of-ad.pdf
+web-token: $(EXTENDED).pdf
+	scp $? $(STASH)/
 	touch $@
