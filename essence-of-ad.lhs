@@ -9,7 +9,7 @@
 
 %let icfp = not extended
 
-%let draft = True
+%% %let draft = True
 
 %let indexed = True
 
@@ -19,10 +19,7 @@
 
 \documentclass[acmsmall=true,authorversion
 %if anonymous
-,anonymous
-%endif
-%if icfp
-,review
+,anonymous,review
 %endif
 ]{acmart}
 %% \settopmatter{printfolios=true,printccs=false,printacmref=false}
@@ -53,10 +50,13 @@
 %% Supplied to authors (based on authors' rights management selection;
 %% see authors.acm.org) by publisher for camera-ready submission;
 %% use 'none' for review submission.
+%if icfp
 \setcopyright{none}
+%else
+\setcopyright{rightsretained}
+%endif
 %\setcopyright{acmcopyright}
 %\setcopyright{acmlicensed}
-\setcopyright{rightsretained}
 %\copyrightyear{2018}           %% If different from \acmYear
 
 %else
@@ -272,7 +272,7 @@ Since one can think of scalars as a special case of vectors, and scalar multipli
 When we turn our attention to higher derivatives (which are derivatives of derivatives), however, the situation gets more complicated, and we need yet higher-dimensional representations, with correspondingly more complex chain rules.
 
 Fortunately, there is a single, elegant generalization of differentiation with a correspondingly simple chain rule.
-First, reword Definition \ref{eq:scalar-deriv} above as follows:\footnote{For clarity, throughout this paper we will use ``|A = B|'' to mean ``|A| is defined as |B|'' and ``|==|'' to mean (more broadly) that ``|A| is equal to |B|''. The former introduces |A|, while the latter asserts that a well-defined statement of equality is in fact true.}
+First, reword Definition \ref{eq:scalar-deriv} above as follows:\out{\footnote{For clarity, throughout this paper we will use ``|A = B|'' to mean ``|A| is defined as |B|'' and ``|==|'' to mean (more broadly) that ``|A| is equal to |B|''. The former introduces |A|, while the latter asserts that a well-defined statement of equality is in fact true.}}
 $$ |lim(eps -> 0)(frac(f (x+eps) - f x) eps) - f' x == 0| $$
 Equivalently,
 $$ |lim(eps -> 0)(frac(f (x+eps) - (f x + eps *^ f' x)) eps) == 0| $$
@@ -766,7 +766,7 @@ class Category k => CoproductPCat k where
 %format Ok = Obj
 Unlike the other classes, there is no |CoproductPCat (->)| instance, and fortunately we will not need such an instance below.
 (There is an instance when using sums instead of cartesian products for coproducts.)
-Instead, we can define a category |(-+>)| of \emph{additive functions} that will have a |CoproductPCat| instance and that we can use to represent derivatives, as shown in \figref{AddFun}.\notefoot{Format this code in two columns if needed.}
+Instead, we can define a category |(-+>)| of \emph{additive functions} that will have a |CoproductPCat| instance and that we can use to represent derivatives, as shown in \figref{AddFun}.
 These instances rely on one more feature of the |Category| class not yet mentioned, namely an associated constraint \citep{Bolingbroke2011CK} |Ok k|.
 In the actual class definitions, |Ok k| constrains the types involved in all categorical operations.
 \begin{figure}
@@ -1072,7 +1072,7 @@ These algebra problems always have a particular stylized form, namely that the o
 \end{itemize}
 The result of this recipe is not quite an implementation of our homomorphic specification, which may after all be non-computable.
 Rather, it gives a computable alternative that is nearly as useful: if the input to the specified conversion is expressed in vocabulary of the chosen algebraic abstraction, then a re-interpretation of that vocabulary in the new data type is the result of the (possibly non-computable) specification.
-Furthermore, if we can \emph{automatically} convert conventionally written functional programs into the chosen algebraic vocabulary (as in \citep{Elliott-2017-compiling-to-categories}), then those programs can be re-interpreted to compute the desired specification.
+Furthermore, if we can \emph{automatically} convert conventionally written functional programs into the chosen algebraic vocabulary \citep{Elliott-2017-compiling-to-categories}, then those programs can be re-interpreted to compute the desired specification.
 
 \mynote{Relate to \citet{BirddeMoor96:Algebra} and maybe \citet{Elliott2009-type-class-morphisms-TR}.}
 
@@ -1613,7 +1613,13 @@ instance (Zip h, IxCoproductPCat k h, Additive1 h) => IxMonoidalPCat (Cont k r) 
 The literature on automatic differentiation is vast, beginning with forward mode \citep{Wengert64} and later reverse mode \citep{Speelpenning:1980:CFP,Rall1981Automatic}, with many developments since \citep{Griewank89onAD,GriewankWalther2008EvalDerivs}.
 While most techniques and uses of AD have been directed at imperative programming, there are also variations for functional programs \citep{Karczmarczuk1999FunCoding,Karczmarczuk00adjointcodes,Karczmarczuk2001FunDif,Pearlmutter2007LMH,Pearlmutter2008RAF,Elliott2009-beautiful-differentiation}.
 The work in this paper differs in being phrased at the level of functions/morphisms and specified by functoriality without any mention or manipulation of graphs or other syntactic representations.\footnote{Of course the Haskell compiler itself manipulates syntax trees, and the compiler plugin that converts Haskell code to categorical form helps do so, but both are entirely domain-independent, with no knowledge of or special support for differentiation or linear algebra \citep{Elliott-2017-compiling-to-categories}.}
-Moreover, the specifications in this paper are simple enough that the various forms of AD presented can be calculated into being (easily)\notefoot{In the conference version, add a citation here to the proof appendix in the extended version.}, and so are correct by construction.
+Moreover, the specifications in this paper are simple enough that the various forms of AD presented can be calculated into being, and so are correct by
+%if icfp
+construction \citep{Elliott-2018-ad-extended-anon}.
+%else
+construction.
+%endif
+
 
 \citet{Pearlmutter2008RAF} make the following observation:
 \begin{quotation}\noindent
@@ -1725,7 +1731,7 @@ Putonlalla (IRC)
 
 \vspace{2ex}
 
-\mynote{The appendices that follow appear in the extended version of this paper and replaced by citations from the shorter, conference version.}
+\mynote{The appendices that follow appear in the extended version of this paper and are cited from the shorter, conference version.}
 
 \sectionl{Terminal and initial objects}
 
