@@ -63,7 +63,7 @@
 
 %% While editing/previewing, use 12pt and tiny margin.
 \documentclass[12]{article}  % fleqn,
-\usepackage[margin=0.7in]{geometry}  % 0.12in, 0.9in
+\usepackage[margin=0.9in]{geometry}  % 0.12in, 0.9in
 
 \usepackage{natbib}
 \bibliographystyle{plainnat}
@@ -753,7 +753,7 @@ instance ProductCat D where
 %format unlessAddFun(stuff) = stuff
 %endif
 
-Cartesian categories have a dual, known as \emph{cocartesian categories}, with each cartesian operation having a mirror image with morphisms reversed (swapping domain and codomain) and coproducts replacing products.
+Cartesian categories have a dual, known as \emph{cocartesian categories}, in which each cartesian operation has a mirror image with morphisms reversed (swapping domain and codomain) and coproducts replacing products.
 In general, each category can have its own notion of coproduct, e.g., sum (disjoint union) types for the |(->)| category.
 In this paper, however, coproducts will coincide with categorical products (both being ordered pairs), i.e., we'll be using biproduct categories \citep{MacedoOliveira2013Typing}:
 %if addFun
@@ -766,11 +766,12 @@ class Category k => CoproductPCat k where
 %format Ok = Obj
 Unlike the other classes, there is no |CoproductPCat (->)| instance, and fortunately we will not need such an instance below.
 (There is an instance when using sums instead of cartesian products for coproducts.)
-Instead, define a category of \emph{additive functions} that will have a |CoproductPCat| instance and that we can use to represent derivatives, as shown in \figref{AddFun}.\notefoot{Format this code in two columns if needed.}
+Instead, we can define a category |(-+>)| of \emph{additive functions} that will have a |CoproductPCat| instance and that we can use to represent derivatives, as shown in \figref{AddFun}.\notefoot{Format this code in two columns if needed.}
 These instances rely on one more feature of the |Category| class not yet mentioned, namely an associated constraint \citep{Bolingbroke2011CK} |Ok k|.
-In the implementation, |Ok k| constrains the types involved in all categorical operations.
+In the actual class definitions, |Ok k| constrains the types involved in all categorical operations.
 \begin{figure}
 \begin{center}
+\begin{minipage}[b]{0.50\textwidth}
 \begin{code}
 newtype a -+> b = AddFun (a -> b)
 
@@ -786,7 +787,11 @@ instance ProductCat (-+>) where
   exl  = AddFun exl
   exr  = AddFun exr
   dup  = AddFun dup
-
+\end{code}
+\end{minipage}
+\begin{minipage}[b]{0ex}{\rule[1ex]{0.5pt}{2.3in}}\end{minipage}
+\begin{minipage}[b]{0.48\textwidth}
+\begin{code}
 instance CoproductPCat (-+>) where
   inlP  = AddFun inlF
   inrP  = AddFun inrF
@@ -800,6 +805,7 @@ inlF  = \ a -> (a,zero)
 inrF  = \ b -> (zero,b)
 jamF  = \ (a,b) -> a ^+^ b
 \end{code}
+\end{minipage}
 \caption{Additive functions}
 \figlabel{AddFun}
 \end{center}
@@ -1526,8 +1532,8 @@ class IxMonoidalPCat k h => IxCoproductPCat k h where
 %else
 \begin{code}
 class IxMonoidalPCat k h => IxCoproductPCat k h where
-  inPF   :: Additive a => h (a `k` h a)
-  jamPF  :: Additive a => h a `k` a
+  inPF   :: h (a `k` h a)
+  jamPF  :: h a `k` a
 \end{code}
 %endif
 
