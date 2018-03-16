@@ -1,27 +1,39 @@
-TARG = essence-of-ad
+PAPER = essence-of-ad
 
-EXTENDED = $(TARG)-extended
+ANON = $(PAPER)-anon
 
-.PRECIOUS: %.tex %.pdf %.web
+EXTENDED = $(PAPER)-extended
 
-# all: $(TARG).pdf
+EXTENDED_ANON = $(EXTENDED)-anon
+
+.PRECIOUS: %.tex %.pdf
+
+# all: $(PAPER).pdf
 
 # # This target for a second view
 # all: other.pdf
 
-all: $(TARG).pdf
+all: $(ANON).pdf
+all: $(PAPER).pdf
 all: $(EXTENDED).pdf
+all: $(EXTENDED_ANON).pdf
 
-other.pdf: $(TARG).pdf
+other.pdf: $(EXTENDED).pdf
 	cp $? $@
 
-$(EXTENDED).tex: $(TARG).lhs macros.tex formatting.fmt Makefile
-	lhs2TeX --set=extended -o $*.tex $(TARG).lhs
+$(ANON).tex: $(PAPER).lhs macros.tex formatting.fmt Makefile
+	lhs2TeX --set=anonymous -o $*.tex $(PAPER).lhs
 
-see: $(TARG).see
+$(EXTENDED).tex: $(PAPER).lhs macros.tex formatting.fmt Makefile
+	lhs2TeX --set=extended --set=draft -o $*.tex $(PAPER).lhs
+
+$(EXTENDED_ANON).tex: $(PAPER).lhs macros.tex formatting.fmt Makefile
+	lhs2TeX --set=extended --set=anonymous -o $*.tex $(PAPER).lhs
+
+see: $(PAPER).see
 
 dots = $(wildcard Figures/*.dot)
-pdfs = $(addsuffix .pdf, $(basename $(dots))) $(wildcard Figures/circuits/*-scaled.pdf)
+pdfs = $(addsuffix .pdf, $(basename $(dots)))
 
 #latex=pdflatex
 latex=latexmk -pdf
@@ -44,7 +56,7 @@ showpdf = open -a Skim.app
 pdfs: $(pdfs)
 
 clean:
-	rm -f $(TARG)*.{tex,pdf,aux,nav,snm,ptb,log,out,toc,bbl,blg,fdb_latexmk,fls}
+	rm -f $(PAPER)*.{tex,pdf,aux,nav,snm,ptb,log,out,toc,bbl,blg,fdb_latexmk,fls}
 
 web: web-token
 
