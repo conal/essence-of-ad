@@ -4,11 +4,12 @@
 
 %% TODO: replace latex if with lhs2tex if
 
+%% Determined by Makefile
 %% %let extended = False
 
 %let icfp = not extended
 
-%let draft = True
+%% %let draft = True
 
 %let indexed = True
 
@@ -567,7 +568,7 @@ Before we get too pleased with this definition, let's remember that for |D| to b
 These definitions must also satisfy the identity and composition laws.
 How might we go about proving that they do?
 Perhaps the most obvious route is take those laws, substitute our definitions of |id| and |(.)|, and reason equationally toward the desired conclusion.
-For instance, let's prove that |id . D f == D f| for all |D f :: D a b|:\footnote{Note that \emph{every} morphism in |D| has the form |D f| for some |f|, so it suffices to consider this form.}\notefootsep{}\notefoot{If pinched for space, remove this proof or move it to \out{\appref{Proofs}}Appendix \ref{sec:Proofs}.}
+For instance, let's prove that |id . D f == D f| for all |D f :: D a b|:\footnote{Note that \emph{every} morphism in |D| has the form |D f| for some |f|, so it suffices to consider this form.}\notefootsep{}\notefoot{If pinched for space, remove this proof or move it to the proof appendix.}
 \begin{code}
     id . D f
 ==  D (\ b -> (b,id)) . D f                                            -- definition of |id| for |D|
@@ -738,14 +739,72 @@ instance ProductCat D where
 %format inrP = inr
 %format jamP = jam
 
-%% %format -+> = ->
-
-Cartesian categories have a dual, known as \emph{cocartesian categories}, with each cartesian operation having a mirror image with morphisms reversed (swapping domain and codomain).
-In general, each category can have its own notion of coproduct, e.g., sum (disjoint union) types for the |(->)| category.
-In this paper, however, all coproducts will be pairs (cartesian \emph{products}, coinciding with the categorical products), i.e., we'll be using biproduct categories \citep{MacedoOliveira2013Typing}:
-\\
 %format zero = 0
 %format ^+^ = +
+
+%% %format -+> = ->
+
+%% Define and use a type of additive functions
+%let addFun = True 
+
+%if addFun
+%format unlessAddFun(stuff) = "{}"
+%else
+%format unlessAddFun(stuff) = stuff
+%endif
+
+Cartesian categories have a dual, known as \emph{cocartesian categories}, with each cartesian operation having a mirror image with morphisms reversed (swapping domain and codomain) and coproducts replacing products.
+In general, each category can have its own notion of coproduct, e.g., sum (disjoint union) types for the |(->)| category.
+In this paper, however, coproducts will coincide with categorical products (both being ordered pairs), i.e., we'll be using biproduct categories \citep{MacedoOliveira2013Typing}:
+%if addFun
+\begin{code}
+class Category k => CoproductPCat k where
+  inl  ::  a `k` (Prod k a b)
+  inr  ::  b `k` (Prod k a b)
+  jam  ::  (Prod k a a) `k` a
+\end{code}
+%format Ok = Obj
+Unlike the other classes, there is no |CoproductPCat (->)| instance, and fortunately we will not need such an instance below.
+(There is an instance when using sums instead of cartesian products for coproducts.)
+Instead, define a category of \emph{additive functions} that will have a |CoproductPCat| instance and that we can use to represent derivatives, as shown in \figref{AddFun}.\notefoot{Format this code in two columns if needed.}
+These instances rely on one more feature of the |Category| class not yet mentioned, namely an associated constraint \citep{Bolingbroke2011CK} |Ok k|.
+In the implementation, |Ok k| constrains the types involved in all categorical operations.
+\begin{figure}
+\begin{center}
+\begin{code}
+newtype a -+> b = AddFun (a -> b)
+
+instance Category (-+>) where
+  type Ok (-+>) = Additive
+  id = AddFun id
+  AddFun g . AddFun f = AddFun (g . f)
+
+instance MonoidalPCat (-+>) where
+  AddFun f *** AddFun g = AddFun (f *** g)
+
+instance ProductCat (-+>) where
+  exl  = AddFun exl
+  exr  = AddFun exr
+  dup  = AddFun dup
+
+instance CoproductPCat (-+>) where
+  inlP  = AddFun inlF
+  inrP  = AddFun inrF
+  jamP  = AddFun jamF
+
+inlF  :: Additive b => a -> a :* b
+inrF  :: Additive a => b -> a :* b
+jamF  :: Additive a => a :* a -> a
+
+inlF  = \ a -> (a,zero)
+inrF  = \ b -> (zero,b)
+jamF  = \ (a,b) -> a ^+^ b
+\end{code}
+\caption{Additive functions}
+\figlabel{AddFun}
+\end{center}
+\end{figure}
+%else
 \begin{minipage}[b]{0.52\textwidth}
 \begin{code}
 class Monoidal k => CoproductPCat k where
@@ -766,6 +825,12 @@ instance CoproductPCat (->) where
 \\
 Unlike |Category| and |ProductCat|, |CoproductPCat| introduces an additivity requirement (having a notion of addition and corresponding zero) to the types involved, in order to have an instance for functions.
 
+%format inlF = inl
+%format inrF = inr
+%format jamF = jam
+
+%endif %% addFun
+
 Unsurprisingly, there is a notion of \emph{cocartesian functor}, saying that the cocartesian structure is preserved, i.e.,
 \begin{closerCodePars}
 \begin{code}
@@ -774,13 +839,17 @@ F inr  == inr
 F jam  == jam
 \end{code}
 \end{closerCodePars}%
+%if False
 From the specification that |adf| is a cocartesian functor and the linearity of |inl|, |inr|, and |jam|, we can derive a correct-by-construction |CoproductPCat| instance for differentiable functions:%
 \begin{code}
 instance CoproductPCat D where
-  inl  = linearD inl
-  inr  = linearD inr
-  jam  = linearD jam
+  inl  = linearD inlF
+  inr  = linearD inrF
+  jam  = linearD jamF
 \end{code}
+%endif
+
+%if not addFun
 
 The translation from Haskell to categorical form \citep{Elliott-2017-compiling-to-categories} does not use this |CoproductPCat| class.
 In fact, |Additive| constraints in the |CoproductPCat| class above are only for concise presentation.
@@ -790,6 +859,8 @@ The |CoproductPCat (-+>)| instance is a wrapped version of the |CoproductPCat (-
 The full |Category| class includes an associated constraint \citep{Bolingbroke2011CK} restricting the types involved in all categorical operations, and defines this constraint to be |Additive| for |(-+>)|.
 As a reminder of this distinction, ``|(-+>)|'' is used below where regular functions are used to represent linear (and hence additive) functions.\notefoot{Reconsider this choice even for the conference version of this paper.
 See how I'm doing on space.}
+
+%endif %% not addFun
 
 \subsectionl{Derived operations}
 
@@ -894,7 +965,7 @@ der f (a,b) = \ (da,db) -> f (da,b) + f (a,db)
 \end{code}
 }
 To make the linearity more apparent, and to prepare for variations later in this paper, let's now rephrase |der mulC| without using lambda directly.
-Just as |Category|, |MonoidalPCat|, |Cartesian|, |Cocartesian|, |NumCat|, etc generalize operations beyond functions, it will also be handy to generalize scalar multiplication as well:
+Just as |Category|, |MonoidalPCat|, |Cartesian|\out{, |Cocartesian|}, |NumCat|, etc generalize operations beyond functions, it will also be handy to generalize scalar multiplication as well:
 %format ScalarCat = Scalable
 \\
 \begin{minipage}[b]{0.35\textwidth} % \mathindent1em
@@ -917,7 +988,13 @@ Now we can rephrase the product rule in terms of more general, linear language, 
 der mulC (a,b) = scale b ||| scale a
 \end{code}
 
-This product rule, along with the linearity of negation and uncurried addition, enables using the same style of derivation as with operations from |Category|, |MonoidalPCat|, |Cartesian|, and |Cocartesian| above.
+This product rule, along with the linearity of negation and uncurried addition, enables using the same style of derivation as with operations from |Category|, |MonoidalPCat|,
+%if addFun
+and |Cartesian|
+%else
+|Cartesian|, and |Cocartesian| 
+%endif
+above.
 As usual, specify the |NumCat| instance for differentiable functions by saying that |adf| preserves (|NumCat|) structure, i.e., |adf negateC == negateC|, |adf addC == addC|, and |adf mulC == mulC|.
 Reasoning as before, we get another correct-by-construction instance for differentiable functions:
 \begin{code}
@@ -926,7 +1003,6 @@ instance NumCat D where
   addC  = linearD addC
   mulC  = D (\ (a,b) -> (a * b, scale b ||| scale a))
 \end{code}
-
 Similar reasoning applies to other numeric operations, e.g.,
 \begin{code}
 instance FloatingCat D where
@@ -1011,9 +1087,11 @@ A few small changes to the non-generalized definitions derived in \secref{Puttin
 Then retroactively make |lin| a method of a new class.
 Could incremental computation implement |lin|?}
 \item The functionality needed of the underlying category becomes explicit.
+\item The constraint |Ok (GD k)| is defined to be the conjunction of |Additive| (needed for the |Cocartesian| instance) and |Ok k| (needed for all instances).
 \end{itemize}
 \begin{figure}
 \begin{center}
+%format &+& = &&
 \begin{code}
 newtype GD k a b = D (a -> b :* (a `k` b))
 
@@ -1021,6 +1099,7 @@ linearD :: (a -> b) -> (a `k` b) -> GD k a b
 linearD f f' = D (\ a -> (f a,f'))
 
 instance Category k => Category (GD k) where
+  type Ok (GD k) = Additive &+& Ok k
   id = linearD id id
   D g . D f = D (\ a -> let { (b,f') = f a ; (c,g') = g b } in (c, g' . f'))
 
@@ -1033,9 +1112,9 @@ instance Cartesian k => Cartesian (GD k) where
   dup  = linearD dup  dup
 
 instance Cocartesian k => Cocartesian (GD k) where
-  inl  = linearD inl  inl
-  inr  = linearD inr  inr
-  jam  = linearD jam  jam
+  inl  = linearD inlF  inl
+  inr  = linearD inrF  inr
+  jam  = linearD jamF  jam
 
 instance ScalarCat k s => NumCat (GD k) s where
   negateC = linearD negateC
@@ -1383,8 +1462,6 @@ Then choose |r| to be the scalar field |s|, as in \secref{Gradients and duality}
 
 \sectionl{Scaling up}
 
-\mynote{Writing in progress. When finished, add to the contributions and maybe abstract.}
-
 So far, we have considered binary products.
 Practical applications, including machine learning and other optimization problems, often involve very high-dimensional spaces.
 While those spaces can be encoded as nested binary products, doing so would result in unwieldy representations and prohibitively long compilation and execution times.
@@ -1419,8 +1496,6 @@ instance Zip h => IxMonoidalPCat (->) h where
 Note that the collected morphisms must all agree in domain and codomain.
 While not required for the general categorical notion of products, this restriction accommodates Haskell's type system and seems adequate in practice so far.
 
-%let cartLong = True
-
 Where the |ProductCat| class has two projection methods and a duplication method, the indexed counterpart has a collection of projections and one replication method.\footnote{Assume the following interface for representable functors \citep{Kmett2011Adj}:
 \begin{code}
 class Distributive f => Representable f where
@@ -1429,7 +1504,7 @@ class Distributive f => Representable f where
   index     :: f a -> (Rep f -> a)
 \end{code}
 }
-%if cartLong
+
 \begin{code}
 class IxMonoidalPCat k h => IxProductCat k h where
   exF    :: h (h a `k` a)
@@ -1439,61 +1514,21 @@ instance (Representable h, Zip h, Pointed h) => IxProductCat (->) h where
   exF    = tabulate (flip index)
   replF  = point
 \end{code}
-%else
-\\
-\begin{minipage}[b]{0.44\textwidth} % \mathindent1em
-\begin{code}
-class  IxMonoidalPCat k h =>
-       IxProductCat k h where
-  exF    :: h (h a `k` a)
-  replF  :: a `k` h a
-\end{code}
-\end{minipage}
-\begin{minipage}[b]{0ex}{\rule[1ex]{0.5pt}{0.67in}}\end{minipage}
-\begin{minipage}[b]{0.48\textwidth} \mathindent2em
-\begin{code}
-instance  (Representable h, Zip h, Pointed h) =>
-          IxProductCat (->) h where
-  exF    = tabulate (flip index)
-  replF  = point
-\end{code}
-\end{minipage}
-\\
-%endif
 Dually, where the |CoproductCat| class has two injection methods and a binary combination method, the indexed counterpart has a collection of injections and one collection-combining method:
 %format sumA = sum
 %format Summable = Foldable
-%if cartLong
+%if not addFun
 \begin{code}
 class IxMonoidalPCat k h => IxCoproductPCat k h where
   inPF   :: Additive a => h (a `k` h a)
   jamPF  :: Additive a => h a `k` a
-
-instance Summable h => IxCoproductPCat (->) h where
-  inPF      = tabulate (\ i a -> tabulate (\ j -> if i == j then a else zero))
-  jamPF     = sumA
 \end{code}
 %else
-\\
-\begin{minipage}[b]{0.44\textwidth} % \mathindent1em
 \begin{code}
-class  IxMonoidalPCat k h =>
-       IxCoproductPCat k h where
+class IxMonoidalPCat k h => IxCoproductPCat k h where
   inPF   :: Additive a => h (a `k` h a)
-  NOP
   jamPF  :: Additive a => h a `k` a
 \end{code}
-\end{minipage}
-\begin{minipage}[b]{0ex}{\rule[1ex]{0.5pt}{0.84in}}\end{minipage}
-\begin{minipage}[b]{0.48\textwidth} \mathindent2em
-\begin{code}
-instance  Summable h =>
-          IxCoproductPCat (->) h where
-  inPF      =  tabulate $ \ i a -> tabulate $ \ j ->
-                 if i == j then a else zero
-  jamPF     = sumA
-\end{code}
-\end{minipage}
 %endif
 
 \noindent
@@ -1514,17 +1549,19 @@ Given the definitions in \figref{indexed}, |adf| is a homomorphism with respect 
 %% \end{code}
 \begin{figure}
 \begin{center}
+%format inFF = "\Varid{inIF}"
+%format jamFF = "\Varid{jamIF}"
 \begin{code}
 instance (IxMonoidalPCat k h, Zip h) => IxMonoidalPCat (GD k) h where
   crossF fs = D (second crossF . unzip . crossF (fmap unD fs))
 
 instance (IxProductCat (->) h, IxProductCat k h, Zip h) => IxProductCat (GD k) h where
-  exF = linearD exF exF
-  replF = zipWith linearD replF replF
+  exF    = linearD exF exF
+  replF  = zipWith linearD replF replF
 
 instance (IxCoproductPCat k h, Zip h) => IxCoproductPCat (GD k) h where
-  inF = zipWith linearD inF inF
-  jamPF = linearD jamPF jamPF
+  inPF   = zipWith linearD inFF inPF
+  jamPF  = linearD sumA jamPF
 
 -- Auxiliary definitions:
 
@@ -1536,6 +1573,9 @@ unzip = fmap exl &&& fmap exr
 
 second :: MonoidalPCat k => (b `k` d) -> ((a :* b) `k` (a :* d))
 second g = id *** g
+
+inFF :: (Additive a, Summable h) => h (a -> h a)
+inFF = tabulate (\ i a -> tabulate (\ j -> if i == j then a else zero))
 
 class Zip h where zipWith :: (a -> b -> c) -> h a -> h b -> h c
 \end{code}
@@ -1556,7 +1596,31 @@ This equation, together with the differentiation rules for |crossF|, |replF|, an
 As with \figref{GAD}, the operations defined in \figref{indexed} rely on corresponding operations for the category parameter |k|.
 Fortunately, all of those operations are linear or preserve linearity, so they can all be defined on the various representations of derivatives (linear maps) used for AD in this paper, including |ContC k r| and |DualC s|.
 
-\mynote{Discuss other bulk operations? |zipWith|, etc.}
+%if False
+
+\workingHere
+
+Finally, \figref{ixInstances} shows instances of |IxProductCat| and |IxCoproductPCat| for all of the linear map representations defined in this paper.
+\begin{figure}
+\begin{center}
+\begin{code}
+instance (Representable h, Zip h, Pointed h, Additive1 h) => IxProductCat (-+>) h where
+  exF   = fmap AddFun exF
+  replF = AddFun replF
+
+instance (Summable h, Additive1 h) => IxCoproductPCat (-+>) h where
+  inPF   = fmap AddFun inFF
+  jamPF  = AddFun sumA
+
+\end{code}
+\caption{Indexed instances for linear map categories}
+\figlabel{ixInstances}
+\end{center}
+\end{figure}
+
+%endif
+
+\mynote{Discuss other bulk operations (|zipWith|, etc)?}
 
 %endif
 
@@ -1565,7 +1629,7 @@ Fortunately, all of those operations are linear or preserve linearity, so they c
 The literature on automatic differentiation is vast, beginning with forward mode \citep{Wengert64} and later reverse mode \citep{Speelpenning:1980:CFP,Rall1981Automatic}, with many developments since \citep{Griewank89onAD,GriewankWalther2008EvalDerivs}.
 While most techniques and uses of AD have been directed at imperative programming, there are also variations for functional programs \citep{Karczmarczuk1999FunCoding,Karczmarczuk00adjointcodes,Karczmarczuk2001FunDif,Pearlmutter2007LMH,Pearlmutter2008RAF,Elliott2009-beautiful-differentiation}.
 The work in this paper differs in being phrased at the level of functions/morphisms and specified by functoriality without any mention or manipulation of graphs or other syntactic representations.\footnote{Of course the Haskell compiler itself manipulates syntax trees, and the compiler plugin that converts Haskell code to categorical form helps do so, but both are entirely domain-independent, with no knowledge of or special support for differentiation or linear algebra \citep{Elliott-2017-compiling-to-categories}.}
-Moreover, the specifications in this paper are simple enough that the various forms of AD presented can be calculated into being (easily)\notefoot{In the conference version, add a citation here to \appref{Proofs} in the extended version.}, and so are correct by construction.
+Moreover, the specifications in this paper are simple enough that the various forms of AD presented can be calculated into being (easily)\notefoot{In the conference version, add a citation here to the proof appendix in the extended version.}, and so are correct by construction.
 
 \citet{Pearlmutter2008RAF} make the following observation:
 \begin{quotation}\noindent
