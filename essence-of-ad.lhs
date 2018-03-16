@@ -1,6 +1,6 @@
 %% -*- latex -*-
 
-%let anonymous = True
+%% %let anonymous = True
 
 %% TODO: replace latex if with lhs2tex if
 
@@ -9,7 +9,7 @@
 
 %let icfp = not extended
 
-%% %let draft = True
+%let draft = True
 
 %let indexed = True
 
@@ -63,7 +63,7 @@
 
 %% While editing/previewing, use 12pt and tiny margin.
 \documentclass[12]{article}  % fleqn,
-\usepackage[margin=0.9in]{geometry}  % 0.12in, 0.9in
+\usepackage[margin=0.8in]{geometry}  % 0.12in, 0.9in
 
 \usepackage{natbib}
 \bibliographystyle{plainnat}
@@ -1194,70 +1194,12 @@ Rather than using functions directly as a representation, one can instead use an
 In particular, we can represent vector spaces over a given field as a \emph{representable functor}, i.e., a functor |F| such that $\exists p \, \forall s$ |F s =~= p -> s| (where ``|=~=|'' denotes isomorphism)\out{\notefoot{Relate this notion of \emph{functor} to the one used for specifying |adf|.}}
 This method is convenient in a richly typed functional language like Haskell, which comes with libraries of functor-level building blocks.
 Four such building blocks are functor product, functor composition, and their corresponding identities, which are the unit functor (containing no elements) and the identity functor (containing one element) \citep{Magalhaes:2010,HaskellWikiGhcGenerics}.
-\begin{code}
-data     (f  :*:  g)  a = f a :*: g a               -- product
-newtype  (g  :.:  f)  a = Comp1 (g (f a)) NOP       -- composition
+One must then define the standard functionality for linear maps in the form of instances of |Category|, |MonoidalPCat|, |ProductCat|, |CoproductPCat|, and |ScalarCat|.
+Details are worked out by \citet[Section 7.4 and Appendix A]{Elliott-2017-compiling-to-categories}.
+One can use other representable functors as well, including length-typed vectors \citep{vector-sized}.
 
-newtype  U1           a = U1                        -- unit
-newtype  Par1         a = Par1 a                    -- identity
-\end{code}
-Use of these functors gives data representation of functions that saves recomputation over a native function representation, as a form of functional memoization \cite{Hinze00memofunctions}.
-They also provide a composable, type-safe alternative to the more commonly used multi-dimensional arrays (often called ``tensors'') in machine learning libraries
-
-%format toV = to QQ"_"V
-%format unV = un QQ"_"V
-
-One way to relate these representable functors to the types that appear in our categorical operations is to use associated types, associating a functor representation to various types \citep{Chakravarty05AssociatedSynonyms}.
-Given a scalar field |s| and type |a| of values, presumably built up from a scalar type |s|, the associated |Vec s a| is a functor such that |Vec s a s =~= a|.
-In other words, the type |a| is modeled as a structure of |s| values, where the structure is given by the associated functor |Vec s a|.
-A ``generalized matrix'' for the linear map type |a :-* b| is the composition of two functors---an outer functor for |b| and an inner functor for |a|, together containing elements from the underlying scalar field |s|:
-%format (LC (s)) = L"_{"s"}"
-\begin{code}
-newtype LC s a b = L (Vec s b (Vec s a s))
-\end{code}
-For a given type |t|, in addition to the choice of functor |Vec s t|, there must be functions to convert from |t| to |Vec s t s| and back:
-\begin{code}
-class HasV s t where
-  type Vec s t :: Type -> Type
-  toV  :: t -> Vec s t s
-  unV  :: Vec s t s -> t
-\end{code}
-%format Double = R
-Some instances are shown in \figref{HasV instances}.
-Note that products are represented as functor products, and uses of existing functors such as length-typed vectors \citep{vector-sized} are represented by functor compositions.
-\begin{figure}
-\begin{minipage}[b]{0.28\textwidth} \mathindent0.25em
-\begin{code}
-instance HasV s () where
-  type Vec s () = U1
-  toV () = U1
-  unV U1 = ()
-
-instance HasV Double Double where
-  type Vec Double Double = Par1
-  toV x = Par1 x
-  unV (Par1 x) = x
-\end{code}
-\end{minipage}
-\begin{minipage}[b]{0ex}{\rule[1.1ex]{0.5pt}{1.5in}}\end{minipage}
-\begin{minipage}[b]{0.65\textwidth} \mathindent1em
-\begin{code}
-instance (HasV s a, HasV s b) => HasV s (a :* b) where
-  type Vec s (a :* b) = Vec s a :*: Vec s b
-  toV (a,b) = toV a :*: toV b
-  unV (f :*: g) = (unV f,unV g)
-
-instance (HasV s b, KnownNat n) => HasV s (Vector n b) where
-  type Vec s (Vector n b) = Vector n :.: Vec s b
-  toV bs = Comp1 (fmap toV bs)
-  unV (Comp1 vs) = fmap unV vs
-\end{code}
-\end{minipage}
-\caption{Some ``vector'' representations}
-\figlabel{HasV instances}
-\end{figure}
-Finally, one must define the standard functionality for linear maps in the form of instances of |Category|, |MonoidalPCat|, |ProductCat|, |CoproductPCat|, and |ScalarCat|.
-Details are spelled out elsewhere \citep[Section 7.4 and Appendix A]{Elliott-2017-compiling-to-categories}.\notefoot{Maybe remove most of the detail from this section in favor of this citation.}
+All of these functors give data representations of functions that save recomputation over a native function representation, as a form of functional memoization \cite{Hinze00memofunctions}.
+They also provide a composable, type-safe alternative to the more commonly used multi-dimensional arrays (often called ``tensors'') in machine learning libraries.
 
 \sectionl{Efficiency of composition}
 
@@ -1502,7 +1444,11 @@ instance Zip h => IxMonoidalPCat (->) h where
 Note that the collected morphisms must all agree in domain and codomain.
 While not required for the general categorical notion of products, this restriction accommodates Haskell's type system and seems adequate in practice so far.
 
-Where the |ProductCat| class has two projection methods and a duplication method, the indexed counterpart has a collection of projections and one replication method.\footnote{Assume the following interface for representable functors \citep{Kmett2011Adj}:
+Where the |ProductCat| class has two projection methods and a duplication method, the indexed counterpart has a collection of projections and one replication method:%
+%if True
+\footnote{The |index| and |tabulate| functions convert from functor to function and back \citep{Kmett2011Adj}.}
+%else
+\footnote{Assume the following interface for representable functors \citep{Kmett2011Adj}:
 \begin{code}
 class Distributive f => Representable f where
   type Rep f :: Type
@@ -1510,6 +1456,7 @@ class Distributive f => Representable f where
   index     :: f a -> (Rep f -> a)
 \end{code}
 }
+%endif
 
 \begin{code}
 class IxMonoidalPCat k h => IxProductCat k h where
@@ -1543,8 +1490,14 @@ There are also indexed variants of the derived operations |(&&&)| and |(###)| fr
 forkF :: IxProductCat k h => h (a `k` b) -> (a `k` h b)
 forkF fs = crossF fs . replF
 
-joinPF :: (IxProductCat k h, Additive a) => h (b `k` a) -> (h b `k` a)
+unforkF :: IxProductCat k h => (a `k` h b) -> h (a `k` b)
+unforkF f = fmap (rcomp f) exF
+
+joinPF :: IxProductCat k h => h (b `k` a) -> (h b `k` a)
 joinPF fs = jamPF . plusPF fs
+
+unjoinPF :: IxCoproductPCat k h => (h b `k` a) -> h (b `k` a)
+unjoinPF f = fmap (lcomp f) inPF
 \end{code}
 As usual, we can derive instances by homomorphic specification:
 \begin{theorem}[\provedIn{theorem:indexed}]\thmLabel{indexed}
@@ -1568,8 +1521,6 @@ instance (IxProductCat (->) h, IxProductCat k h, Zip h) => IxProductCat (GD k) h
 instance (IxCoproductPCat k h, Zip h) => IxCoproductPCat (GD k) h where
   inPF   = zipWith linearD inFF inPF
   jamPF  = linearD sumA jamPF
-
--- Auxiliary definitions:
 
 unD :: D a b -> (a -> (b :* (a :-* b)))
 unD (D f) = f
@@ -1599,17 +1550,18 @@ fmap    :: Functor       h =>    (a -> b) -> (h a -> h b)
 In fact, the following relationship holds: |fmap == crossF . replF|.
 This equation, together with the differentiation rules for |crossF|, |replF|, and |(.)| determines differentiation for |fmap|.
 
+%format Additive1
 As with \figref{GAD}, the operations defined in \figref{indexed} rely on corresponding operations for the category parameter |k|.
-Fortunately, all of those operations are linear or preserve linearity, so they can all be defined on the various representations of derivatives (linear maps) used for AD in this paper, including |ContC k r| and |DualC s|.
-
-%if False
-
-\workingHere
-
-Finally, \figref{ixInstances} shows instances of |IxProductCat| and |IxCoproductPCat| for all of the linear map representations defined in this paper.
+Fortunately, all of those operations are linear or preserve linearity, so they can all be defined on the various representations of derivatives (linear maps) used for AD in this paper.
+%if True
+\figreftwo{ixAdditive}{ixDual} show instances for two of the linear map representations defined in this paper, with the third left as an exercise for the reader.
+({The constraint |Additive1 h| means that |forall a. Additive a => Additive (h a)|.})
 \begin{figure}
 \begin{center}
 \begin{code}
+instance (Zip h, Additive1 h) => IxMonoidalPCat (-+>) h where
+  crossF = AddFun . crossF . fmap unAddFun
+
 instance (Representable h, Zip h, Pointed h, Additive1 h) => IxProductCat (-+>) h where
   exF   = fmap AddFun exF
   replF = AddFun replF
@@ -1617,12 +1569,38 @@ instance (Representable h, Zip h, Pointed h, Additive1 h) => IxProductCat (-+>) 
 instance (Summable h, Additive1 h) => IxCoproductPCat (-+>) h where
   inPF   = fmap AddFun inFF
   jamPF  = AddFun sumA
-
 \end{code}
-\caption{Indexed instances for linear map categories}
-\figlabel{ixInstances}
+\vspace{-3ex}
+\caption{Indexed instances for |(-+>)|}
+\figlabel{ixAdditive}
 \end{center}
 \end{figure}
+\begin{figure}
+\begin{center}
+\begin{code}
+instance (IxMonoidalPCat k h, Functor h, Additive1 h) => IxMonoidalPCat (Dual k) h where
+  crossF = Dual . crossF . fmap unDual
+
+instance (IxCoproductPCat k h, Functor h, Additive1 h) => IxProductCat (Dual k) h where
+  exF    = fmap Dual inPF
+  replF  = Dual jamPF
+
+instance (IxProductCat k h, Functor h, Additive1 h) => IxCoproductPCat (Dual k) h where
+  inPF   = fmap Dual exF
+  jamPF  = Dual replF
+\end{code}
+\vspace{-3ex}
+\caption{Indexed instances for |DualC k|}
+\figlabel{ixDual}
+\end{center}
+\end{figure}
+
+%if False
+\begin{code}
+instance (Zip h, IxCoproductPCat k h, Additive1 h) => IxMonoidalPCat (Cont k r) h where
+  crossF fs = Cont (joinPF . crossF (fmap unCont fs) . unjoinPF) 
+\end{code}
+%endif
 
 %endif
 
@@ -2203,8 +2181,6 @@ Given the definitions in \figref{asDual},
 
 \subsection{\thmRef{indexed}}\proofLabel{theorem:indexed}
 
-%% Given the definitions in \figref{indexed},
-
 We will need an indexed counterpart to \thmRef{cross}, which says
 $$|der (f *** g) (a,b) == der f a *** der g b|$$
 Letting |cross = uncurry (***)|, we can rephrase this theorem:
@@ -2278,6 +2254,8 @@ Below is a proof in the |(->)| category, which suffice for our purpose.
 ==  transpose . inl . (f &&& g)                  -- definition of |(.)| for functions
 \end{code}
 Similarly for the second property (with |inr|), noting that |((zero, f a), (zero, g a)) == transpose ((zero, zero), (f a, g a))|.
+
+The |IxProductCat| and |IxCoproductPCat| instances follow from linearity (\thmRef{linear}).
 
 %endif
 
