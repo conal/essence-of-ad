@@ -104,3 +104,5 @@
   \def\commentend{\}}%
 }
 \calculationcomments
+
+%format == = =
