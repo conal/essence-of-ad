@@ -63,7 +63,7 @@
 
 %% While editing/previewing, use 12pt and tiny margin.
 \documentclass[12]{article}  % fleqn,
-\usepackage[margin=0.8in]{geometry}  % 0.12in, 0.9in
+\usepackage[margin=0.9in]{geometry}  % 0.12in, 0.9in
 
 \usepackage[square]{natbib}
 \bibliographystyle{plainnat}
@@ -988,8 +988,8 @@ class ScalarCat k a where
 \begin{minipage}[b]{0ex}{\rule[1ex]{0.5pt}{0.32in}}\end{minipage}
 \begin{minipage}[b]{0.48\textwidth} \mathindent2em
 \begin{code}
-instance Num a => ScalarCat (->) a where
-  scale a = \ da -> a * da
+instance Num a => ScalarCat (-+>) a where
+  scale a = AddFun (\ da -> a * da)
 \end{code}
 \end{minipage}
 \\
@@ -1078,8 +1078,6 @@ These algebra problems always have a particular stylized form, namely that the o
 The result of this recipe is not quite an implementation of our homomorphic specification, which may after all be non-computable.
 Rather, it gives a computable alternative that is nearly as useful: if the input to the specified conversion is expressed in vocabulary of the chosen algebraic abstraction, then a re-interpretation of that vocabulary in the new data type is the result of the (possibly non-computable) specification.
 Furthermore, if we can \emph{automatically} convert conventionally written functional programs into the chosen algebraic vocabulary \citep{Elliott-2017-compiling-to-categories}, then those programs can be re-interpreted to compute the desired specification.
-
-\mynote{Relate to \citet{BirddeMoor96:Algebra} and maybe \citet{Elliott2009-type-class-morphisms-TR}.}
 
 \sectionl{Generalizing automatic differentiation}
 
@@ -1616,7 +1614,7 @@ instance (Zip h, IxCoproductPCat k h, Additive1 h) => IxMonoidalPCat (Cont k r) 
 The literature on automatic differentiation is vast, beginning with forward mode \citep{Wengert64} and later reverse mode \citep{Speelpenning:1980:CFP,Rall1981Automatic}, with many developments since \citep{Griewank89onAD,GriewankWalther2008EvalDerivs}.
 While most techniques and uses of AD have been directed at imperative programming, there are also variations for functional programs \citep{Karczmarczuk1999FunCoding,Karczmarczuk00adjointcodes,Karczmarczuk2001FunDif,Pearlmutter2007LMH,Pearlmutter2008RAF,Elliott2009-beautiful-differentiation}.
 The work in this paper differs in being phrased at the level of functions/morphisms and specified by functoriality, without any mention or manipulation of graphs or other syntactic representations.\footnote{Of course the Haskell compiler itself manipulates syntax trees, and the compiler plugin that converts Haskell code to categorical form helps do so, but both are entirely domain-independent, with no knowledge of or special support for differentiation or linear algebra \citep{Elliott-2017-compiling-to-categories}.}
-Moreover, the specifications in this paper are simple enough that the various forms of AD presented can be calculated into being, and so are correct by
+Moreover, the specifications in this paper are simple enough that the various forms of AD presented can be calculated into being \citep{BirddeMoor96AOP,Oliveira2018Calc}, and so are correct by
 %if icfp
 construction \citep{Elliott-2018-ad-extended-anon}.
 %else
@@ -1681,8 +1679,6 @@ For this reason, such implementations tend to use considerable memory\needcite.
 In contrast, the implementations in this paper (\secreftwo{Reverse-mode AD}{Gradients and duality}) are free of mutation and can easily free (reuse) memory as they run, keeping memory use low.
 Given the prominent use of AD, particularly with large data, performance is crucial, so it will be worthwhile to examine and compare time and space use in detail.
 
-\mynote{Maybe relate the methodology of \secref{Programming as defining and solving algebra problems} to \citet{BirddeMoor96:Algebra} and \citet{Elliott2009-type-class-morphisms-TR}.}
-
 %if False
 \mynote{
 Perhaps more about the following:
@@ -1691,7 +1687,7 @@ Perhaps more about the following:
 \item \emph{Kan Extensions for Program Optimisation} \citep{Hinze2012KanEF}.
 \item \emph{Beautiful differentiation} \citep{Elliott2009-beautiful-differentiation}
 \item Denotational design \citep{Elliott2009-type-class-morphisms-TR} (similar methodologies).
-\item \emph{Algebra of programming} \citep{BirddeMoor96:Algebra}.
+\item \emph{Algebra of programming} \citep{BirddeMoor96AOP}.
 \end{itemize}
 }
 %endif
@@ -2290,6 +2286,7 @@ The |IxProductCat| and |IxCoproductPCat| instances follow from linearity (\thmRe
 
 \sectionl{To do}
 \begin{itemize}
+\item Reference to SD blow-up? I haven't found one.
 \item Return to comparison with TensorFlow etc in the related work and/or conclusions section.
 \item Nested AD. I think the categorical approach in this paper can correctly handle nesting with ease and that the nesting problem indicates an unfortunate choice of abstraction together with non-rigorous specification and development.
 \item Resolve possible title or subtitle: ``Differentiable functional programming made easy''.
