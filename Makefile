@@ -4,6 +4,8 @@ ANON = $(PAPER)-anon
 
 EXTENDED = $(PAPER)-extended
 
+EXTENDED_ARXIV = $(PAPER)-arxiv
+
 EXTENDED_ANON = $(EXTENDED)-anon
 
 .PRECIOUS: %.tex %.pdf
@@ -13,21 +15,27 @@ EXTENDED_ANON = $(EXTENDED)-anon
 # # This target for a second view
 # all: other.pdf
 
-all: $(ANON).pdf
-all: $(PAPER).pdf
-all: $(EXTENDED).pdf
-all: $(EXTENDED_ANON).pdf
+# all: $(ANON).pdf
+# all: $(PAPER).pdf
+# all: $(EXTENDED).pdf
+# all: $(EXTENDED_ANON).pdf
+# all: $(EXTENDED_ARXIV).pdf
+
+all: arXiv.pdf
 
 other.pdf: $(EXTENDED).pdf
 	cp $? $@
 
-$(ANON).tex: $(PAPER).lhs macros.tex formatting.fmt Makefile
+$(ANON).tex: $(PAPER).lhs formatting.fmt Makefile
 	lhs2TeX --set=anonymous -o $*.tex $(PAPER).lhs
 
-$(EXTENDED).tex: $(PAPER).lhs macros.tex formatting.fmt Makefile
+$(EXTENDED).tex: $(PAPER).lhs formatting.fmt Makefile
 	lhs2TeX --set=extended --set=draft -o $*.tex $(PAPER).lhs
 
-$(EXTENDED_ANON).tex: $(PAPER).lhs macros.tex formatting.fmt Makefile
+$(EXTENDED_ARXIV).tex: $(PAPER).lhs formatting.fmt Makefile
+	lhs2TeX --set=extended -o $*.tex $(PAPER).lhs
+
+$(EXTENDED_ANON).tex: $(PAPER).lhs formatting.fmt Makefile
 	lhs2TeX --set=extended --set=anonymous -o $*.tex $(PAPER).lhs
 
 see: $(PAPER).see
@@ -37,6 +45,9 @@ pdfs = $(addsuffix .pdf, $(basename $(dots)))
 
 #latex=pdflatex
 latex=latexmk -pdf
+
+arXiv.pdf: arXiv.tex $(EXTENDED_ARXIV).pdf Makefile
+	$(latex) arXiv.tex
 
 %.pdf: %.tex $(pdfs) bib.bib Makefile
 	$(latex) $*.tex
