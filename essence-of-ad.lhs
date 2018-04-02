@@ -93,6 +93,10 @@
 \input{macros}
 \citestyle{acmauthoryear}
 
+%if arXiv
+\hypersetup{hidelinks} % for the arXiv version
+%endif
+
 %if not draft
 \rnc\indraft[1]{}
 %endif

@@ -19,9 +19,9 @@ EXTENDED_ANON = $(EXTENDED)-anon
 # all: $(PAPER).pdf
 # all: $(EXTENDED).pdf
 # all: $(EXTENDED_ANON).pdf
-# all: $(EXTENDED_ARXIV).pdf
+all: $(EXTENDED_ARXIV).pdf
 
-all: arXiv.pdf
+# all: arXiv.pdf
 
 other.pdf: $(EXTENDED).pdf
 	cp $? $@
@@ -33,7 +33,7 @@ $(EXTENDED).tex: $(PAPER).lhs formatting.fmt Makefile
 	lhs2TeX --set=extended --set=draft -o $*.tex $(PAPER).lhs
 
 $(EXTENDED_ARXIV).tex: $(PAPER).lhs formatting.fmt Makefile
-	lhs2TeX --set=extended -o $*.tex $(PAPER).lhs
+	lhs2TeX --set=extended --set=arXiv -o $*.tex $(PAPER).lhs
 
 $(EXTENDED_ANON).tex: $(PAPER).lhs formatting.fmt Makefile
 	lhs2TeX --set=extended --set=anonymous -o $*.tex $(PAPER).lhs
@@ -46,8 +46,12 @@ pdfs = $(addsuffix .pdf, $(basename $(dots)))
 #latex=pdflatex
 latex=latexmk -pdf
 
+# Loses embedded links :(
 arXiv.pdf: arXiv.tex $(EXTENDED_ARXIV).pdf Makefile
 	$(latex) arXiv.tex
+
+arXiv.zip: $(EXTENDED_ARXIV).tex $(EXTENDED_ARXIV).bbl macros.tex $(pdfs)
+	zip $@ $^
 
 %.pdf: %.tex $(pdfs) bib.bib Makefile
 	$(latex) $*.tex
