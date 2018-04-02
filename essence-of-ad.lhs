@@ -62,7 +62,7 @@
 %else
 
 %% While editing/previewing, use 12pt and tiny margin.
-\documentclass[12]{article}  % fleqn,
+\documentclass[12,twoside]{article}  % fleqn,
 \usepackage[margin=0.9in]{geometry}  % 0.12in, 0.9in
 
 \usepackage[square]{natbib}
@@ -92,6 +92,22 @@
 
 \input{macros}
 \citestyle{acmauthoryear}
+
+%if not icfp
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LO]{The simple essence of automatic differentiation}
+\fancyhead[RE]{%
+%if anonymous
+Anonymous
+%else
+Conal Elliott
+%endif
+}
+\fancyhead[LE,RO]{\thepage}
+% \rnc{\headrulewidth}{0pt}
+%endif
 
 %if arXiv
 \hypersetup{hidelinks} % for the arXiv version
