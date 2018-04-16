@@ -1671,7 +1671,7 @@ He derived a variety of algorithms based on a single elegant technique: transfor
 Each such representation is a monoid, with its identity and associative operation corresponding to identity and composition of the continuations.
 Monoids are categories with only one object, but the technique extends to general categories.
 Cayley's theorem for groups (or monoids) captures this same insight and is a corollary (in retrospect) of the Yoneda lemma \cite[Section 2.2]{Riehl2016category}.
-The idea of using data representations for functions (``defunctionalization'') was pioneered by \citep{Reynolds72definitionalinterpreters} and further explored by \citep{Danvy2001DW}.
+The idea of using data representations for functions (``defunctionalization'') was pioneered by \citet{Reynolds72definitionalinterpreters} and further explored by \citet{Danvy2001DW}.
 
 The notion of derivatives as linear maps is the basis of calculus on manifolds \cite{Spivak65} and was also used for AD by \citet{Elliott2009-beautiful-differentiation}.
 The latter addressed only forward-mode AD but also included all orders of derivatives.
@@ -1687,7 +1687,7 @@ He pointed out that most of the patterns now used in machine learning are alread
 \begin{quotation}
 These neural network patterns are just higher order functions---that is, functions which take functions as arguments. Things like that have been studied extensively in functional programming. In fact, many of these network patterns correspond to extremely common functions, like fold. The only unusual thing is that, instead of receiving normal functions as arguments, they receive chunks of neural network.
 \end{quotation}
-The current paper carries this perspective further, suggesting that the that the essence is \emph{differentiable functions}, with ``networks'' (graphs) being an unnecessary (and unwise) operational choice.
+The current paper carries this perspective further, suggesting that the essence is \emph{differentiable functions}, with ``networks'' (graphs) being an unnecessary (and unwise) operational choice.
 
 This paper builds on a compiler plugin that translates Haskell programs into categorical form to be specialized to various specific categories, including differentiable functions \citep{Elliott-2017-compiling-to-categories}.
 (The plugin knows nothing about any specific category, including differentiable functions.)
