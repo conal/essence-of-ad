@@ -33,7 +33,7 @@
   \country{USA}
 }
 
-%if False
+%if True
 \acmJournal{PACMPL}
 \acmVolume{1}
 \acmNumber{ICFP}
@@ -454,7 +454,7 @@ For all linear functions |f|, |ad f == \ a -> (f a, f)|.
 \sectionl{Putting the pieces together}
 
 The definition of |ad| is a precise specification; but it is not an implementation, since |der| itself is not computable \citep{PourEl1978Diff, PourEl1983Comp}.
-\corRefs{compose}{linear} provide insight into the compositional nature of |ad| in exactly the form we can now assemble into an efficient, correct-by-construction implementation.
+\corRefs{compose}{linear} provide insight into the compositional nature of |ad| in exactly the form we can now assemble into a correct-by-construction implementation.
 
 Although differentiation is not computable when given just an arbitrary computable function, we can instead build up differentiable functions compositionally, using exactly the forms introduced above, (namely |(.)|, |(***)| and linear functions), together with various non-linear primitives having known derivatives.
 Computations expressed in this vocabulary are differentiable by construction thanks to \corRefs{compose}{linear}.
