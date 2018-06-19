@@ -15,13 +15,13 @@ EXTENDED_ANON = $(EXTENDED)-anon
 # # This target for a second view
 # all: other.pdf
 
-# all: $(ANON).pdf
-# all: $(PAPER).pdf
+all: $(PAPER).pdf
 # all: $(EXTENDED).pdf
-# all: $(EXTENDED_ANON).pdf
-all: $(EXTENDED_ARXIV).pdf
 
-# all: arXiv.pdf
+# all: $(ANON).pdf
+# all: $(EXTENDED_ANON).pdf
+
+# all: $(EXTENDED_ARXIV).pdf
 
 other.pdf: $(EXTENDED).pdf
 	cp $? $@
