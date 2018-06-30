@@ -73,6 +73,11 @@
 \author{Conal Elliott \\[1.5ex]Target\\[1.5ex]conal@@conal.net}
 %endif
 
+%% https://www.conference-publishing.com/Help.php
+\usepackage[utf8]{inputenc} 
+\usepackage[T1]{fontenc}
+\usepackage{microtype}
+
 \newcommand\subtitle\footnote
 
 %endif
@@ -823,7 +828,7 @@ instance ProductCat (-+>) where
 \end{code}
 \end{minipage}
 \begin{minipage}[b]{0ex}{\rule[1ex]{0.5pt}{2.3in}}\end{minipage}
-\begin{minipage}[b]{0.48\textwidth}
+\begin{minipage}[b]{0.48\textwidth} \mathindent2em
 \begin{code}
 instance CoproductPCat (-+>) where
   inlP  = AddFun inlF
