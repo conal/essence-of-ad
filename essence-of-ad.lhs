@@ -97,7 +97,7 @@
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[LO]{The simple essence of automatic differentiation}
+\fancyhead[LO]{The Simple Essence of Automatic Differentiation}
 \fancyhead[RE]{%
 %if anonymous
 Anonymous
@@ -122,8 +122,8 @@ Conal Elliott
 %include greek.fmt
 %include formatting.fmt
 
-\nc\tit{The simple essence of automatic differentiation}
-\nc\alttit{Differentiable functional programming made easy}
+\nc\tit{The Simple Essence of Automatic Differentiation}
+\nc\alttit{Differentiable Functional Programming Made Easy}
 %if draft && not anonymous
 \date{Draft\footnote{In this draft, \mynote{red bracketed text} indicates notes to be addressed and eliminated as writing progresses.}~\ of \today{} \currenttime \out{\\[1ex] For submission to ICFP 2018 ---} \emph{(comments requested)}}
 %else
@@ -269,7 +269,7 @@ This paper makes the following specific contributions:
   A similar construction yields forward-mode AD.
 \end{itemize}
 
-\sectionl{What's a derivative?}
+\sectionl{What's a Derivative?}
 
 %format eps = epsilon
 
@@ -343,9 +343,9 @@ However, |f'| is a covector, not a vector.
 Noodle more on this explanation, and maybe remove it.}
 %endif
 
-\sectionl{Rules for differentiation}
+\sectionl{Rules for Differentiation}
 
-\subsectionl{Sequential composition}
+\subsectionl{Sequential Composition}
 
 With the shift to linear maps, there is one general chain rule, having a lovely form, namely that the derivative of a composition is a \emph{composition} of the derivatives \cite[Theorem 2-2]{Spivak65}:
 \begin{theorem}[compose/``chain'' rule] \thmLabel{compose}
@@ -394,7 +394,7 @@ ad (g . f) a == let { (b,f') = ad f a ; (c,g') = ad g b } in (c, g' . f')
 \end{code}
 \end{corollary}
 
-\subsectionl{Parallel composition}
+\subsectionl{Parallel Composition}
 
 The chain rule, telling how to differentiate sequential compositions, gets a lot of attention in calculus classes and in automatic and symbolic differentiation.\out{\notefoot{To do: introduce AD and SD early.}}
 There are other important ways to combine functions, however, and examining them yields additional helpful tools.
@@ -419,7 +419,7 @@ $$|ad (f *** g) (a,b) == let { (c,f') = ad f a ; (d,g') = ad g b } in ((c,d), f'
 An important point left implicit in the discussion above is that sequential and parallel composition preserve linearity.
 This property is what makes it meaningful to use these forms to combine derivatives, i.e., linear maps, as we've done above.
 
-\subsectionl{Linear functions}
+\subsectionl{Linear Functions}
 
 A function |f :: u -> v| is said to be \emph{linear} when |f| distributes over (preserves the structure of) vector addition and scalar multiplication, i.e.,
 \begin{code}
@@ -452,7 +452,7 @@ For all linear functions |f|, |ad f == \ a -> (f a, f)|.
 (Proof: immediate from the |ad| definition and \thmRef{linear}.)
 \end{corollary}
 
-\sectionl{Putting the pieces together}
+\sectionl{Putting the Pieces Together}
 
 The definition of |ad| on page \pageref{code:ad} is a precise specification; but it is not an implementation, since |der| itself is not computable \citep{PourEl1978Diff, PourEl1983Comp}.
 \corRefs{compose}{linear} provide insight into the compositional nature of |ad| in exactly the form we can now assemble into a correct-by-construction implementation.
@@ -640,7 +640,7 @@ Each one uses only the functor laws plus the particular category law on function
 The proofs do \emph{not} rely on anything about the nature of |D| or |adf| other than the functor laws.
 The importance of this observation is that we \emph{never} need to perform these proofs when we specify category instances via a functor.
 
-\subsectionl{Monoidal categories}
+\subsectionl{Monoidal Categories}
 
 %format MonoidalPCat = Monoidal
 
@@ -649,7 +649,7 @@ The importance of this observation is that we \emph{never} need to perform these
 
 %format Prod (k) a b = a "\times\scrk{-0.4ex}" b
 
-\secref{Parallel composition} introduced parallel composition.
+\secref{Parallel Composition} introduced parallel composition.
 This operation generalizes to play an important role in category theory as part of the notion of a \emph{monoidal category}:
 \\
 \begin{minipage}[b]{0.59\textwidth}
@@ -694,7 +694,7 @@ instance MonoidalPCat D where
 
 \end{code}
 
-\subsectionl{Cartesian categories}
+\subsectionl{Cartesian Categories}
 
 %format TerminalCat = Terminal
 %format CoterminalCat = Initial
@@ -765,7 +765,7 @@ instance ProductCat D where
   dup  = linearD dup
 \end{code}
 
-\subsectionl{Cocartesian categories}
+\subsectionl{Cocartesian Categories}
 
 %format inlP = inl
 %format inrP = inr
@@ -901,7 +901,7 @@ See how I'm doing on space.}
 
 %endif %% not addFun
 
-\subsectionl{Derived operations}
+\subsectionl{Derived Operations}
 
 With |dup|, we can define an alternative to |(***)| that takes two morphisms sharing a domain:
 \begin{code}
@@ -939,7 +939,7 @@ unjoin h = (h . inl, h . inr)
 \end{code}
 \end{minipage}
 
-\subsectionl{Numeric operations}
+\subsectionl{Numeric Operations}
 
 So far, the vocabulary we've considered comprises linear functions and combining forms (|(.)| and |(***)|) that preserve linearity.
 To make differentiation interesting, we'll need some non-linear primitives as well.
@@ -1018,7 +1018,7 @@ instance Num a => ScalarCat (-+>) a where
 \end{minipage}
 \\
 Since uncurried multiplication is bilinear, its partial application as |scale a| (for functions) is linear for all |a|.
-Now we can rephrase the product rule in terms of more general, linear language, using the derived |(###)| operation defined in \secref{Derived operations}:
+Now we can rephrase the product rule in terms of more general, linear language, using the derived |(###)| operation defined in \secref{Derived Operations}:
 \begin{code}
 der mulC (a,b) = scale b ||| scale a
 \end{code}
@@ -1086,14 +1086,14 @@ Some remarks:
 \item The graphs shown here are used \emph{solely} for visualizing functions before and after differentiation, playing no role in the programming interface or in the implementation of differentiation.
 \end{itemize}
 
-\sectionl{Programming as defining and solving algebra problems}
+\sectionl{Programming as Defining and Solving Algebra Problems}
 
 Stepping back to consider what we've done, a general recipe emerges:\out{\notefoot{Go over the wording of this section to make as clear as I can.}}
 \begin{itemize}
 \item Start with an expensive or even non-computable specification (here involving differentiation).
 \item Build the desired result into the representation of a new data type (here as the combination of a function and its derivative).
 \item Try to show that conversion from a simpler form (here regular functions) to the new data type---even if not computable---is \emph{compositional} with respect to a well-understood collection of algebraic abstractions (here |Category| etc).
-\item If compositionality fails (as with |der|, unadorned differentiation, in \secref{Sequential composition}), examine the failure to find an augmented specification, iterating as needed until converging on a representation and corresponding specification that \emph{is} compositional.
+\item If compositionality fails (as with |der|, unadorned differentiation, in \secref{Sequential Composition}), examine the failure to find an augmented specification, iterating as needed until converging on a representation and corresponding specification that \emph{is} compositional.
 \item Set up an algebra problem whose solution will be an instance of the well-understood algebraic abstraction for the chosen representation.
 These algebra problems always have a particular stylized form, namely that the operation being solved for is a \emph{homomorphism} for the chosen abstractions (here including a category homomorphism, also called a ``functor'').
 \item Solve the algebra problem by using the compositionality properties.
@@ -1103,7 +1103,7 @@ The result of this recipe is not quite an implementation of our homomorphic spec
 Rather, it gives a computable alternative that is nearly as useful: if the input to the specified conversion is expressed in the vocabulary of the chosen algebraic abstraction, then a re-interpretation of that vocabulary in the new data type is the result of the (possibly non-computable) specification.
 Furthermore, if we can \emph{automatically} convert conventionally written functional programs into the chosen algebraic vocabulary \citep{Elliott-2017-compiling-to-categories}, then those programs can be re-interpreted to compute the desired specification.
 
-\sectionl{Generalizing automatic differentiation}
+\sectionl{Generalizing Automatic Differentiation}
 
 \corRefs{compose}{linear} all have the same form: an operation on |D| (differentiable functions) is defined entirely via the same operation on |(:-*)| (linear maps).
 Specifically, the sequential and parallel composition of differentiable functions rely (respectively) on sequential and parallel composition of linear maps, and likewise for each other operation.
@@ -1113,7 +1113,7 @@ These properties make for a pleasantly poetic theory, but they also have a power
 %format (GD (k)) = D"_{"k"}"
 %% %format GD (k) a b = a "\leadsto_{"k"}" b
 
-A few small changes to the non-generalized definitions derived in \secref{Putting the pieces together} result in the generalized AD definitions shown in \figref{GAD}:
+A few small changes to the non-generalized definitions derived in \secref{Putting the Pieces Together} result in the generalized AD definitions shown in \figref{GAD}:
 \begin{itemize}
 \item The new category takes as parameter a category |k| that replaces |(:-*)| in |D|.
 \item The |linearD| function takes two arrows, previously identified.\notefoot{Alternatively, posit an embedding function |lin :: (a :-* b) -> (a -> b)|, write \thmRef{linear} as |der (lin f) a = f|, and change to |linearD :: (a :-* b) -> D a b|.
@@ -1184,11 +1184,11 @@ When matrices are used to represent linear maps, the domain and codomain types f
 
 \out{\mynote{Maybe say something about block matrices and their use in efficient matrix computations, citing \citet{MacedoOliveira2013Typing}.}}
 
-\sectionl{Extracting a data representation}
+\sectionl{Extracting a Data Representation}
 
 %format R2
 %format R3
-The generalized form of AD in \secref{Generalizing automatic differentiation} allows for different representations of linear maps (as well as alternatives to linear maps).
+The generalized form of AD in \secref{Generalizing Automatic Differentiation} allows for different representations of linear maps (as well as alternatives to linear maps).
 One simple choice is to use functions, as in \figreftwo{magSqr-adf}{cosSinProd-adf}.
 Although this choice is simple and reliable, sometimes we need a \emph{data} representation.
 For instance,
@@ -1207,7 +1207,7 @@ Alternatively, the computations can be done using a sparse vector representation
 If |m| is small, then this method of extracting a Jacobian is tolerably efficient, but as dimension grows, it becomes quite expensive.
 In particular, many useful problems involve gradient-based optimization over very high-dimensional spaces, which is the worst case for this technique.
 
-\sectionl{Generalized matrices}
+\sectionl{Generalized Matrices}
 
 Rather than representing derivatives as functions and then extracting a (Jacobian) matrix, a more conventional alternative is to construct and combine matrices in the first place.
 These matrices are usually rectangular arrays, representing |Rm :-* Rn|, which interferes with the composability we get from  organizing around binary cartesian products, as in the |MonoidalPCat|, |Cartesian|, and |Cocartesian| categorical interfaces.
@@ -1226,10 +1226,10 @@ One can use other representable functors as well, including length-typed vectors
 All of these functors give data representations of functions that save recomputation over a native function representation, as a form of functional memoization \cite{Hinze00memofunctions}.
 They also provide a composable, type-safe alternative to the more commonly used multi-dimensional arrays (often called ``tensors'') in machine learning libraries.
 
-\sectionl{Efficiency of composition}
+\sectionl{Efficiency of Composition}
 
-With the function representation of linear maps, composition is simple and efficient, but extracting a matrix can be quite expensive, as described in \secref{Extracting a data representation}.
-The generalized matrix representation of \secref{Generalized matrices} eliminates the need for this expensive extraction step but at the cost of more expensive construction operations used throughout.
+With the function representation of linear maps, composition is simple and efficient, but extracting a matrix can be quite expensive, as described in \secref{Extracting a Data Representation}.
+The generalized matrix representation of \secref{Generalized Matrices} eliminates the need for this expensive extraction step but at the cost of more expensive construction operations used throughout.
 
 One particularly important efficiency concern is that of (generalized) matrix multiplication.
 Although matrix multiplication is associative (because it correctly implements composition of linear maps represented as matrices), different associations can result in very different computational cost.
@@ -1246,7 +1246,7 @@ One of the main purposes of this paper is to demonstrate that these complication
 
 \sectionl{Reverse-mode AD}
 
-The AD algorithm derived in \secref{Putting the pieces together} and generalized in \figref{GAD} can be thought of as a family of algorithms.
+The AD algorithm derived in \secref{Putting the Pieces Together} and generalized in \figref{GAD} can be thought of as a family of algorithms.
 For fully right-associated compositions, it becomes forward mode AD; for fully left-associated compositions, reverse-mode AD; and for all other associations, various mixed modes.
 
 Let's now look at how to separate the associations used in formulating a differentiable function from the associations used to compose its derivatives.
@@ -1324,7 +1324,7 @@ The instances for |ContC k r| constitute a simple algorithm for reverse-mode AD.
 \figoneW{0.57}{cosSinProd-adr}{|cosSinProd| in |GD (ContC ((-+>)) R)|}}
 The derivatives are represented as (linear) functions again, but reversed (mapping from codomain to domain).
 
-\sectionl{Gradients and duality}
+\sectionl{Gradients and Duality}
 
 As a special case of reverse-mode automatic differentiation, let's consider its use to compute \emph{gradients}, i.e., derivatives of functions with a scalar codomain, as with gradient-based optimization.
 %% This case is very important for gradient-based optimization.
@@ -1427,11 +1427,11 @@ begin :: Category k => (a `k` b) -> BeginC k r a b
 begin f = Begin (lcomp f)
 \end{code}
 As usual, we can derive instances for our new category by homomorphic specification (for |begin|).
-Then choose |r| to be the scalar field |s|, as in \secref{Gradients and duality}, noting that |(s :-* a) =~= a|.
+Then choose |r| to be the scalar field |s|, as in \secref{Gradients and Duality}, noting that |(s :-* a) =~= a|.
 
 %if indexed
 
-\sectionl{Scaling up}
+\sectionl{Scaling Up}
 
 So far, we have considered binary products.
 Practical applications, including machine learning and other optimization problems, often involve very high-dimensional spaces.
@@ -1508,7 +1508,7 @@ class IxMonoidalPCat k h => IxCoproductPCat k h where
 %endif
 
 \noindent
-There are also indexed variants of the derived operations |(&&&)| and |(###)| from \secref{Derived operations}:
+There are also indexed variants of the derived operations |(&&&)| and |(###)| from \secref{Derived Operations}:
 \begin{code}
 forkF :: IxProductCat k h => h (a `k` b) -> (a `k` h b)
 forkF fs = crossF fs . replF
@@ -1631,7 +1631,7 @@ instance (Zip h, IxCoproductPCat k h, Additive1 h) => IxMonoidalPCat (Cont k r) 
 
 %endif
 
-\sectionl{Related work}
+\sectionl{Related Work}
 
 The literature on automatic differentiation is vast, beginning with forward mode \citep{Wengert64} and later reverse mode \citep{Speelpenning:1980:CFP,Rall1981Automatic}, with many developments since \citep{Griewank89onAD,GriewankWalther2008EvalDerivs}.
 While most techniques and uses of AD have been directed at imperative programming, there are also variations for functional programs \citep{Karczmarczuk1999FunCoding,Karczmarczuk00adjointcodes,Karczmarczuk2001FunDif,Pearlmutter2007LMH,Pearlmutter2008RAF,Elliott2009-beautiful-differentiation}.
@@ -1646,19 +1646,19 @@ Moreover, the specifications in this paper are simple enough that the various fo
 \begin{quotation}\noindent
 In this context, reverse-mode AD refers to a particular construction in which the primal data-flow graph is transformed to construct an adjoint graph that computes the sensitivity values. In the adjoint, the direction of the data-flow edges are reversed; addition nodes are replaced by fanout nodes; fanout nodes are replaced by addition nodes; and other nodes are replaced by multiplication by their linearizations. The main constructions of this paper can, in this context, be viewed as a method for constructing scaffolding that supports this adjoint computation.
 \end{quotation}
-The |Cont| and |Dual| category transformers described in \secreftwo{Reverse-mode AD}{Gradients and duality} (shown in \figreftwo{cont}{asDual}) above explain this ``adjoint graph'' construction without involving graphs.
+The |Cont| and |Dual| category transformers described in \secreftwo{Reverse-mode AD}{Gradients and Duality} (shown in \figreftwo{cont}{asDual}) above explain this ``adjoint graph'' construction without involving graphs.
 Data-flow edge reversal corresponds to the reversal of |(.)| (from |Category|), while fanout and addition correspond to |dup| and |jam| (from |ProductCat| and |CoproductPCat| respectively), which are mutually dual.
 \citet{Pearlmutter2008RAF} further remark:
 \begin{quotation}\noindent
 The main technical difficulty to be faced is that reverse-mode AD must convert fanout (multiple use of a variable) in the untransformed code into addition in the reverse phase of the transformed code. We address this by expressing all straight-line code segments in A-normal form, which makes fanout lexically apparent. 
 \end{quotation}
-The categorical approach in this paper also makes fanout easily apparent, as appearances of |dup|, which are produced during translation from Haskell to categorical form \citep{Elliott-2017-compiling-to-categories} (via |(&&&)| as defined in \secref{Derived operations} above).
+The categorical approach in this paper also makes fanout easily apparent, as appearances of |dup|, which are produced during translation from Haskell to categorical form \citep{Elliott-2017-compiling-to-categories} (via |(&&&)| as defined in \secref{Derived Operations} above).
 This translation is specified and implemented independently of AD.
 
 Closely related to our choice of derivatives as linear maps and their categorical generalizations is the work of \citet{MacedoOliveira2013Typing}, also based on biproducts (though not addressing differentiation).
 That work uses natural numbers as categorical objects to capture the dimensions of vectors and matrices, while the current paper uses vector spaces themselves.
-The difference is perhaps minor, however, since natural numbers can be thought of as representing finite sets (of corresponding cardinality), which are \emph{bases} of finite-dimensional free vector spaces (as in \secref{Generalized matrices}).
-On the other hand, the duality-based gradient algorithm of \secref{Gradients and duality} involves no matrices at all in their traditional representation (arrays of numbers) or generalized sense of \secref{Generalized matrices} (representable functors).
+The difference is perhaps minor, however, since natural numbers can be thought of as representing finite sets (of corresponding cardinality), which are \emph{bases} of finite-dimensional free vector spaces (as in \secref{Generalized Matrices}).
+On the other hand, the duality-based gradient algorithm of \secref{Gradients and Duality} involves no matrices at all in their traditional representation (arrays of numbers) or generalized sense of \secref{Generalized Matrices} (representable functors).
 
 Also sharing a categorical style is the work of \citet{Fong2017BackpropAF}, formulating the backpropropagation algorithm as a functor.
 That work, which also uses biproducts (in monoidal but not cartesian form), does not appear to be separable from the application to machine learning, and so would seem to complement this paper.
@@ -1693,10 +1693,10 @@ Another instance of generalized AD given there is automatic incremental evaluati
 Relative to that work, the new contributions are the |ContC k r| and |DualC k| categories, their use to succinctly implement reverse-mode AD (by instantiating the generalized differentiation category), the precise specification of instances for |D|, |ContC k r|, and |DualC k| via functoriality, and the calculation of implementations from these specifications.
 
 The implementations in this paper are quite simple and would appear to be efficient as well.
-For instance, the duality-based version (\secref{Gradients and duality}) involves no matrices.
+For instance, the duality-based version (\secref{Gradients and Duality}) involves no matrices.
 Moreover, typical reverse-mode AD (RAD) implementations use mutation to incrementally update derivative contributions from each \emph{use} of a variable or intermediate computation, holding onto all of these accumulators until the very end of the derivative computation.
 For this reason, such implementations tend to use considerable memory\needcite.
-In contrast, the implementations in this paper (\secreftwo{Reverse-mode AD}{Gradients and duality}) are free of mutation and can easily free (reuse) memory as they run, keeping memory use low.
+In contrast, the implementations in this paper (\secreftwo{Reverse-mode AD}{Gradients and Duality}) are free of mutation and can easily free (reuse) memory as they run, keeping memory use low.
 Given the prominent use of AD, particularly with large data, performance is crucial, so it will be worthwhile to examine and compare time and space use in detail.
 
 %if False
@@ -1714,7 +1714,7 @@ Perhaps more about the following:
 
 \sectionl{Conclusions}
 
-This paper develops a simple, mode-independent algorithm for automatic differentiation (AD) (\secref{Putting the pieces together}), calculated from a simple, natural specification in terms of elementary category theory (functoriality).
+This paper develops a simple, mode-independent algorithm for automatic differentiation (AD) (\secref{Putting the Pieces Together}), calculated from a simple, natural specification in terms of elementary category theory (functoriality).
 It then generalizes the algorithm, replacing linear maps (as derivatives) by an arbitrary biproduct category (\figref{GAD}).
 Specializing this general algorithm to two well-known categorical constructions (\figreftwo{cont}{asDual})---also calculated---yields reverse-mode AD (RAD) for general derivatives and for gradients.
 These RAD implementations are far simpler than previously known.
@@ -1766,7 +1766,7 @@ Putonlalla (IRC)
 
 \mynote{The appendices that follow appear in the extended version of this paper and are cited from the shorter, conference version.}
 
-\sectionl{Terminal and initial objects}
+\sectionl{Terminal and Initial Objects}
 
 In the biproduct setting of this paper, terminal and initial objects coincide and may be taken to be any singleton type.
 We may as well choose the unit type, having exactly one element, representing a canonical zero-dimensional vector space, and written ``|()|'' in Haskell:\footnote{In a more general categorical setting, terminal and initial objects need not coincide and are defined per category.}\footnote{As with |CoproductPCat|,  in the actual implementation, the |CoterminalCat| definition has no |Additive| constraint or |CoterminalCat (->)| instance, and instead has a |CoterminalCat| instance for additive functions.}
@@ -1779,7 +1779,7 @@ instance CoterminalCat (->)  where ti = \ () -> zero
 \end{code}
 Differentiation is trivial, since |it| and |ti| on functions are both linear.
 
-\sectionl{Abelian categories}
+\sectionl{Abelian Categories}
 
 Another perspective on the operations we've considered is that morphisms sharing any particular domain and codomain (i.e., hom-sets) form an abelian group.
 The zero for |a `k` b| results from the composition of initial and terminal morphisms:
@@ -1896,7 +1896,7 @@ Simplify both sides:
 ==  Cont (\ h -> join (((rcomp f) *** (rcomp g)) (unjoin h)))          -- eliminate |let|
 ==  Cont (join . ((rcomp f) *** (rcomp g)) . unjoin)                   -- definition of |(.)|
 \end{code}
-The crucial trick here was to note that |h :: (a :* b) `k` r| can be split into two continuations |ha :: a `k` r| and |hb :: b `k` r| thanks to |join|/|unjoin| isomorphism from \secref{Derived operations}.\notefoot{In general, this splitting can lose efficiency, since |ha| and |hb| could duplicate work that was shared in |h|. Investigate this concern.}
+The crucial trick here was to note that |h :: (a :* b) `k` r| can be split into two continuations |ha :: a `k` r| and |hb :: b `k` r| thanks to |join|/|unjoin| isomorphism from \secref{Derived Operations}.\notefoot{In general, this splitting can lose efficiency, since |ha| and |hb| could duplicate work that was shared in |h|. Investigate this concern.}
 Now, strengthen the massaged specification, generalizing from |rcomp f| and |rcomp g| as usual, resulting in a sufficient condition in solved form:
 \begin{code}
 Cont f *** Cont g == Cont (join . (f *** g) . unjoin)
@@ -1946,7 +1946,7 @@ For instance,
 \begin{code}
     cont exl
 ==  Cont (\ h -> h . exl)        -- definition of |cont|
-==  Cont (\ h -> h ||| zero)     -- \appref{Abelian categories}
+==  Cont (\ h -> h ||| zero)     -- \appref{Abelian Categories}
 ==  Cont (\ h -> join (h,zero))  -- definition of |join|
 ==  Cont (\ h -> join (inl h))   -- definition of |inl| for functions
 ==  Cont (join . inl)            -- definition of |(.)| for functions
@@ -1958,7 +1958,7 @@ For |dup :: a `k` (a :* a)|, we'll have |h :: (a :* a) ~> r|, so we can split |h
 ==  Cont (\ h -> h . dup)                                      -- definition of |cont|
 ==  Cont (\ h -> join (unjoin h) . dup)                        -- |join . unjoin == id|
 ==  Cont (\ h -> let (ha,hb) = unjoin h in (ha ||| hb) . dup)  -- refactor; definition of |join|
-==  Cont (\ h -> let (ha,hb) = unjoin h in ha ^+^ hb)          -- \appref{Abelian categories}
+==  Cont (\ h -> let (ha,hb) = unjoin h in ha ^+^ hb)          -- \appref{Abelian Categories}
 ==  Cont (\ h -> let (ha,hb) = unjoin h in jam (ha,hb))        -- definition of |jamP| for functions
 ==  Cont (\ h -> jam (unjoin h))                               -- eliminate the |let|
 ==  Cont (jam . unjoin)                                        -- definition of |(.)| on functions
@@ -2068,7 +2068,7 @@ The following properties hold:
 \end{enumerate}
 \emph{End of proof of \lemRef{dot-properties}}.\\
 
-Recall the definition of |asDual| from \secref{Gradients and duality}:
+Recall the definition of |asDual| from \secref{Gradients and Duality}:
 \begin{code}
 asDual :: (HasDot s a, HasDot s b) => ContC k s a b -> DualC k a b
 asDual (Cont f) = Dual (onDot f)
@@ -2304,7 +2304,7 @@ The |IxProductCat| and |IxCoproductPCat| instances follow from linearity (\thmRe
 
 %if draft
 
-\sectionl{To do}
+\sectionl{To Do}
 \begin{itemize}
 \item Reference to SD blow-up? I haven't found one.
 \item Return to comparison with TensorFlow etc in the related work and/or conclusions section.
@@ -2320,7 +2320,7 @@ The |IxProductCat| and |IxCoproductPCat| instances follow from linearity (\thmRe
       How to make their positions and heights work for both versions?
 %if False
 \item Maybe more future work, including sub-differentiation.
-\item Possibly replace most of \secref{Generalized matrices} by a reference \citep{Elliott-2017-compiling-to-categories}, saving nearly a page.
+\item Possibly replace most of \secref{Generalized Matrices} by a reference \citep{Elliott-2017-compiling-to-categories}, saving nearly a page.
       If so, merge the decimated section into the previous one (``Extracting a data representation'').
 \item Maybe define and use |(-+>)|.
 \item Probably remove the |Additive| constraints in |Cocartesian|, along with the |Cocartesian (->)| instance.
