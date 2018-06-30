@@ -1244,7 +1244,7 @@ For instance, gradient-based optimization (including its use in machine learning
 Reverse mode (including its specialization, backpropagation) is much more efficient for these problems, but is also typically given much more complicated explanations and implementations, involving mutation, graph construction, and ``tapes''\needcite.
 One of the main purposes of this paper is to demonstrate that these complications are inessential and that RAD can instead be specified and implemented quite simply.
 
-\sectionl{Reverse-mode AD}
+\sectionl{Reverse-Mode Automatic Differentiation}
 
 The AD algorithm derived in \secref{Putting the Pieces Together} and generalized in \figref{GAD} can be thought of as a family of algorithms.
 For fully right-associated compositions, it becomes forward mode AD; for fully left-associated compositions, reverse-mode AD; and for all other associations, various mixed modes.
@@ -1341,7 +1341,7 @@ instance HasDot R R where dot = scale
 instance (HasDot s a, HasDot s b) => HasDot s (a :* b) where dot (u,v) = dot u ||| dot v
 \end{code}
 
-The |ContC k r| construction from \secref{Reverse-mode AD} works for \emph{any} type/object |r|, so let's take |r| to be the scalar field |s|.
+The |ContC k r| construction from \secref{Reverse-Mode Automatic Differentiation} works for \emph{any} type/object |r|, so let's take |r| to be the scalar field |s|.
 The internal representation of |ContC ((:-*)) s a b| is |(b :-* s) -> (a :-* s)|, which is isomorphic to |b -> a|.
 Call this representation the \emph{dual} (or ``opposite'') of |k|:
 %% %format Dual = Op
@@ -1415,7 +1415,7 @@ Compare \figref{magSqr-gradr} with\out{ the same example in} \figreftwo{magSqr-a
 \figoneW{0.34}{magSqr-gradr}{|magSqr| in |GD (DualC (-+>))|}}{
 \figoneW{0.62}{cos-xpytz-gradr}{|\ ((x,y),z) -> cos (x + y * z)| in |GD (DualC (-+>))|}}
 
-\sectionl{Forward-mode AD}
+\sectionl{Forward-Mode Automatic Differentiation}
 
 It may be interesting to note that we can turn the |Cont| and |Dual| techniques around to yield category transformers that perform full \emph{right-} instead of left-association, converting the general, mode-independent algorithm into forward mode, thus yielding an algorithm preferable for low-dimensional domains (rather than codomains):
 %format (BeginC (k) (r)) = Begin"_{"k"}^{"r"}"
@@ -1646,7 +1646,7 @@ Moreover, the specifications in this paper are simple enough that the various fo
 \begin{quotation}\noindent
 In this context, reverse-mode AD refers to a particular construction in which the primal data-flow graph is transformed to construct an adjoint graph that computes the sensitivity values. In the adjoint, the direction of the data-flow edges are reversed; addition nodes are replaced by fanout nodes; fanout nodes are replaced by addition nodes; and other nodes are replaced by multiplication by their linearizations. The main constructions of this paper can, in this context, be viewed as a method for constructing scaffolding that supports this adjoint computation.
 \end{quotation}
-The |Cont| and |Dual| category transformers described in \secreftwo{Reverse-mode AD}{Gradients and Duality} (shown in \figreftwo{cont}{asDual}) above explain this ``adjoint graph'' construction without involving graphs.
+The |Cont| and |Dual| category transformers described in \secreftwo{Reverse-Mode Automatic Differentiation}{Gradients and Duality} (shown in \figreftwo{cont}{asDual}) above explain this ``adjoint graph'' construction without involving graphs.
 Data-flow edge reversal corresponds to the reversal of |(.)| (from |Category|), while fanout and addition correspond to |dup| and |jam| (from |ProductCat| and |CoproductPCat| respectively), which are mutually dual.
 \citet{Pearlmutter2008RAF} further remark:
 \begin{quotation}\noindent
@@ -1664,7 +1664,7 @@ Also sharing a categorical style is the work of \citet{Fong2017BackpropAF}, form
 That work, which also uses biproducts (in monoidal but not cartesian form), does not appear to be separable from the application to machine learning, and so would seem to complement this paper.
 Backpropagation is a specialization of reverse-mode AD to the context of machine learning, discovered by \citet{Linnainmaa1970MS} and popularized by \citet{Rumelhart1988backprop}.
 
-The continuation transformation of \secref{Reverse-mode AD} was inspired by Mitch Wand's work on continuation-based program transformation \citep{Wand80continuation-basedprogram}.
+The continuation transformation of \secref{Reverse-Mode Automatic Differentiation} was inspired by Mitch Wand's work on continuation-based program transformation \citep{Wand80continuation-basedprogram}.
 He derived a variety of algorithms based on a single elegant technique: transform a simple recursive program into continuation-passing form, examine the continuations that arise, and find a data (rather than function) representation for them.
 Each such representation is a monoid, with its identity and associative operation corresponding to identity and composition of the continuations.
 Monoids are categories with only one object, but the technique extends to general categories.
@@ -1696,7 +1696,7 @@ The implementations in this paper are quite simple and would appear to be effici
 For instance, the duality-based version (\secref{Gradients and Duality}) involves no matrices.
 Moreover, typical reverse-mode AD (RAD) implementations use mutation to incrementally update derivative contributions from each \emph{use} of a variable or intermediate computation, holding onto all of these accumulators until the very end of the derivative computation.
 For this reason, such implementations tend to use considerable memory\needcite.
-In contrast, the implementations in this paper (\secreftwo{Reverse-mode AD}{Gradients and Duality}) are free of mutation and can easily free (reuse) memory as they run, keeping memory use low.
+In contrast, the implementations in this paper (\secreftwo{Reverse-Mode Automatic Differentiation}{Gradients and Duality}) are free of mutation and can easily free (reuse) memory as they run, keeping memory use low.
 Given the prominent use of AD, particularly with large data, performance is crucial, so it will be worthwhile to examine and compare time and space use in detail.
 
 %if False
