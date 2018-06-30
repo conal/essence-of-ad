@@ -35,12 +35,12 @@
 
 %if True
 \acmJournal{PACMPL}
-\acmVolume{1}
+\acmVolume{2}
 \acmNumber{ICFP}
-\acmArticle{1}
+\acmArticle{18}
 \acmYear{2018}
-\acmMonth{1}
-\acmDOI{} % \acmDOI{10.1145/nnnnnnn.nnnnnnn}
+\acmMonth{9}
+\acmDOI{10.1145/nnnn.nnnnn}  % \acmDOI{}
 \startPage{1}
 %endif
 
@@ -160,7 +160,7 @@ Conal Elliott
 
 \nc\proofLabel[1]{\label{proof:#1}}
 %if icfp
-\nc\provedIn[1]{\textnormal{See proof \citep[Appendix]{Elliott-2018-ad-extended}}}
+\nc\provedIn[1]{\textnormal{See proof \citep[Appendix C]{Elliott-2018-ad-extended}}}
 %else
 \nc\proofRef[1]{Appendix \ref{proof:#1}}
 \nc\provedIn[1]{\textnormal{Proved in \proofRef{#1}}}
@@ -225,7 +225,7 @@ Construction and interpretation (or compilation) of graphs and tapes also add ex
 The importance of RAD makes its current complicated and bulky implementations especially problematic.
 The increasingly large machine learning (and other optimization) problems being solved with RAD (usually via backpropagation) suggest the need to find more streamlined, efficient implementations, especially with the massive hardware parallelism now readily and inexpensively available in the form of graphics processors (GPUs) and FPGAs.
 
-Another difficulty in the practical application of AD in machine learning (ML) comes from the nature of many currently popular ML frameworks, including\out{ Theano \citep{Bergstra10theano}\notefoot{Theano doesn't seem to expose graphs.},} Caffee \citep{Jia2014Caffe}, TensorFlow \citep{Abadi2016TensorFlow}, and Keras \citep{Chollet2016KerasResources}.
+Another difficulty in the practical application of AD in machine learning (ML) comes from the nature of many currently popular ML frameworks, including\out{ Theano \citep{Bergstra10theano}\notefoot{Theano doesn't seem to expose graphs.},} Caffe \citep{Jia2014Caffe}, TensorFlow \citep{Abadi2016TensorFlow}, and Keras \citep{Chollet2016KerasResources}.
 These frameworks are designed around the notion of a ``graph'' (or ``network'') of interconnected nodes, each of which represents a mathematical operation---a sort of data flow graph.
 Application programs construct these graphs \emph{explicitly}, creating nodes and connecting them to other nodes.
 After construction, the graphs must then be processed into a representation that is more efficient to train and to evaluate.
@@ -381,6 +381,7 @@ Since the chain rule gets applied recursively to nested compositions, this redun
 
 Fortunately, this efficiency problem is easily fixed.
 Instead of pairing |f| and |der f|, \emph{combine} them\out{ into a single function}:\footnote{The precedence of ``|:*|'' is tighter than that of ``|->|'' and ``|:-*|'', so |a -> b :* (a :-* b)| is equivalent to |a -> (b :* (a :-* b))|.}
+\label{code:ad}
 \begin{code}
 ad :: (a -> b) -> (a -> b :* (a :-* b))   -- better!
 ad f a = (f a, der f a)
@@ -453,7 +454,7 @@ For all linear functions |f|, |ad f == \ a -> (f a, f)|.
 
 \sectionl{Putting the pieces together}
 
-The definition of |ad| is a precise specification; but it is not an implementation, since |der| itself is not computable \citep{PourEl1978Diff, PourEl1983Comp}.
+The definition of |ad| on page \pageref{code:ad} is a precise specification; but it is not an implementation, since |der| itself is not computable \citep{PourEl1978Diff, PourEl1983Comp}.
 \corRefs{compose}{linear} provide insight into the compositional nature of |ad| in exactly the form we can now assemble into a correct-by-construction implementation.
 
 Although differentiation is not computable when given just an arbitrary computable function, we can instead build up differentiable functions compositionally, using exactly the forms introduced above, (namely |(.)|, |(***)| and linear functions), together with various non-linear primitives having known derivatives.
