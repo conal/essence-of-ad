@@ -26,16 +26,18 @@ all: $(PAPER).pdf
 other.pdf: $(EXTENDED).pdf
 	cp $? $@
 
-$(ANON).tex: $(PAPER).lhs formatting.fmt Makefile
+moredeps = formatting.fmt macros.tex acmart.cls ACM-Reference-Format.bst Makefile
+
+$(ANON).tex: $(PAPER).lhs $(moredeps)
 	lhs2TeX --set=anonymous -o $*.tex $(PAPER).lhs
 
-$(EXTENDED).tex: $(PAPER).lhs formatting.fmt Makefile
+$(EXTENDED).tex: $(PAPER).lhs $(moredeps)
 	lhs2TeX --set=extended --set=draft -o $*.tex $(PAPER).lhs
 
-$(EXTENDED_ARXIV).tex: $(PAPER).lhs formatting.fmt Makefile
+$(EXTENDED_ARXIV).tex: $(PAPER).lhs $(moredeps)
 	lhs2TeX --set=extended --set=arXiv -o $*.tex $(PAPER).lhs
 
-$(EXTENDED_ANON).tex: $(PAPER).lhs formatting.fmt Makefile
+$(EXTENDED_ANON).tex: $(PAPER).lhs $(moredeps)
 	lhs2TeX --set=extended --set=anonymous -o $*.tex $(PAPER).lhs
 
 see: $(PAPER).see
@@ -50,13 +52,13 @@ latex=latexmk -pdf
 arXiv.pdf: arXiv.tex $(EXTENDED_ARXIV).pdf Makefile
 	$(latex) arXiv.tex
 
-arXiv.zip: $(EXTENDED_ARXIV).tex $(EXTENDED_ARXIV).bbl macros.tex $(pdfs)
+arXiv.zip: $(EXTENDED_ARXIV).tex $(EXTENDED_ARXIV).bbl $(moredeps) $(pdfs)
 	zip $@ $^
 
 %.pdf: %.tex $(pdfs) bib.bib Makefile
 	$(latex) $*.tex
 
-%.tex: %.lhs macros.tex formatting.fmt Makefile
+%.tex: %.lhs formatting.fmt
 	lhs2TeX -o $*.tex $*.lhs
 
 showpdf = open -a Skim.app
