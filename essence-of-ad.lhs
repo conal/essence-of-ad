@@ -374,7 +374,7 @@ As desired, this altered specification is compositional:
 \end{code}
 
 Note that |ad0 (g . f)| is assembled entirely from components of |ad0 g| and |ad0 f|, which is to say from |g|, |der g|, |f|, and |der f|.
-Writing out |g . f| as |\ a -> g (f a)| underscores that the two parts of |ad0 (g . f)| when applied to |a| both involve |f a|.
+Writing out |g . f| as |\ a -> g (f a)| underscores that the two parts of |ad0 (g . f) a| both involve |f a|.
 Computing these parts independently thus requires redundant work.
 Moreover, the chain rule itself requires applying a function and its derivative (namely |f| and |der f|) to the same |a|.
 Since the chain rule gets applied recursively to nested compositions, this redundant work multiplies greatly, resulting in an impractically expensive algorithm.
@@ -398,7 +398,7 @@ ad (g . f) a == let { (b,f') = ad f a ; (c,g') = ad g b } in (c, g' . f')
 
 The chain rule, telling how to differentiate sequential compositions, gets a lot of attention in calculus classes and in automatic and symbolic differentiation.\out{\notefoot{To do: introduce AD and SD early.}}
 There are other important ways to combine functions, however, and examining them yields additional helpful tools.
-Another operation (pronounced ``cross'') combines two functions in \emph{parallel} \citep{Gibbons2002Calculating}:\footnote{By ``parallel'', I simply mean without data dependencies. Operationally, the two functions can be applied simultaneously or not.}
+Another operation (pronounced ``cross'') combines two functions in \emph{parallel} \citep{Gibbons2002Calculating}:\footnote{By ``parallel'', I mean without data dependencies. Operationally, the two functions can be applied simultaneously or not.}
 \begin{code}
 (***) :: (a -> c) -> (b -> d) -> (a :* b -> c :* d)
 f *** g = \ (a,b) -> (f a, g b)
@@ -421,12 +421,12 @@ This property is what makes it meaningful to use these forms to combine derivati
 
 \subsectionl{Linear Functions}
 
-A function |f :: u -> v| is said to be \emph{linear} when |f| distributes over (preserves the structure of) vector addition and scalar multiplication, i.e.,
+A function |f| is said to be \emph{linear} when it distributes over (preserves the structure of) vector addition and scalar multiplication, i.e.,
 \begin{code}
 f (a + a')  == f a + f a'
 f (s *^ a)  == s *^ f a
 \end{code}
-for all |a,a' :: u| and |s| taken from the scalar field underlying |u| and |v|.
+%% for all |a,a' :: u| and |s| taken from the scalar field underlying |u| and |v|.
 
 In addition to \thmRefTwo{compose}{cross}, we will want one more broadly useful rule, namely that \emph{the derivative of every linear function is itself, everywhere} \citep[Theorem 2-3 (2)]{Spivak65}:
 \begin{theorem}[linear rule] \thmLabel{linear}
@@ -636,8 +636,8 @@ Associativity has a similar flavor as well:
 \end{code}
 
 Note how mechanical these proofs are.
-Each one uses only the functor laws plus the particular category law on functions that corresponds to the one being proved for |D|.
-The proofs do \emph{not} rely on anything about the nature of |D| or |adf| other than the functor laws.
+Each uses only the functor laws plus the particular category law on functions that corresponds to the one being proved for |D|.
+The proofs rely on nothing about the nature of |D| or |adf| beyond the functor laws.
 The importance of this observation is that we \emph{never} need to perform these proofs when we specify category instances via a functor.
 
 \subsectionl{Monoidal Categories}
