@@ -211,6 +211,7 @@ The dualized variant is suitable for gradient-based optimization and is particul
 
 \end{abstract}
 
+%if icfp
 \begin{CCSXML}
 <ccs2012>
 <concept>
@@ -236,6 +237,7 @@ The dualized variant is suitable for gradient-based optimization and is particul
 \ccsdesc[300]{Theory of computation~Program specifications}
 
 \keywords{automatic differentiation, program calculation, category theory}
+%endif
 
 %%%%%%%
 
@@ -1688,8 +1690,8 @@ Data-flow edge reversal corresponds to the reversal of |(.)| (from |Category|), 
 \begin{quotation}\noindent
 The main technical difficulty to be faced is that reverse-mode AD must convert fanout (multiple use of a variable) in the untransformed code into addition in the reverse phase of the transformed code. We address this by expressing all straight-line code segments in A-normal form, which makes fanout lexically apparent. 
 \end{quotation}
-The categorical approach in this paper also makes fanout easily apparent, as appearances of |dup|, which are produced during translation from Haskell to categorical form \citep{Elliott-2017-compiling-to-categories} (via |(&&&)| as defined in \secref{Derived Operations} above).
-This translation is specified and implemented independently of AD.
+The categorical approach in this paper also makes fanout easily apparent, as occurrences of |dup|, which are produced during translation from Haskell to categorical form \citep{Elliott-2017-compiling-to-categories} (via |(&&&)| as defined in \secref{Derived Operations} above).
+This translation is specified and implemented independently of AD and so presents no additional complexity.
 
 Closely related to our choice of derivatives as linear maps and their categorical generalizations is the work of \citet{MacedoOliveira2013Typing}, also based on biproducts (though not addressing differentiation).
 That work uses natural numbers as categorical objects to capture the dimensions of vectors and matrices, while the current paper uses vector spaces themselves.
@@ -1721,19 +1723,20 @@ He pointed out that most of the patterns now used in machine learning are alread
 \begin{quotation}
 These neural network patterns are just higher order functions---that is, functions which take functions as arguments. Things like that have been studied extensively in functional programming. In fact, many of these network patterns correspond to extremely common functions, like fold. The only unusual thing is that, instead of receiving normal functions as arguments, they receive chunks of neural network.
 \end{quotation}
-The current paper carries this perspective further, suggesting that the essence is \emph{differentiable functions}, with ``networks'' (graphs) being an unnecessary (and unwise) operational choice.
+The current paper carries this perspective further, suggesting that the essence is \emph{differentiable functions}, with ``networks'' (graphs) being an unnecessary (and apparently unwise) operational choice.
 
 This paper builds on a compiler plugin that translates Haskell programs into categorical form to be specialized to various specific categories, including differentiable functions \citep{Elliott-2017-compiling-to-categories}.
 (The plugin knows nothing about any specific category, including differentiable functions.)
 Another instance of generalized AD given there is automatic incremental evaluation of functional programs.
 Relative to that work, the new contributions are the |ContC k r| and |DualC k| categories, their use to succinctly implement reverse-mode AD (by instantiating the generalized differentiation category), the precise specification of instances for |D|, |ContC k r|, and |DualC k| via functoriality, and the calculation of implementations from these specifications.
 
-The implementations in this paper are quite simple and would appear to be efficient as well.
+The implementations in this paper are quite simple and appear to be efficient as well.
 For instance, the duality-based version (\secref{Gradients and Duality}) involves no matrices.
 Moreover, typical reverse-mode AD (RAD) implementations use mutation to incrementally update derivative contributions from each \emph{use} of a variable or intermediate computation, holding onto all of these accumulators until the very end of the derivative computation.
 For this reason, such implementations tend to use considerable memory\needcite.
 In contrast, the implementations in this paper (\secreftwo{Reverse-Mode Automatic Differentiation}{Gradients and Duality}) are free of mutation and can easily free (reuse) memory as they run, keeping memory use low.
 Given the prominent use of AD, particularly with large data, performance is crucial, so it will be worthwhile to examine and compare time and space use in detail.
+Lack of mutation also makes the algorithms in this paper naturally parallel, potentially leading to considerable speed improvement, especially when using the functor-level (bulk) vocabulary in \secref{Scaling Up}.
 
 %if False
 \mynote{
@@ -1764,12 +1767,12 @@ This paper rounds out the story with two more rules: one for parallel compositio
 Parallel composition is usually left implicit in the special-case treatment of a collection of non-unary operations, such as addition, multiplication, division, and dot products.
 With explicit, general support for parallel composition, all operations come to be on equal footing, regardless of arity (as illustrated in \figref{GAD}).
 
-AD is also typically presented in opposition to symbolic differentiation (SD), which is described as applying differentiation rules symbolically.
+AD is also typically presented in opposition to symbolic differentiation (SD), with the latter described as applying differentiation rules symbolically.
 The main criticism of SD is that it can blow up expressions, resulting a great deal of redundant work\needcite.
 Secondly, SD requires implementation of symbolic manipulation as in a computer algebra system.
 In contrast, AD is described as a numeric method and can retain the complexity of the original function (within a small constant factor) if carefully implemented, as in reverse mode.
-The approach explored in this paper suggests a different perspective: automatic differentiation \emph{is} symbolic differentiation done by a compiler.
-Compilers already work symbolically and already take care to preserve sharing in computations.
+The approach explored in this paper suggests a different perspective: automatic differentiation \emph{is} symbolic differentiation performed by a compiler.
+Compilers already work symbolically and already take care to preserve sharing in computations, addressing both criticisms of SD.
 
 The specification and implementation of AD in a simple, correct-by-construction, and apparently efficient manner, together with its use from a typed functional language (here via a compiler plugin), make a step toward the vision of differentiable functional programming for machine learning and other uses, as outlined in \secref{Introduction}.
 Programmers then define their functions just as they are accustomed, differentiating where desired, without the intrusion of operational notions such as graphs with questionably defined, extralinguistic semantics.
@@ -1783,8 +1786,13 @@ In retrospect, two key principles enable the results in this paper:
   Capture the main concepts of interest directly, as first-class values (here, differentiable functions).
 \end{enumerate}
 The second principle leads us into a quandary, because most programming languages (including Haskell) are much better suited to expressing regular computable functions than other function-like things, and yet the main AD concept is exactly a function-like thing (differentiable functions).
-This suitability imbalance stems from built-in language support for functions---such as lambda, application, and variables---and would seem to explain two common strategies in AD: use of explicit graph representations (complicating use and implementation), and overloading numeric operators (abandoning the second principle, encouraging \emph{forward} mode AD, and leading to incorrect nested differentiation \citep{Siskind2008nesting-forward-mode-AD}).
-Fortunately, we can instead extend the convenience of function-writing to other function-like things by compiling to categories.
+This imbalance in suitability stems from built-in language support for functions---such as lambda, application, and variables---and would seem to explain two common strategies in AD: use of explicit graph representations (complicating use and implementation), and overloading numeric operators (abandoning the second principle, encouraging \emph{forward} mode AD, and leading to incorrect nested differentiation \citep{Siskind2008nesting-forward-mode-AD}).
+Fortunately, we can instead extend the notational convenience of functions to other function-like things by
+%if False
+compiling to categories.
+%else
+writing in a conventional functional language and automatically translating to other categories \citep{Elliott-2017-compiling-to-categories}.
+%endif
 
 %if False
 
