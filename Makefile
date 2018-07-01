@@ -1,14 +1,12 @@
 PAPER = essence-of-ad
 
-# EXTENDED = $(PAPER)-extended
-
 ICFP = $(PAPER)-icfp
-EXTENDED_ARXIV = $(PAPER)-arxiv
+ARXIV = $(PAPER)-arxiv
 
 .PRECIOUS: %.tex %.pdf
 
 all: $(ICFP).pdf
-all: $(EXTENDED_ARXIV).pdf
+all: $(ARXIV).pdf
 
 other.pdf: $(EXTENDED).pdf
 	cp $? $@
@@ -18,7 +16,7 @@ texdeps = formatting.fmt Makefile
 $(ICFP).tex: $(PAPER).lhs $(texdeps)
 	lhs2TeX -o $*.tex $(PAPER).lhs
 
-$(EXTENDED_ARXIV).tex: $(PAPER).lhs $(texdeps)
+$(ARXIV).tex: $(PAPER).lhs $(texdeps)
 	lhs2TeX --set=extended --set=arXiv -o $*.tex $(PAPER).lhs
 
 %.tex: %.lhs $(texdeps)
@@ -37,7 +35,7 @@ latex=latexmk -pdf
 icfp.zip: $(ICFP).tex $(ICFP).bbl macros.tex $(pdfs) acmart.cls ACM-Reference-Format.bst
 	zip $@ $^
 
-arXiv.zip: $(EXTENDED_ARXIV).tex $(EXTENDED_ARXIV).bbl macros.tex $(pdfs)
+arXiv.zip: $(ARXIV).tex $(ARXIV).bbl macros.tex $(pdfs)
 	zip $@ $^
 
 %.pdf: %.tex $(pdfdeps)
