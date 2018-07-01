@@ -1,12 +1,11 @@
 PAPER = essence-of-ad
 
-ANON = $(PAPER)-anon
-
 EXTENDED = $(PAPER)-extended
 
 EXTENDED_ARXIV = $(PAPER)-arxiv
 
-EXTENDED_ANON = $(EXTENDED)-anon
+# ANON = $(PAPER)-anon
+# EXTENDED_ANON = $(EXTENDED)-anon
 
 .PRECIOUS: %.tex %.pdf
 
@@ -17,19 +16,17 @@ EXTENDED_ANON = $(EXTENDED)-anon
 
 all: $(PAPER).pdf
 # all: $(EXTENDED).pdf
+# all: $(EXTENDED_ARXIV).pdf
 
 # all: $(ANON).pdf
-# all: $(EXTENDED_ANON).pdf
-
-# all: $(EXTENDED_ARXIV).pdf
 
 other.pdf: $(EXTENDED).pdf
 	cp $? $@
 
 moredeps = formatting.fmt macros.tex acmart.cls ACM-Reference-Format.bst Makefile
 
-$(ANON).tex: $(PAPER).lhs $(moredeps)
-	lhs2TeX --set=anonymous -o $*.tex $(PAPER).lhs
+# $(ANON).tex: $(PAPER).lhs $(moredeps)
+# 	lhs2TeX --set=anonymous -o $*.tex $(PAPER).lhs
 
 $(EXTENDED).tex: $(PAPER).lhs $(moredeps)
 	lhs2TeX --set=extended --set=draft -o $*.tex $(PAPER).lhs
