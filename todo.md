@@ -4,27 +4,9 @@ title: ICFP 2018 paper still to do
 
 ## To do
 
-*   From [author instructions](https://www.conference-publishing.com/Instructions.php?Event=ICFP18MAIN&Paper=XfwrQT8UozlTD0DjWut2btsq3svKU84fBXOuc33F):
-    *   "has the title and all headings properly capitalized" [done]
-    *   "is based on the most recent version of the formatting template/style (see details below)" [done]
-    *   "has no orphans and widows." [done]
-*   [Camera-ready paper preparation](https://www.conference-publishing.com/Instructions.php?Event=ICFP18MAIN&Paper=XfwrQT8UozlTD0DjWut2btsq3svKU84fBXOuc33F):
-    *   Paper-specific copyright, DOI, etc. [done]
-    *   Copyright
-*   From [Help on Formatting Papers](https://www.conference-publishing.com/Help.php):
-    *   Include packages for "Text Encoding, Font Encoding, Microtypography" [done]
-    *   ACM keywords etc.
-    *   Widows & orphans again, after keywords etc.
-
-*   "Reverse-mode AD" vs "Reverse-mode Automatic Differentiation" in section title.
-    Also, "Reverse-mode" or "Reverse-Mode"?
-    Same for "Forward-mode AD".
-    [done]
+## Didn't
 
 *   Link coloring?
-*   I think drop the subtitle.
-*   Update abstract and paper [on arXiv](https://arxiv.org/abs/1804.00746).
-
 *   Left/right-reverse the homomorphism equations, adding a remark about fitting the derivations.
 *   In the last paragraph of the Related Work section, with efficiency remarks, maybe mention parallel evaluation again.
     Instead or in addition, discuss in the conclusions as well.
@@ -91,6 +73,23 @@ title: ICFP 2018 paper still to do
 
 ## Did
 
+*   Update abstract and paper [on arXiv](https://arxiv.org/abs/1804.00746). [done]
+*   Add reference from extended version to ICFP version.
+*   Citations on index.md.
+*   From [author instructions](https://www.conference-publishing.com/Instructions.php?Event=ICFP18MAIN&Paper=XfwrQT8UozlTD0DjWut2btsq3svKU84fBXOuc33F):
+    *   "has the title and all headings properly capitalized"
+    *   "is based on the most recent version of the formatting template/style (see details below)"
+    *   "has no orphans and widows."
+*   [Camera-ready paper preparation](https://www.conference-publishing.com/Instructions.php?Event=ICFP18MAIN&Paper=XfwrQT8UozlTD0DjWut2btsq3svKU84fBXOuc33F):
+    *   Paper-specific copyright, DOI, etc.
+    *   Copyright
+*   From [Help on Formatting Papers](https://www.conference-publishing.com/Help.php):
+    *   Include packages for "Text Encoding, Font Encoding, Microtypography"
+    *   ACM keywords etc.
+    *   Widows & orphans again, after keywords etc.
+*   "Reverse-mode AD" vs "Reverse-mode Automatic Differentiation" in section title.
+    Also, "Reverse-mode" or "Reverse-Mode"?
+    Same for "Forward-mode AD".
 *   Non-anonymous references to extended version from ICFP version.
 *   Update the abstract on the submission page.
 *   Even out the font sizes in the side-by-side figures 11 & 12. [done]
