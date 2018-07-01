@@ -51,14 +51,7 @@
 %% Supplied to authors (based on authors' rights management selection;
 %% see authors.acm.org) by publisher for camera-ready submission;
 %% use 'none' for review submission.
-%if icfp
-\setcopyright{none}
-%else
 \setcopyright{rightsretained}
-%endif
-%\setcopyright{acmcopyright}
-%\setcopyright{acmlicensed}
-%\copyrightyear{2018}           %% If different from \acmYear
 
 %else
 
@@ -141,7 +134,7 @@ Conal Elliott
 %else
 \title{\tit \\[1ex] \large \alttit
 %if extended
-\\[1ex](extended version)
+\\[1ex](extended version\footnote{The appendices of this extended version include proofs omitted in the conference version \citep{Elliott-2018-ad-icfp}.}\ )
 %endif
 }
 %endif
