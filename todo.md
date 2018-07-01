@@ -4,17 +4,39 @@ title: ICFP 2018 paper still to do
 
 ## To do
 
+*   From [author instructions](https://www.conference-publishing.com/Instructions.php?Event=ICFP18MAIN&Paper=XfwrQT8UozlTD0DjWut2btsq3svKU84fBXOuc33F):
+    *   "has the title and all headings properly capitalized" [done]
+    *   "is based on the most recent version of the formatting template/style (see details below)" [done]
+    *   "has no orphans and widows." [done]
+*   [Camera-ready paper preparation](https://www.conference-publishing.com/Instructions.php?Event=ICFP18MAIN&Paper=XfwrQT8UozlTD0DjWut2btsq3svKU84fBXOuc33F):
+    *   Paper-specific copyright, DOI, etc. [done]
+    *   Copyright
+*   From [Help on Formatting Papers](https://www.conference-publishing.com/Help.php):
+    *   Include packages for "Text Encoding, Font Encoding, Microtypography" [done]
+    *   ACM keywords etc.
+    *   Widows & orphans again, after keywords etc.
+
+*   "Reverse-mode AD" vs "Reverse-mode Automatic Differentiation" in section title.
+    Also, "Reverse-mode" or "Reverse-Mode"?
+    Same for "Forward-mode AD".
+    [done]
+
+*   Link coloring?
+*   I think drop the subtitle.
 *   Update abstract and paper [on arXiv](https://arxiv.org/abs/1804.00746).
 
-*   Update the abstract on the submission page.
+*   Left/right-reverse the homomorphism equations, adding a remark about fitting the derivations.
+*   In the last paragraph of the Related Work section, with efficiency remarks, maybe mention parallel evaluation again.
+    Instead or in addition, discuss in the conclusions as well.
+*   `CoproductPCat` for `GD k`.
+    The "cocartesian rule", a peer to the chain and cartesian rules.
+
 *   Acknowledgments.
-*   Non-anonymous references to extended version from ICFP version.
 *   From reviews:
     *   I find the paper difficult to read front to back. The description which starts the conclusions would help as a forward overview of the achievement.
         I think it could help to split the unusual high number of sections into a bit more hierarchy with subsections?
 
     *   144: "The derivative of a function" => "The derivative $\mathcal{D}$ of a function" 
-    *   267: "The definition of $\mathcal{D}^+$ ...": Perhaps give a number to the definition at lines 197-198 (like the key theorems and corollaries) to facilitate referenencing and make it precise.
     *   311: Why the dashed arrow in the type of "F f"? It's also a morphism?
     *   1309-1316: I found the writing here a bit unclear.
 
@@ -67,14 +89,10 @@ title: ICFP 2018 paper still to do
       You've commented on various differences, but what is the
       relationship between the approaches?
 
-*   Left/right-reverse the homomorphism equations, adding a remark about fitting the derivations.
-*   In the last paragraph of the Related Work section, with efficiency remarks, maybe mention parallel evaluation again.
-    Instead or in addition, discuss in the conclusions as well.
-*   `CoproductPCat` for `GD k`.
-    The "cocartesian rule", a peer to the chain and cartesian rules.
-
 ## Did
 
+*   Non-anonymous references to extended version from ICFP version.
+*   Update the abstract on the submission page.
 *   Even out the font sizes in the side-by-side figures 11 & 12. [done]
 *   Abstract: "can be specialized" --> "is then specialized". [done]
 *   As required by my reviews, tone down efficiency claims, including the following:
@@ -90,6 +108,8 @@ title: ICFP 2018 paper still to do
         [Replace "high-performance" by "more efficient".]
 
 *   From reviews:
+    *   267: "The definition of $\mathcal{D}^+$ ...": Perhaps give a number to the definition at lines 197-198 (like the key theorems and corollaries) to facilitate referenencing and make it precise.
+        [added page reference]
     *   1244: duplicate: "that the that the"
         [done]
     *   910: sentence lacking a verb. "This trick akin ..."
@@ -107,8 +127,6 @@ title: ICFP 2018 paper still to do
         [I replaced "(e.g., for optimization)" by "as with gradient-based optimization"]
 
 *   `AddFun`
-*   Abstract
-*   Use infix `(~>)` in place of `k`.
 *   Rework `Incremental`.
 *   Resolve whether to give the talk at PEPM.
     [Yes](https://popl18.sigplan.org/track/PEPM-2018#Invited-Talks).
