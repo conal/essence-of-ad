@@ -461,10 +461,12 @@ f (s *^ a)  == s *^ f a
 \end{code}
 %% for all |a,a' :: u| and |s| taken from the scalar field underlying |u| and |v|.
 
+\begin{samepage}
 In addition to \thmRefTwo{compose}{cross}, we will want one more broadly useful rule, namely that \emph{the derivative of every linear function is itself, everywhere} \citep[Theorem 2-3 (2)]{Spivak65}:
 \begin{theorem}[linear rule] \thmLabel{linear}
 For all linear functions |f|, |der f a == f|.
 \end{theorem}
+\end{samepage}
 This statement may sound surprising at first, but less so when we recall that the |der f a| is a local linear approximation of |f| at |a|, so we're simply saying that linear functions are their own perfect linear approximations.
 
 For example, consider the function |id = \ a -> a|.
@@ -491,7 +493,7 @@ The definition of |ad| on page \pageref{code:ad} is a precise specification; but
 Although differentiation is not computable when given just an arbitrary computable function, we can instead build up differentiable functions compositionally, using exactly the forms introduced above, (namely |(.)|, |(***)| and linear functions), together with various non-linear primitives having known derivatives.
 Computations expressed in this vocabulary are differentiable by construction thanks to \corRefs{compose}{linear}.
 The building blocks above are not just a random assortment, but rather a fundamental language of mathematics, logic, and computation, known as \emph{category theory} \citep{MacLane1998categories,Lawvere:2009:Conceptual,Awodey2006CT}.
-While it would be unpleasant to program directly in such an austere language, its foundational nature enables instead an automatic conversion from conventionally written functional programs \citep{Lambek:1980:LambdaToCCC,Lambek:1985:CCC,Elliott-2017-compiling-to-categories}.
+While it would be unpleasant to program directly in such an austere language, its foundational nature enables instead an automatic conversion from programs written in more conventional functional languages \citep{Lambek:1980:LambdaToCCC,Lambek:1985:CCC,Elliott-2017-compiling-to-categories}.
 
 %format (arr c) = "\mathbin{\to_{"c"}}"
 
@@ -718,12 +720,14 @@ Now substitute the left-hand side of this equation into the right-hand side of t
 \begin{code}
 D f *** D g == D (\ (a,b) -> let { (c,f') = f a ; (d,g') = g b } in ((c,d), f' *** g'))
 \end{code}
+\begin{samepage}
 This strengthened form of the specification can be converted directly to a sufficient definition:
 \begin{code}
 instance MonoidalPCat D where
   D f *** D g = D (\ (a,b) -> let { (c,f') = f a ; (d,g') = g b } in ((c,d), f' *** g'))
 
 \end{code}
+\end{samepage}
 
 \subsectionl{Cartesian Categories}
 
@@ -737,7 +741,7 @@ instance MonoidalPCat D where
 %format (Coprod (k) a b) = a "+\scrk{-0.4ex}" b
 %% %format (Exp (k) a b) = a "\Rightarrow\scrk{-0.2ex}" b
 
-The |MonoidalPCat| abstraction gives a way to combine two functions but not separate them.
+The |MonoidalPCat| abstraction provides a way to combine two functions but not separate them.
 It also gives no way to duplicate or discard information.
 These additional abilities require another algebraic abstraction, namely that of \emph{cartesian category}, adding operations for projection and duplication:
 \\
@@ -1553,6 +1557,7 @@ joinPF fs = jamPF . plusPF fs
 unjoinPF :: IxCoproductPCat k h => (h b `k` a) -> h (b `k` a)
 unjoinPF f = fmap (lcomp f) inPF
 \end{code}
+
 As usual, we can derive instances by homomorphic specification:
 \begin{theorem}[\provedIn{theorem:indexed}]\thmLabel{indexed}
 Given the definitions in \figref{indexed}, |adf| is a homomorphism with respect to each instantiated class.
