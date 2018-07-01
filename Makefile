@@ -23,19 +23,24 @@ all: $(PAPER).pdf
 other.pdf: $(EXTENDED).pdf
 	cp $? $@
 
-moredeps = formatting.fmt macros.tex acmart.cls ACM-Reference-Format.bst Makefile
-
 # $(ANON).tex: $(PAPER).lhs $(moredeps)
 # 	lhs2TeX --set=anonymous -o $*.tex $(PAPER).lhs
 
-$(EXTENDED).tex: $(PAPER).lhs $(moredeps)
+texdeps = formatting.fmt Makefile
+
+$(EXTENDED).tex: $(PAPER).lhs $(texdeps)
 	lhs2TeX --set=extended --set=draft -o $*.tex $(PAPER).lhs
 
-$(EXTENDED_ARXIV).tex: $(PAPER).lhs $(moredeps)
+$(EXTENDED_ARXIV).tex: $(PAPER).lhs $(texdeps)
 	lhs2TeX --set=extended --set=arXiv -o $*.tex $(PAPER).lhs
 
-$(EXTENDED_ANON).tex: $(PAPER).lhs $(moredeps)
+$(EXTENDED_ANON).tex: $(PAPER).lhs $(texdeps)
 	lhs2TeX --set=extended --set=anonymous -o $*.tex $(PAPER).lhs
+
+%.tex: %.lhs $(texdeps)
+	lhs2TeX -o $*.tex $*.lhs
+
+pdfdeps = $(pdfs) macros.tex bib.bib acmart.cls ACM-Reference-Format.bst
 
 see: $(PAPER).see
 
@@ -52,11 +57,8 @@ arXiv.pdf: arXiv.tex $(EXTENDED_ARXIV).pdf Makefile
 arXiv.zip: $(EXTENDED_ARXIV).tex $(EXTENDED_ARXIV).bbl $(moredeps) $(pdfs)
 	zip $@ $^
 
-%.pdf: %.tex $(pdfs) bib.bib Makefile
+%.pdf: %.tex $(pdfdeps)
 	$(latex) $*.tex
-
-%.tex: %.lhs formatting.fmt
-	lhs2TeX -o $*.tex $*.lhs
 
 showpdf = open -a Skim.app
 
