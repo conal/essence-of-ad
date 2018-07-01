@@ -17,7 +17,8 @@
 
 %% \documentclass[acmsmall,screen]{acmart} % ,authorversion=true,
 
-\documentclass[acmsmall=true,authorversion
+\documentclass[acmsmall=true,screen
+%,authorversion
 %if anonymous
 ,anonymous,review
 %endif
@@ -33,16 +34,16 @@
   \country{USA}
 }
 
-%if True
+\setcopyright{rightsretained}
+\acmPrice{}
+\acmDOI{10.1145/3234593}
+\acmYear{2018}
+\copyrightyear{2018}
 \acmJournal{PACMPL}
 \acmVolume{2}
 \acmNumber{ICFP}
-\acmArticle{18}
-\acmYear{2018}
+\acmArticle{4}
 \acmMonth{9}
-\acmDOI{10.1145/nnnn.nnnnn}  % \acmDOI{}
-\startPage{1}
-%endif
 
 \bibliographystyle{ACM-Reference-Format}
 
@@ -171,7 +172,6 @@ Conal Elliott
 \nc\provedIn[1]{\textnormal{Proved in \proofRef{#1}}}
 %endif
 
-
 \setlength{\blanklineskip}{2ex}
 \setlength\mathindent{3ex}
 
@@ -211,13 +211,41 @@ The dualized variant is suitable for gradient-based optimization and is particul
 
 \end{abstract}
 
-%if icfp
-\maketitle
-%endif
+\begin{CCSXML}
+<ccs2012>
+<concept>
+<concept_id>10002950.10003741.10003732.10003734</concept_id>
+<concept_desc>Mathematics of computing~Differential calculus</concept_desc>
+<concept_significance>500</concept_significance>
+</concept>
+<concept>
+<concept_id>10003752.10010124.10010138</concept_id>
+<concept_desc>Theory of computation~Program reasoning</concept_desc>
+<concept_significance>300</concept_significance>
+</concept>
+<concept>
+<concept_id>10003752.10010124.10010138.10010140</concept_id>
+<concept_desc>Theory of computation~Program specifications</concept_desc>
+<concept_significance>300</concept_significance>
+</concept>
+</ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Mathematics of computing~Differential calculus}
+\ccsdesc[300]{Theory of computation~Program reasoning}
+\ccsdesc[300]{Theory of computation~Program specifications}
+
+\keywords{automatic differentiation, program calculation, category theory}
+
+%%%%%%%
 
 %format Type = "\ast"
 %format Vec (s) = V"\!_{"s"}"
 %format (HasV (s)) = HasV "\!_{"s"}"
+
+%if icfp
+\maketitle
+%endif
 
 \sectionl{Introduction}
 
@@ -316,7 +344,7 @@ Notice that |f' x| is used to linearly transform |eps|.
 Next, generalize this condition to say that |f' x| is a \emph{linear map} such that
 $$|lim(eps -> 0)(frac(norm (f (x+eps) - (f x + f' x eps)))(norm eps)) == 0| .$$
 In other words, |f' x| is a \emph{local linear approximation} of |f| at |x|.
-When an |f' x| satisfying this condition exists, it is indeed unique \citep[chapter 2]{Spivak65}
+When an |f' x| satisfying this condition exists, it is indeed unique \citep[chapter 2]{Spivak65}.
 
 The derivative of a function |f :: a -> b| at some value in |a| is thus not a number, vector, matrix, or higher-dimensional variant, but rather a \emph{linear map} (also called ``linear transformation'') from |a| to |b|, which we will write as ``|a :-* b|''.
 The numbers, vectors, matrices, etc mentioned above are all different \emph{representations} of linear maps; and the various forms of ``multiplication'' appearing in their associated chain rules are all implementations of linear map \emph{composition} for those representations.
@@ -439,14 +467,12 @@ For all linear functions |f|, |der f a == f|.
 \end{theorem}
 This statement may sound surprising at first, but less so when we recall that the |der f a| is a local linear approximation of |f| at |a|, so we're simply saying that linear functions are their own perfect linear approximations.
 
-For example, consider the (linear) function |id = \ a -> a|.
-The linearity rule says that |der id a == id|.
-When expressed in terms of typical \emph{representations} of linear maps, this property may be expressed as saying that |der id a| is the number one or is an identity matrix (with ones on the diagonal and zeros elsewhere).
-
+For example, consider the function |id = \ a -> a|.
+\thmRef{linear} says that |der id a == id|.
+When expressed via typical \emph{representations} of linear maps, this property may be expressed as saying that |der id a| is the number one or is an identity matrix (with ones on the diagonal and zeros elsewhere).
 %% %format Rmn = R"^{m+n}"
-
-As another example, consider the (linear) function |fst (a,b) = a|, for which the linearity rule says |der fst (a,b) == fst|.
-This property, when expressed in terms of typical \emph{representations} of linear maps, would appear as saying that |der fst a| comprises the partial derivatives one and zero if |a, b :: R|.
+Likewise, consider the (linear) function |fst (a,b) = a|, for which \thmRef{linear} says |der fst (a,b) == fst|.
+This property, when expressed via typical \emph{representations} of linear maps, would appear as saying that |der fst a| comprises the partial derivatives one and zero if |a, b :: R|.
 More generally, if |a :: Rm| and |b :: Rn|, then the Jacobian matrix representation has shape |m :* (m+n)| (i.e., |m| rows and |m + n| columns) and is formed by the horizontal juxtaposition of an |m :* m| identity matrix on the left with an |m :* n| zero matrix on the right.
 This |m :* (m+n)| matrix, however, represents |fst :: Rm :* Rn :-* Rm|.
 Note how much simpler it is to say |der fst (a,b) == fst|, and with no loss of precision!
@@ -735,7 +761,7 @@ instance ProductCat (->) where
 \end{minipage}
 
 \begin{closerCodePars}
-Two cartesian categories can be related by a \emph{cartesian functor}, which is a functor that also preserves the cartesian structure.
+Two cartesian categories can be related by a \emph{cartesian functor}, which additionally preserves the cartesian structure.
 That is, a cartesian functor |F| from cartesian category |CU| to cartesian category |CV|, besides mapping objects and morphisms in |CU| to counterparts in |CV| while preserving the category and monoidal structure (|id|, |(.)|, and |(***)|), \emph{also} preserves the cartesian structure:
 \begin{code}
 F exl  == exl
@@ -792,7 +818,7 @@ instance ProductCat D where
 
 Cartesian categories have a dual, known as \emph{cocartesian categories}, in which each cartesian operation has a mirror image with morphisms reversed (swapping domain and codomain) and coproducts replacing products.
 In general, each category can have its own notion of coproduct, e.g., sum (disjoint union) types for the |(->)| category.
-In this paper, however, coproducts will coincide with categorical products (both being ordered pairs), i.e., we'll be using biproduct categories \citep{MacedoOliveira2013Typing}:
+In this paper, however, coproducts will coincide with categorical products\out{ (both being ordered pairs)}, i.e., we'll be using biproduct categories \citep{MacedoOliveira2013Typing}:
 %if addFun
 \begin{code}
 class Category k => CoproductPCat k where
@@ -959,7 +985,7 @@ class Num a where
   ...
 \end{code}
 Although this class can accommodate many different types of ``numbers'', the class operations are all committed to being functions.
-A more flexible alternative allows operations to be non-functions as well:
+A more flexible alternative allows operations to be non-functions\out{ as well}:
 \\
 %format * = "\cdot"
 \begin{minipage}[b]{0.4\textwidth}
@@ -1055,8 +1081,8 @@ In what follows, the |scale| operation will play a more important role than mere
 
 \sectionl{Examples}
 
-Let's look at some AD examples.
-In this section and later ones, we will use a few running examples:
+Let's now look at some AD examples, to which we will later in the paper as well:
+% In this section and later ones, we will use a few running examples:
 \begin{code}
 sqr :: Num a => a -> a
 sqr a = a * a
@@ -1087,7 +1113,7 @@ The results are rendered in \figreftwo{magSqr-adf}{cosSinProd-adf}.
 Some remarks:
 \begin{itemize}
 \item The derivatives are (linear) functions, as depicted in boxes.
-\item Work is shared between the function's result (the ``primal'') and its derivative in \figref{cosSinProd-adf}.
+\item Work is shared between the function's result (sometimes called the ``primal'') and its derivative in \figref{cosSinProd-adf}.
 \item The graphs shown here are used \emph{solely} for visualizing functions before and after differentiation, playing no role in the programming interface or in the implementation of differentiation.
 \end{itemize}
 
