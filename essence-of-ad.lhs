@@ -36,13 +36,13 @@
 
 \setcopyright{rightsretained}
 \acmPrice{}
-\acmDOI{10.1145/3234593}
+\acmDOI{10.1145/3236765}
 \acmYear{2018}
 \copyrightyear{2018}
 \acmJournal{PACMPL}
 \acmVolume{2}
 \acmNumber{ICFP}
-\acmArticle{4}
+\acmArticle{70}
 \acmMonth{9}
 
 \bibliographystyle{ACM-Reference-Format}
@@ -132,30 +132,12 @@ Conal Elliott
 %if icfp
 \title{\tit} \subtitle{\alttit}
 %else
-\title{\tit \\[1ex] \large \alttit
+\title{\tit \\[1ex] \large (\alttit)
 %if extended
-\\[1ex](extended version\footnote{The appendices of this extended version include proofs omitted in the conference version \citep{Elliott-2018-ad-icfp}.}\ )
+\\[1ex]\emph{Extended version}\footnote{The appendices of this extended version include proofs omitted in the conference article \citep{Elliott-2018-ad-icfp}.}\ 
 %endif
 }
 %endif
-
-\newtheorem{theorem}{Theorem}%[section]
-\nc\thmLabel[1]{\label{theorem:#1}}
-\nc\thmRef[1]{Theorem \ref{theorem:#1}}
-\nc\thmRefTwo[2]{Theorems \ref{theorem:#1} and \ref{theorem:#2}}
-\nc\thmRefs[2]{Theorems \ref{theorem:#1} through \ref{theorem:#2}}
-
-\newtheorem{corollary}{Corollary}[theorem]
-\nc\corLabel[1]{\label{corollary:#1}}
-\nc\corRef[1]{Corollary \ref{corollary:#1}}
-\nc\corRefTwo[2]{Corollaries \ref{corollary:#1} and \ref{corollary:#2}}
-\nc\corRefs[2]{Corollaries \ref{corollary:#1} through \ref{corollary:#2}}
-
-\newtheorem{lemma}[theorem]{Lemma}
-\nc\lemLabel[1]{\label{lemma:#1}}
-\nc\lemRef[1]{Lemma \ref{lemma:#1}}
-\nc\lemRefTwo[2]{Lemma \ref{lemma:#1} and \ref{lemma:#2}}
-\nc\lemRefs[2]{Lemma \ref{lemma:#1} through \ref{lemma:#2}}
 
 \nc\proofLabel[1]{\label{proof:#1}}
 %if icfp
@@ -1443,7 +1425,8 @@ In particular, we can simply use the category of linear functions |(-+>)|.
 Compare \figref{magSqr-gradr} with\out{ the same example in} \figreftwo{magSqr-adf}{magSqr-adr}.
 \figp{
 \figoneW{0.34}{magSqr-gradr}{|magSqr| in |GD (DualC (-+>))|}}{
-\figoneW{0.62}{cos-xpytz-gradr}{|\ ((x,y),z) -> cos (x + y * z)| in |GD (DualC (-+>))|}}
+\figoneW{0.62}{cos-xpytz-gradr}{|\ ((x,y),z) -> cos (x + y * z)| in |GD (DualC (-+>))|}
+}
 
 \sectionl{Forward-Mode Automatic Differentiation}
 
