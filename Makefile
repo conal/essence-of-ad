@@ -6,7 +6,7 @@ ARXIV = $(PAPER)-arxiv
 .PRECIOUS: %.tex %.pdf
 
 all: $(ICFP).pdf
-all: $(ARXIV).pdf
+# all: $(ARXIV).pdf
 
 other.pdf: $(EXTENDED).pdf
 	cp $? $@
@@ -35,7 +35,7 @@ latex=latexmk -pdf
 icfp.zip: $(ICFP).tex $(ICFP).bbl macros.tex $(pdfs) acmart.cls ACM-Reference-Format.bst
 	zip $@ $^
 
-arXiv.zip: $(ARXIV).tex $(ARXIV).bbl macros.tex $(pdfs)
+arxiv.zip: $(ARXIV).tex $(ARXIV).bbl macros.tex $(pdfs)
 	zip $@ $^
 
 %.pdf: %.tex $(pdfdeps)
