@@ -764,7 +764,7 @@ ad dup  == \ a  -> (dup  a  , dup  )
 \end{code}
 Now substitute the left-hand sides of these three properties into the right-hand sides of the of the cartesian functor properties for |adf|, and recall the definition of |linearD|:
 \begin{code}
-exl  == linearD exr
+exl  == linearD exl
 exr  == linearD exr
 dup  == linearD dup
 \end{code}
