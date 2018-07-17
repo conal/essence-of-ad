@@ -1,6 +1,6 @@
-%% -*- latex -*-
+let -*-
 
-%% %let anonymous = True
+%% %%% -*- latext anonymous = True
 
 %% TODO: replace latex if with lhs2tex if
 
@@ -130,9 +130,9 @@ Conal Elliott
 %endif
 
 %if icfp
-\title{\tit} \subtitle{\alttit}
+\title{\tit}
 %else
-\title{\tit \\[1ex] \large (\alttit)
+\title{\tit
 %if extended
 \\[1ex]\emph{Extended version}\footnote{The appendices of this extended version include proofs omitted in the conference article \citep{Elliott-2018-ad-icfp}.}\ 
 %endif

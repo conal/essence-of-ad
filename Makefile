@@ -6,7 +6,7 @@ ARXIV = $(PAPER)-arxiv
 .PRECIOUS: %.tex %.pdf
 
 all: $(ICFP).pdf
-# all: $(ARXIV).pdf
+all: $(ARXIV).pdf
 
 other.pdf: $(EXTENDED).pdf
 	cp $? $@
