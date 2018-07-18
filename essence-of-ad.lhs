@@ -1,8 +1,4 @@
-let -*-
-
-%% %%% -*- latext anonymous = True
-
-%% TODO: replace latex if with lhs2tex if
+% -*- latex -*-
 
 %% Determined by Makefile
 %% %let extended = False
