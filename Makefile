@@ -30,7 +30,7 @@ dots = $(wildcard Figures/*.dot)
 pdfs = $(addsuffix .pdf, $(basename $(dots)))
 
 #latex=pdflatex
-latex=latexmk -pdf
+latex=latexmk -pdf -halt-on-error
 
 icfp.zip: $(ICFP).tex $(ICFP).bbl macros.tex $(pdfs) acmart.cls ACM-Reference-Format.bst
 	zip $@ $^
@@ -60,6 +60,6 @@ web: web-token
 STASH=conal@conal.net:/home/conal/web/papers/essence-of-ad
 web: web-token
 
-web-token: $(ICFP).pdf
+web-token: $(ICFP).pdf $(ARXIV).pdf
 	scp $? $(STASH)/
 	touch $@
