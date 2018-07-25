@@ -30,7 +30,8 @@
   \country{USA}
 }
 
-\setcopyright{rightsretained}
+%% How do I get the Creative Commons logo as ACM did?
+\setcopyright{rightsretained} % iw3c2w3g iw3c2w3 
 \acmPrice{}
 \acmDOI{10.1145/3236765}
 \acmYear{2018}
@@ -104,8 +105,8 @@ Conal Elliott
 % \rnc{\headrulewidth}{0pt}
 %endif
 
-%if arXiv
-\hypersetup{hidelinks} % for the arXiv version
+%if long
+\hypersetup{hidelinks} % for the long/arXiv version
 %endif
 
 %if not draft
