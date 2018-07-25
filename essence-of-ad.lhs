@@ -31,7 +31,7 @@
 }
 
 %% How do I get the Creative Commons logo as ACM did?
-\setcopyright{rightsretained} % iw3c2w3g iw3c2w3 
+\setcopyright{rightsretained}
 \acmPrice{}
 \acmDOI{10.1145/3236765}
 \acmYear{2018}
