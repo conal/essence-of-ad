@@ -1,30 +1,42 @@
 PAPER = essence-of-ad
 
+SHORT = $(PAPER)-short
+LONG = $(PAPER)-long
 ICFP = $(PAPER)-icfp
-ARXIV = $(PAPER)-arxiv
+
+# $(ICFP).pdf is the final camera-ready version from the publisher.
 
 .PRECIOUS: %.tex %.pdf
 
-all: $(ICFP).pdf
-all: $(ARXIV).pdf
+# ALL += $(SHORT).pdf
+ALL += $(LONG).pdf
+
+all: $(ALL)
 
 other.pdf: $(EXTENDED).pdf
 	cp $? $@
 
 texdeps = formatting.fmt Makefile
 
-$(ICFP).tex: $(PAPER).lhs $(texdeps)
+$(SHORT).tex: $(PAPER).lhs $(texdeps)
 	lhs2TeX -o $*.tex $(PAPER).lhs
 
-$(ARXIV).tex: $(PAPER).lhs $(texdeps)
-	lhs2TeX --set=extended --set=arXiv -o $*.tex $(PAPER).lhs
+$(LONG).tex: $(PAPER).lhs $(texdeps)
+	lhs2TeX --set=extended --set=long -o $*.tex $(PAPER).lhs
 
 %.tex: %.lhs $(texdeps)
 	lhs2TeX -o $*.tex $*.lhs
 
 pdfdeps = $(pdfs) macros.tex bib.bib acmart.cls ACM-Reference-Format.bst
 
-see: $(ICFP).see
+short: $(SHORT).pdf
+long: $(LONG).pdf
+
+see: $(SHORT).see
+
+short.see: $(SHORT).see
+long.see:  $(LONG).see
+icfp.see:  $(ICFP).see
 
 dots = $(wildcard Figures/*.dot)
 pdfs = $(addsuffix .pdf, $(basename $(dots)))
@@ -32,11 +44,13 @@ pdfs = $(addsuffix .pdf, $(basename $(dots)))
 #latex=pdflatex
 latex=latexmk -pdf -halt-on-error
 
-icfp.zip: $(ICFP).tex $(ICFP).bbl macros.tex $(pdfs) acmart.cls ACM-Reference-Format.bst
+short.zip: $(SHORT).tex $(SHORT).bbl macros.tex $(pdfs) acmart.cls ACM-Reference-Format.bst
 	zip $@ $^
 
-arxiv.zip: $(ARXIV).tex $(ARXIV).bbl macros.tex $(pdfs)
+long.zip: $(LONG).tex $(LONG).bbl macros.tex $(pdfs)
 	zip $@ $^
+
+zips: short.zip long.zip
 
 %.pdf: %.tex $(pdfdeps)
 	$(latex) $*.tex
@@ -58,8 +72,11 @@ clean:
 web: web-token
 
 STASH=conal@conal.net:/home/conal/web/papers/essence-of-ad
-web: web-token
+# web: web-token
 
-web-token: $(ICFP).pdf $(ARXIV).pdf
+web: $(ALL)
 	scp $? $(STASH)/
 	touch $@
+
+# How does make know that the web target is up to date without the
+# web-token trick?
