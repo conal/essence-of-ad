@@ -72,11 +72,8 @@ clean:
 web: web-token
 
 STASH=conal@conal.net:/home/conal/web/papers/essence-of-ad
-# web: web-token
+web: web-token
 
-web: $(ALL)
+web-token: $(ALL)
 	scp $? $(STASH)/
 	touch $@
-
-# How does make know that the web target is up to date without the
-# web-token trick?
