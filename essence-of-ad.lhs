@@ -1059,7 +1059,7 @@ In what follows, the |scale| operation will play a more important role than mere
 
 \sectionl{Examples}
 
-Let's now look at some AD examples, to which we will later in the paper as well:
+Let's now look at some AD examples, to which we will return later in the paper:
 % In this section and later ones, we will use a few running examples:
 \begin{code}
 sqr :: Num a => a -> a
@@ -1767,11 +1767,11 @@ compiling to categories.
 writing in a conventional functional language and automatically translating to other categories \citep{Elliott-2017-compiling-to-categories}.
 %endif
 
-%if False
+%if True
 
 \sectionl{Acknowledgments}
 
-Putonlalla (IRC)
+The investigation of reverse-mode AD and its specialization to scalar-valued functions (as in backpropagation) were inspired by a conversation with Wang Ruikang.
 
 %endif
 
